@@ -1,0 +1,7 @@
+{
+  "product": "ISA by Korluz",
+  "version": "10.1.0",
+  "release": "Sprint 1 - Infraestrutura",
+  "frontendMode": "monolithic",
+  "databaseMinimum": "10.0"
+}
