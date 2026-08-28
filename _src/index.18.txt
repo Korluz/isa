@@ -1,0 +1,80 @@
+'pt-BR',{style:'currency',currency:'BRL'})}</td><td>${r.commission.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td><td>${r.rule}</td></tr>`).join('')}<tr class="total"><td colspan="7">TOTAL</td><td>${total.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td><td></td></tr></tbody></table><script>window.onload=()=>window.print()<\/script></body></html>`);w.document.close();
+}
+
+const oldRenderAllV4=window.renderAll;
+window.renderAll=function(){oldRenderAllV4();normalizeSalesV8();renderContractSales();renderAuditReport();setTimeout(refreshIcons,0)}
+document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.view==='contratos'){renderContractSales()}if(b.dataset.view==='auditoria')renderAuditReport()}));
+// V10.2.6: recalcula comissão AGORA, depois que todos os patches acima
+// (inclusive o caso especial do Hop On Hop Off) já reescreveram
+// window.calcSaleCommission. A primeira chamada a updateCommissions() lá
+// no início do arquivo roda cedo demais — antes desses patches existirem
+// — e por isso passeios com regra especial ficavam com comissão errada
+// até alguém salvar a venda de novo manualmente.
+if(typeof updateCommissions==='function')updateCommissions();
+renderAll();
+})();
+
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+/* ISA V10.3 — Central de Horários em lote */
+(function(){
+ const E=id=>document.getElementById(id);
+ const normV103=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9:\/-]+/g,' ').replace(/\s+/g,' ').trim();
+ const tokensV103=v=>normV103(v).split(' ').filter(x=>x.length>=3&&!['tour','full','day','sunset','city','de','do','da','dos','das','del','la','el','e'].includes(x));
+ const phoneDigits=v=>String(v||'').replace(/\D/g,'').slice(-9);
+ function activeV103(t){return !(t.cancelled||t.cancelChecked===true)}
+ function tomorrowV103(){const date=localISO(1),items=[];(db.sales||[]).forEach(s=>{if(s.status==='Cancelado')return;(s.tours||[]).filter(t=>activeV103(t)&&t.date===date).forEach(t=>items.push({sale:s,tour:t}))});return items}
+ function nameScore(name,txt){const a=tokensV103(name),n=normV103(txt);return a.length?a.filter(x=>n.includes(x)).length/a.length:0}
+ function tourScoreV103(name,txt){const a=tokensV103(name),n=normV103(txt);return a.length?a.filter(x=>n.includes(x)).length/a.length:0}
+ function extractTimeV103(txt){const s=String(txt||''),m=s.match(/\b(?:às?\s*)?([01]?\d|2[0-3])\s*[:hH]\s*([0-5]\d)\b/i)||s.match(/\b(?:pickup|pick\s*up|hor[aá]rio|hora|coleta)\D{0,16}([01]?\d|2[0-3])\s*([0-5]\d)\b/i);return m?String(m[1]).padStart(2,'0')+':'+m[2]:''}
+ function extractDateV103(txt){const m=String(txt||'').match(/\b(\d{2})[\/-](\d{2})(?:[\/-](\d{4}))?\b/);return m?(m[3]||String(new Date().getFullYear()))+'-'+m[2]+'-'+m[1]:''}
+ function likelyClientLine(line,items){let best=0;items.forEach(x=>best=Math.max(best,nameScore(x.sale.name,line)));return best>=.62}
+ function splitBlocksV103(raw,items){raw=String(raw||'').replace(/\r/g,'').trim();if(!raw)return[];let blocks=raw.split(/\n\s*\n+/).map(x=>x.trim()).filter(Boolean);if(blocks.length>1)return blocks;const lines=raw.split('\n').map(x=>x.trim()).filter(Boolean),result=[];let current=[];lines.forEach(line=>{if(current.length&&likelyClientLine(line,items)){result.push(current.join('\n'));current=[]}current.push(line)});if(current.length)result.push(current.join('\n'));return result.length?result:[raw]}
+ function candidateScore(item,block){const ns=nameScore(item.sale.name,block),ts=tourScoreV103(item.tour.name,block);let score=ns*5+ts*4;const ph=phoneDigits(item.sale.phone);if(ph&&phoneDigits(block).includes(ph))score+=5;const d=extractDateV103(block);if(d&&d===item.tour.date)score+=2;const hotel=tokensV103(item.tour.location||item.sale.hotel||'').filter(x=>x.length>=4);if(hotel.some(x=>normV103(block).includes(x)))score+=1.5;const time=extractTimeV103(block);if(time)score+=1;return{score,ns,ts,time,date:d}}
+ function classifyV103(c){if(c.score>=6.2&&c.time&&(c.ns>=.5||c.ts>=.7))return'ok';if(c.score>=3.3)return'warn';return'bad'}
+ let batchMatches=[];
+ window.analyzeScheduleBatch=function(){
+  const raw=E('scheduleBulkInput')?.value||'',items=tomorrowV103();if(!raw.trim())return alert('Cole primeiro as mensagens da logística.');if(!items.length)return alert('Não há passeios ativos cadastrados para amanhã.');
+  const blocks=splitBlocksV103(raw,items),used=new Set();batchMatches=[];
+  blocks.forEach((block,bi)=>{const ranked=items.map((item,ii)=>({item,ii,...candidateScore(item,block)})).filter(x=>!used.has(x.ii)).sort((a,b)=>b.score-a.score),best=ranked[0],status=best?classifyV103(best):'bad';if(best&&status==='ok')used.add(best.ii);batchMatches.push({block,bi,best:best||null,status})});
+  const ok=batchMatches.filter(x=>x.status==='ok').length,warn=batchMatches.filter(x=>x.status==='warn').length,bad=batchMatches.filter(x=>x.status==='bad').length;E('scheduleBatchSummary').textContent=`${blocks.length} mensagem(ns) • ${ok} segura(s) • ${warn} para conferir • ${bad} não identificada(s)`;E('scheduleReviewCard').style.display='block';
+  E('scheduleReview').innerHTML=batchMatches.map((m,i)=>{const b=m.best,label=m.status==='ok'?'Correspondência segura':m.status==='warn'?'Conferir correspondência':'Não identificado';return `<div class="schedule-match ${m.status}"><div class="schedule-match-head"><div><strong>${label}</strong>${b?`<div class="meta">${esc(b.item.sale.name)} • ${esc(b.item.tour.name)} • ${fmtDate(b.item.tour.date)}${b.time?' • '+esc(b.time):''}</div>`:'<div class="meta">Nenhuma venda de amanhã teve correspondência suficiente.</div>'}</div><span class="badge ${m.status==='ok'?'b-ok':m.status==='warn'?'b-warn':'b-red'}">${m.status==='ok'?'Pronto':m.status==='warn'?'Revisar':'Sem match'}</span></div><pre>${esc(m.block)}</pre>${b&&m.status!=='bad'?`<div class="actions"><button class="btn light sm" onclick="applyScheduleMatch(${i})">${m.status==='ok'?'Salvar agora':'Aceitar correspondência'}</button><button class="btn light sm" onclick="openDetail(${b.item.sale.id})">Abrir ficha</button></div>`:''}</div>`}).join('');
+ };
+ window.applyScheduleMatch=function(index,quiet=false){const m=batchMatches[index],b=m?.best;if(!b)return false;const s=(db.sales||[]).find(x=>String(x.id)===String(b.item.sale.id)),t=s?.tours?.find(x=>x===b.item.tour||(x.name===b.item.tour.name&&x.date===b.item.tour.date));if(!s||!t)return false;if(!b.time&&!quiet){alert('Não foi possível identificar o horário nessa mensagem.');return false}if(b.time)t.hour=b.time;if(!t.location)t.location=s.hotel||'';t.logisticsMessage=m.block;t.scheduleReceivedAt=new Date().toISOString();t.scheduleSource='central-horarios';addHistory(s,`Central de horários: logística recebida para ${t.name}${b.time?' às '+b.time:''}`);if(!quiet){save();renderScheduleCenter();alert('Horário salvo na venda.')}return true};
+ window.saveSafeScheduleMatches=function(){let saved=0;batchMatches.forEach((m,i)=>{if(m.status==='ok'&&applyScheduleMatch(i,true))saved++});if(saved){save();renderScheduleCenter()}alert(saved?`${saved} horário(s) salvo(s) com segurança.`:'Nenhuma correspondência segura para salvar.')};
+ window.clearScheduleBatch=function(){if(E('scheduleBulkInput'))E('scheduleBulkInput').value='';if(E('scheduleBatchSummary'))E('scheduleBatchSummary').textContent='';if(E('scheduleReview'))E('scheduleReview').innerHTML='';if(E('scheduleReviewCard'))E('scheduleReviewCard').style.display='none';batchMatches=[]};
+ window.copyScheduleMessage=async function(saleId,tourIndex){const s=(db.sales||[]).find(x=>String(x.id)===String(saleId)),t=s?.tours?.[tourIndex];if(!t)return;const msg=t.logisticsMessage||(`${s.name}\n${t.name}\nHorário: ${t.hour||'a confirmar'}\nLocal: ${t.location||s.hotel||'a confirmar'}`);try{await navigator.clipboard.writeText(msg)}catch(e){const ta=document.createElement('textarea');ta.value=msg;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove()}alert('Mensagem copiada. Agora é só colar no JetSales.')};
+ window.markScheduleSent=function(saleId,tourIndex){const s=(db.sales||[]).find(x=>String(x.id)===String(saleId)),t=s?.tours?.[tourIndex];if(!s||!t)return;t.messageSent=true;t.messageSentAt=new Date().toISOString();if((s.tours||[]).some(x=>x.messageSent))s.status='Horário enviado';addHistory(s,`Horário enviado ao cliente: ${t.name}`);save();renderScheduleCenter()};
+ window.undoScheduleSent=function(saleId,tourIndex){const s=(db.sales||[]).find(x=>String(x.id)===String(saleId)),t=s?.tours?.[tourIndex];if(!s||!t)return;t.messageSent=false;t.messageSentAt='';addHistory(s,`Horário voltou para pendente: ${t.name}`);save();renderScheduleCenter()};
+ window.renderScheduleCenter=function(){
+  const items=tomorrowV103(),received=items.filter(x=>!!x.tour.hour||!!x.tour.logisticsMessage);if(E('schExpected'))E('schExpected').textContent=items.length;if(E('schReceived'))E('schReceived').textContent=received.length;if(E('schWaiting'))E('schWaiting').textContent=Math.max(0,items.length-received.length);if(E('schToSend'))E('schToSend').textContent=items.filter(x=>(x.tour.hour||x.tour.logisticsMessage)&&!x.tour.messageSent).length;if(E('scheduleTomorrowLabel'))E('scheduleTomorrowLabel').textContent=fmtDate(localISO(1));
+  const box=E('scheduleClientList');if(!box)return;box.innerHTML=items.length?items.map(x=>{const s=x.sale,t=x.tour,idx=(s.tours||[]).indexOf(t),state=t.messageSent?'sent':(t.hour||t.logisticsMessage)?'received':'pending';return `<div class="schedule-client ${state}"><div class="saletop"><div><div class="title">${esc(s.name)} — ${esc(t.name)}</div><div class="meta">${esc(s.phone||'Sem telefone')} • ${esc(t.location||s.hotel||'Local não informado')} • ${totalPax(s)} passageiro(s)</div></div><span class="schedule-status ${state==='sent'?'ok':state==='received'?'blue':'warn'}">${state==='sent'?'Enviado':state==='received'?'Recebido':'Aguardando logística'}</span></div><div class="hour">${t.hour?esc(t.hour):'--:--'}</div>${t.logisticsMessage?`<div class="message-preview">${esc(t.logisticsMessage)}</div>`:''}<div class="actions">${t.hour||t.logisticsMessage?`<button class="btn gold sm" onclick="copyScheduleMessage(${s.id},${idx})">Copiar mensagem</button>`:''}${!t.messageSent&&(t.hour||t.logisticsMessage)?`<button class="btn light sm" onclick="markScheduleSent(${s.id},${idx})">✓ Marcar enviado</button>`:''}${t.messageSent?`<button class="btn light sm" onclick="undoScheduleSent(${s.id},${idx})">Desfazer envio</button>`:''}<button class="btn light sm" onclick="openDetail(${s.id})">Abrir ficha</button></div></div>`}).join(''):'<div class="empty">Nenhum passeio ativo cadastrado para amanhã.</div>';
+ };
+ const latestRows=[["City Walking Tour",99,89,7],["Valparaíso e Viña del Mar",249,199,23],["Isla Negra, Algarrobo e Undurraga",449,399,37],["Portillo e Laguna del Inca",299,259,30],["Parque Safari",389,349,24],["Undurraga",329,299,20],["Concha y Toro",429,399,35],["Concha y Toro Marquês",549,null,43],["Concha y Toro Noturno",799,null,43],["Alyan Sunset",599,null,40],["Alyan Sunset Transporte",199,null,16],["Santa Rita",389,349,26],["Andes Panorâmico",229,199,22],["Farellones s/ ticket",229,199,22],["Valle Nevado s/ ticket",229,199,22],["El Colorado s/ ticket",229,199,22],["Termas + cajon",399,349,37],["Infinitum (Valle Nevado Sunset)",519,null,31],["Monteluz",499,null,31],["Hop On Hop Off",269,269,18],["Lagunillas",299,259,36],["Portillo Alterno",299,259,30],["Chillan",829,759,59],["Oasis Sunset",599,null,40],["Atacama · Tour Astronômico",261.75,261.75,12],["Atacama · Laguna Cejar + Ojos + Tebenquiche",396.75,396.75,23],["Atacama · Valle del Arcoiris",321.75,321.75,15],["Atacama · Lagunas Escondidas de Baltinache",396.75,396.75,21],["Atacama · Vallecito Magic Bus",261.75,261.75,15],["Atacama · Trekking Guatín",254.25,254.25,15],["Atacama · Geyser del Tatio",419.25,419.25,22],["Atacama · Valle de la Luna",374.25,374.25,19],["Atacama · Ruta de los Salares",396.75,396.75,21],["Atacama · Piedras Rojas + Altiplânicas + Cha
