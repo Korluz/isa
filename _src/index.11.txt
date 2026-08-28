@@ -1,0 +1,145 @@
+${totalPax(s)} passageiro(s)</span><br><span class="meta">${esc(t.location||s.hotel||'hotel não informado')}</span>${ticketRequired(t.name)?'<br><span class="ticketflag">🎟 Ticket obrigatório</span>':''}</div>`).join(''):'<strong>Nenhum passeio ativo desta venda está marcado para amanhã.</strong>';
+   el('validatorResult').className='empty';el('validatorResult').innerHTML='Cole a mensagem e pressione “Analisar mensagem”.';
+ }
+ const oldValidate=window.validateMessage;
+ window.validateMessage=function(){
+   oldValidate();
+   const grid=el('validatorResult')?.querySelector('.validatorgrid');
+   if(grid)grid.classList.add('v24');
+ }
+
+ // ---- voucher phone parser fix ----
+ const oldParse=window.parseVoucher;
+ if(oldParse){
+   window.parseVoucher=function(raw){
+     const v=oldParse(raw),joined=String(raw||'').replace(/\s+/g,' ');
+     const m=joined.match(/Telefone\s*:\s*(?:\+?55\s*)?(\(?\d{2}\)?\s*\d{4,5}[\s-]?\d{4})/i);
+     if(m)v.phone=phoneMask(m[1]);
+     return v;
+   }
+ }
+
+ // ---- render all additions ----
+ const oldRenderAllV24=window.renderAll;
+ window.renderAll=function(){
+   oldRenderAllV24();
+   loadSellerProfile();
+   renderDashboard();
+   renderTomorrow();
+   if(typeof renderCancelled==='function')renderCancelled();
+ };
+ localStorage.setItem(KEY,JSON.stringify(db));
+ loadSellerProfile();
+ renderAll();
+})();
+
+/* ===== MÓDULO CONSOLIDADO ===== */
+
+(function(){
+ const COMMISSION_RULES=[{"name":"City Walking Tour","adult":7,"child":7},{"name":"Valparaíso e Viña del Mar","adult":23,"child":23},{"name":"Isla Negra, Algarrobo e Undurraga","adult":37,"child":37},{"name":"Portillo e Laguna del Inca","adult":30,"child":30},{"name":"Parque Safari","adult":24,"child":24},{"name":"Undurraga","adult":20,"child":20},{"name":"Concha y Toro","adult":35,"child":35},{"name":"Concha y Toro Marquês","adult":43,"child":null},{"name":"Concha y Toro Noturno","adult":43,"child":null},{"name":"Alyan Sunset","adult":40,"child":null},{"name":"Alyan Sunset Transporte","adult":16,"child":null},{"name":"Santa Rita","adult":26,"child":26},{"name":"Andes Panorâmico","adult":22,"child":22},{"name":"Farellones s/ ticket","adult":22,"child":22},{"name":"Valle Nevado s/ ticket","adult":22,"child":22},{"name":"El Colorado s/ ticket","adult":22,"child":22},{"name":"Termas + cajon","adult":37,"child":37},{"name":"Infinitum (Valle Nevado Sunset)","adult":31,"child":null},{"name":"Monteluz","adult":31,"child":null},{"name":"Hop On Hop Off","adult":18,"child":18},{"name":"Lagunillas","adult":36,"child":36},{"name":"Portillo Alterno","adult":30,"child":30},{"name":"Chillan","adult":59,"child":59},{"name":"Oasis Sunset","adult":40,"child":null},{"name":"Transfer Compartido","adult":9,"child":9},{"name":"Tour Astronômico","adult":12,"child":12},{"name":"Trekking Puripobre","adult":15,"child":15},{"name":"Trekking Cascadas Perdidas","adult":15,"child":15},{"name":"Trekking Jacuzzi Rustico","adult":15,"child":15},{"name":"Trekking Guatín","adult":15,"child":15},{"name":"Vallecito Magic Bus","adult":15,"child":15},{"name":"Valle del Arcoiris","adult":15,"child":15},{"name":"Cabalgatas","adult":15,"child":15},{"name":"Tour Bike","adult":16,"child":16},{"name":"Tour Arqueologico","adult":16,"child":16},{"name":"Valle de la Luna","adult":19,"child":19},{"name":"Ruta de los Salares","adult":21,"child":21},{"name":"Sandboard","adult":21,"child":21},{"name":"Lagunas Escondidas de Baltinache","adult":21,"child":21},{"name":"Geysers del Tatio","adult":22,"child":22},{"name":"Cejar + Ojos + Tebenquinche","adult":23,"child":23},{"name":"Termas Puritama","adult":28,"child":28},{"name":"Cerro Toco","adult":33,"child":33},{"name":"Piedras Rojas + Altiplanicas + Chaxa","adult":34,"child":34},{"name":"Atacama Ancestral","adult":41,"child":41},{"name":"Volcán Lascar","adult":55,"child":55},{"name":"Sairecabur","adult":69,"child":69},{"name":"Uyuni 3 Dias","adult":90,"child":90},{"name":"Uyuni 4 Dias","adult":111,"child":111},{"name":"Globo Aerostatico","adult":118,"child":118}];
+
+ function cNorm(v){
+   return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
+     .replace(/&/g,' e ').replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim();
+ }
+ function ruleAliases(name){
+   const n=cNorm(name);
+   const aliases=[n];
+   if(n.includes('valparaiso')&&n.includes('vina')){aliases.push(cNorm('Valparaíso e Viña del Mar'));aliases.push(cNorm('Viña del Mar e Valparaíso'))}
+   if(n.includes('isla negra')&&n.includes('algarrobo')&&n.includes('undurraga'))aliases.push(cNorm('Isla Negra, Algarrobo e Undurraga'));
+   if(n.includes('portillo')&&n.includes('laguna'))aliases.push(cNorm('Portillo e Laguna del Inca'));
+   if(n.includes('farellones'))aliases.push(cNorm('Farellones s/ ticket'));
+   if(n.includes('valle nevado')&&!n.includes('sunset')&&!n.includes('infinitum'))aliases.push(cNorm('Valle Nevado s/ ticket'));
+   if(n.includes('el colorado')&&!n.includes('sunset'))aliases.push(cNorm('El Colorado s/ ticket'));
+   if(n.includes('termas')&&n.includes('cajon'))aliases.push(cNorm('Termas + cajon'));
+   if(n.includes('infinitum')){aliases.push(cNorm('Infinitum (Valle Nevado Sunset)'));aliases.push(cNorm('Infinitum Sunset'))}
+   if(n.includes('alyan')&&n.includes('transporte'))aliases.push(cNorm('Alyan Sunset Transporte'));
+   else if(n.includes('alyan'))aliases.push(cNorm('Alyan Sunset'));
+   if(n.includes('city')&&n.includes('walking'))aliases.push(cNorm('City Walking Tour'));
+   if(n.includes('city')&&n.includes('road')&&n.includes('jantar'))aliases.push(cNorm('City road trip + Jantar'));
+   if(n.includes('concha')&&n.includes('marques'))aliases.push(cNorm('Concha y Toro Marquês'));
+   else if(n.includes('concha')&&n.includes('noturno'))aliases.push(cNorm('Concha y Toro Noturno'));
+   else if(n.includes('concha'))aliases.push(cNorm('Concha y Toro'));
+   if(n==='undurraga'||(n.includes('undurraga')&&!n.includes('isla negra')))aliases.push(cNorm('Undurraga'));
+   // Atacama
+   if(n.includes('astronom'))aliases.push(cNorm('Tour Astronômico'));
+   if(n.includes('cejar')&&(n.includes('ojos')||n.includes('teben'))) {aliases.push(cNorm('Cejar + Ojos + Tebenquinche'));aliases.push(cNorm('Laguna Cejar, Tebenquiche e Ojos del Salar'))}
+   if(n.includes('arcoiris')){aliases.push(cNorm('Valle del Arcoiris'));aliases.push(cNorm('Valle del Arcoiris e Yerbas Buenas'))}
+   if(n.includes('puripobre')||n.includes('purilibre')){aliases.push(cNorm('Trekking Puripobre'));aliases.push(cNorm('Termas Purilibre'))}
+   if(n.includes('cascadas')&&n.includes('perdidas'))aliases.push(cNorm('Trekking Cascadas Perdidas'));
+   if(n.includes('jacuzzi')&&n.includes('rustico'))aliases.push(cNorm('Trekking Jacuzzi Rustico'));
+   if(n.includes('guatin'))aliases.push(cNorm('Trekking Guatín'));
+   if(n.includes('vallecito')||n.includes('magic bus'))aliases.push(cNorm('Vallecito Magic Bus'));
+   if(n.includes('cabalg')||n.includes('cavalg')){aliases.push(cNorm('Cabalgatas'));aliases.push(cNorm('Cavalgada'))}
+   if(n.includes('bike')){aliases.push(cNorm('Tour Bike'));aliases.push(cNorm('Tour Sunset Bike'))}
+   if(n.includes('arqueolog'))aliases.push(cNorm('Tour Arqueologico'));
+   if(n.includes('luna'))aliases.push(cNorm('Valle de la Luna'));
+   if(n.includes('salares'))aliases.push(cNorm('Ruta de los Salares'));
+   if(n.includes('sandboard'))aliases.push(cNorm('Sandboard'));
+   if(n.includes('baltinache'))aliases.push(cNorm('Lagunas Escondidas de Baltinache'));
+   if(n.includes('tatio')){aliases.push(cNorm('Geysers del Tatio'));aliases.push(cNorm('Geyser del Tatio'))}
+   if(n.includes('puritama')&&!n.includes('purilibre'))aliases.push(cNorm('Termas Puritama'));
+   if(n.includes('cerro')&&n.includes('toco'))aliases.push(cNorm('Cerro Toco'));
+   if((n.includes('piedras rojas')||n.includes('altiplan'))&&n.includes('chaxa')){aliases.push(cNorm('Piedras Rojas + Altiplanicas + Chaxa'));aliases.push(cNorm('Lagunas Altiplânicas, Piedras Rojas e Laguna Chaxa'))}
+   if(n.includes('ancestral'))aliases.push(cNorm('Atacama Ancestral'));
+   if(n.includes('lascar'))aliases.push(cNorm('Volcán Lascar'));
+   if(n.includes('sairecabur'))aliases.push(cNorm('Sairecabur'));
+   if(n.includes('uyuni')&&n.includes('3'))aliases.push(cNorm('Uyuni 3 Dias'));
+   if(n.includes('uyuni')&&n.includes('4'))aliases.push(cNorm('Uyuni 4 Dias'));
+   if(n.includes('globo')||n.includes('balao')){aliases.push(cNorm('Globo Aerostatico'));aliases.push(cNorm('Tour Balão'))}
+   if(n.includes('transfer')&&n.includes('compart'))aliases.push(cNorm('Transfer Compartido'));
+   return [...new Set(aliases)];
+ }
+ function legacyFindCommissionRule(tourName){
+   const aliases=ruleAliases(tourName);
+   return COMMISSION_RULES.find(r=>aliases.includes(cNorm(r.name)))||null;
+ }
+ function findCatalogItem(tourName){
+   const cat=db.catalog||[];
+   let item=cat.find(c=>c.name===tourName);
+   if(item)return item;
+   item=cat.find(c=>cNorm(c.name)===cNorm(tourName));
+   if(item)return item;
+   const aliases=ruleAliases(tourName);
+   return cat.find(c=>aliases.includes(cNorm(c.name)))||null;
+ }
+ window.findCatalogItem=findCatalogItem;
+ function catalogCommissionRule(tourName){
+   const item=findCatalogItem(tourName);
+   if(!item||item.adultCommission==null)return null;
+   return {name:item.name,adult:item.adultCommission,child:item.childCommission??null};
+ }
+ function findCommissionRule(tourName){
+   // V10.2.3: a tela de Catálogo (Editar passeio) já deixa cadastrar comissão
+   // ADT/CHD por passeio — isso agora é a fonte oficial. A tabela antiga
+   // (COMMISSION_RULES) só entra como fallback para passeios que ainda não
+   // foram editados no Catálogo, e é usada para semear os valores iniciais
+   // (ver seedCatalogCommissionsFromLegacyRules, mais abaixo).
+   return catalogCommissionRule(tourName)||legacyFindCommissionRule(tourName);
+ }
+ function seedCatalogCommissionsFromLegacyRules(){
+   let changed=false;
+   (db.catalog||[]).forEach(c=>{
+     if(c.adultCommission!=null)return;
+     const legacy=legacyFindCommissionRule(c.name);
+     if(legacy){c.adultCommission=legacy.adult;c.childCommission=legacy.child??null;changed=true}
+   });
+   if(changed)localStorage.setItem(KEY,JSON.stringify(db));
+   return changed;
+ }
+ // V10.2.5 — lista de preços/comissões (planilha enviada em 07/08/2026).
+ // "catalogName" é o nome exato já usado no Catálogo (quando o passeio já
+ // existia); passeios sem catalogName são novos, adicionados por esta
+ // migração. Os valores de comissão aqui batem com os que já estavam
+ // cadastrados — a mudança real é a adição do preço (ADT/CHD), que o app
+ // nunca teve até agora.
+ const PRICE_LIST_2026_08=[
+  {catalogName:"City Tour Santiago",adultPrice:99,childPrice:89,adultCommission:7,childCommission:7,sourceName:"City Walking Tour",ticket:false,nonRefundableTicket:false,region:"Santiago"},
+  {catalogName:"Viña del Mar e Valparaíso",adultPrice:249,childPrice:199,adultCommission:23,childCommission:23,sourceName:"Valparaíso e Viña del Mar",ticket:false,nonRefundableTicket:false,region:"Santiago"},
+  {name:"Isla Negra, Algarrobo e Undurraga",adultPrice:449,childPrice:399,adultCommission:37,childCommission:37,ticket:true,nonRefundableTicket:true,region:"Santiago"},
+  {catalogName:"Portillo e Laguna del Inca",adultPrice:299,childPrice:259,adultCommission:30,childCommission:30,ticket:false,nonRefundableTicket:false,region:"Santiago"},
+  {catalogName:"Parque Safari",adultPrice:389,childPrice:349,adultCommission:24,childCommission:24,ticket:true,nonRefundableTicket:true,region:"Santiago"},
+  {catalogName:"Undurraga",adultPrice:329,childPrice:299,adultCommission:20,childCommission:20,ticket:true,nonRefundableTicket:true,region:"Santiago"},
+  {catalogName:"Concha y Toro",adultPrice:429,childPrice:399,adultCommission:35,childCommission:35,ticket:true,nonRefundableTicket:true,region:"Santiago"},
+  {name:"Concha y Toro Marquês",adultPrice:549,childPrice:null,adultCommission:43,childCommission:null,ticket:true,nonRefundableTicket:true,region:"Santiago"},
+  {name:"Concha y Toro Noturno",adultPrice:799,chil
