@@ -1,0 +1,242 @@
+"validator-result-stack">
+        ${card('Passeio',tourOk?'ok':'danger',tourOk?best.t.name:'Não reconhecido')}
+        ${card('Passageiros',paxOk?'ok':'warn',paxOk?`${pax} passageiro(s) reconhecido(s)`:`Esperado: ${pax}`)}
+        ${card('Hotel / coleta',hotelOk===true?'ok':hotelOk===false?'danger':'warn',hotelOk===true?'Local compatível':hotelOk===false?'Local não reconhecido':'Sem local cadastrado')}
+        ${card('Horário',time?'ok':'danger',time||'Não reconhecido')}
+      </div>
+      ${time&&tourOk?`<div class="actions"><button class="btn gold" onclick="saveValidatedTime(${s.id},'${best.t.name.replace(/'/g,"\\'")}','${time}')">Salvar horário</button></div>`:''}`;
+  };
+  window.saveValidatedTime=function(id,tourName,time){
+    const s=db.sales.find(x=>x.id===id),t=s?.tours?.find(x=>x.name===tourName);
+    if(!s||!t)return;
+    t.hour=time;
+    addHistory(s,'Mensagem validada; horário '+time+' salvo em '+t.name);
+    save();
+    alert('Horário salvo na venda.');
+  };
+
+  // Rebinds explicit button in case previous onclick was broken.
+  const analyzeBtn=[...document.querySelectorAll('button')].find(b=>/analisar mensagem/i.test(b.textContent||''));
+  if(analyzeBtn)analyzeBtn.onclick=validateMessage;
+
+  // Recalculate commissions and render.
+  if(typeof renderAll==='function')renderAll();
+})();
+
+/* ===== MÓDULO CONSOLIDADO ===== */
+
+(function(){
+  const el=id=>document.getElementById(id);
+  const nrm=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase().replace(/[^a-z0-9:\/-]+/g,' ').replace(/\s+/g,' ').trim();
+
+  function active(t){ return !(t.cancelled || t.cancelChecked===true); }
+
+  function extractCounts(msg){
+    const text=String(msg||'');
+    const adt=(text.match(/\b(\d+)\s*ADT\b/i)||[])[1];
+    const chd=(text.match(/\b(\d+)\s*CHD\b/i)||[])[1];
+    const inf=(text.match(/\b(\d+)\s*INF\b/i)||[])[1];
+    return {
+      adults:adt==null?null:Number(adt),
+      children:chd==null?null:Number(chd),
+      babies:inf==null?null:Number(inf)
+    };
+  }
+
+  function extractDate(msg){
+    const m=String(msg||'').match(/\b(\d{2})[-\/](\d{2})[-\/](\d{4})\b/);
+    return m?`${m[3]}-${m[2]}-${m[1]}`:'';
+  }
+
+  function extractTime(msg){
+    const m=String(msg||'').match(/\b([01]?\d|2[0-3])\s*[:hH]\s*([0-5]\d)(?::[0-5]\d)?\b/);
+    return m?String(m[1]).padStart(2,'0')+':'+m[2]:'';
+  }
+
+  function scoreTour(name,msg){
+    const ignored=new Set(['tour','full','day','sunset','city','de','do','da','del','la','el']);
+    const words=nrm(name).split(' ').filter(w=>w.length>=3&&!ignored.has(w));
+    const m=nrm(msg);
+    return words.length?words.filter(w=>m.includes(w)).length/words.length:0;
+  }
+
+  function expectedCounts(s,t){
+    return {
+      adults:Number(t.adults ?? s.adults ?? 0),
+      children:Number(t.children ?? s.children ?? 0),
+      babies:Number(t.babies ?? s.babies ?? 0)
+    };
+  }
+
+  function hotelMatch(s,t,msg){
+    const source=nrm(t.location||s.hotel||'');
+    if(!source)return null;
+    const words=source.split(' ').filter(w=>w.length>=5 && !['hotel','punto','encontro','ponto','avenida','regiao','metropolitana'].includes(w));
+    const m=nrm(msg);
+    return words.length?words.some(w=>m.includes(w)):null;
+  }
+
+  function vcard(title,state,body){
+    const icon=state==='ok'?'✓':state==='danger'?'✕':'!';
+    return `<div class="validatorcheck ${state}"><strong>${icon} ${esc(title)}</strong><span>${esc(body)}</span></div>`;
+  }
+
+  window.validateMessage=function(){
+    const s=db.sales.find(x=>String(x.id)===String(el('validatorSale')?.value));
+    const msg=el('validatorMessage')?.value.trim();
+    if(!s)return alert('Selecione uma venda.');
+    if(!msg)return alert('Cole a mensagem da logística.');
+
+    const expected=(s.tours||[]).filter(t=>active(t)&&t.date===localISO(1));
+    if(!expected.length){
+      el('validatorResult').className='alertbox validator-stop';
+      el('validatorResult').innerHTML='<strong>✕ NÃO ENVIAR</strong>Nenhum passeio ativo desta venda está marcado para amanhã.';
+      return;
+    }
+
+    const ranked=expected.map(t=>({t,score:scoreTour(t.name,msg)})).sort((a,b)=>b.score-a.score);
+    const best=ranked[0];
+    const exp=expectedCounts(s,best.t);
+    const got=extractCounts(msg);
+    const msgDate=extractDate(msg);
+    const msgTime=extractTime(msg);
+    const tourOk=best.score>=0.45;
+    const dateOk=msgDate===best.t.date;
+    const adultOk=got.adults!==null && got.adults===exp.adults;
+    const childOk=got.children!==null && got.children===exp.children;
+    const countsOk=adultOk&&childOk;
+    const hotelOk=hotelMatch(s,best.t,msg);
+    const essentialOk=tourOk&&dateOk&&countsOk&&!!msgTime&&(hotelOk!==false);
+
+    const passengerText =
+      `Esperado: ${exp.adults} ADT / ${exp.children} CHD` +
+      ` — Recebido: ${got.adults===null?'não identificado':got.adults+' ADT'} / ${got.children===null?'não identificado':got.children+' CHD'}`;
+
+    const cards=[
+      vcard('Passeio',tourOk?'ok':'danger',tourOk?best.t.name:`Esperado: ${best.t.name}`),
+      vcard('Data',dateOk?'ok':'danger',`Esperada: ${fmtDate(best.t.date)} — Recebida: ${msgDate?fmtDate(msgDate):'não identificada'}`),
+      vcard('Passageiros',countsOk?'ok':'danger',passengerText),
+      vcard('Hotel / coleta',hotelOk===true?'ok':hotelOk===false?'danger':'warn',
+        hotelOk===true?'Local compatível':hotelOk===false?'Local divergente':'Não foi possível comparar'),
+      vcard('Horário',msgTime?'ok':'danger',msgTime||'Não identificado')
+    ];
+
+    el('validatorResult').className='alertbox '+(essentialOk?'validator-ok-title':'validator-stop');
+    el('validatorResult').innerHTML=
+      `<strong>${essentialOk?'✓ MENSAGEM COMPATÍVEL':'✕ NÃO ENVIAR'}</strong>`+
+      `<div>${essentialOk?'Os dados essenciais conferem.':'Há divergência em um ou mais dados essenciais.'}</div>`+
+      `<div class="validator-result-stack">${cards.join('')}</div>`+
+      (essentialOk?`<div class="actions"><button class="btn gold" onclick="saveValidatedTimeV29(${s.id},'${best.t.name.replace(/'/g,"\\'")}','${msgTime}')">Salvar horário</button></div>`:'');
+
+    if(!essentialOk && navigator.vibrate) navigator.vibrate([100,60,100]);
+  };
+
+  window.saveValidatedTimeV29=function(id,tourName,time){
+    const s=db.sales.find(x=>x.id===id),t=s?.tours?.find(x=>x.name===tourName);
+    if(!s||!t)return;
+    t.hour=time;
+    addHistory(s,'Mensagem validada com sucesso; horário '+time+' salvo em '+t.name);
+    save();
+    alert('Horário salvo na venda.');
+  };
+
+  const btn=[...document.querySelectorAll('button')].find(b=>/analisar mensagem/i.test(b.textContent||''));
+  if(btn)btn.onclick=window.validateMessage;
+})();
+
+/* ===== MÓDULO CONSOLIDADO ===== */
+
+(function(){
+function addressFilled(s){
+ const txt=(s.address||s.endereco||s.clientAddress||"").trim();
+ const hotel=(s.hotel||"").trim();
+ return txt.length>5 || (hotel && !/sem endereço|nao informado|não informado/i.test(hotel));
+}
+const old=window.renderDashboard;
+window.renderDashboard=function(){
+ if(old) old();
+ const alerts=document.getElementById("alertsList");
+ if(!alerts) return;
+ let extra="";
+ db.sales.forEach(s=>{
+  if(s.status==="Cancelado") return;
+  (s.tours||[]).forEach(t=>{
+   if(t.cancelled||t.cancelChecked===true) return;
+   const d=daysUntil(t.date);
+   if(d>=0&&d<=2&&!addressFilled(s)){
+    extra+=`<div class="alertitem orange"><div onclick="openDetail(${s.id})"><strong>🏠 Endereço pendente</strong><small>${esc(s.name)} • ${esc(t.name)}</small></div><div class="quick-actions"><button class="btn gold sm" onclick="event.stopPropagation();copyAddressMessage()">Solicitar endereço</button><button class="btn light sm" onclick="event.stopPropagation();openDetail(${s.id})">Já recebi</button></div></div>`;
+   }
+  });
+ });
+ if(extra) alerts.insertAdjacentHTML("afterbegin",extra);
+};
+window.copyAddressMessage=function(){
+ const msg="Olá! 😊 Para organizarmos seu embarque, poderia nos informar o endereço completo onde você estará hospedado em Santiago? Caso esteja em hotel, basta informar o nome. Obrigado!";
+ if(navigator.clipboard){navigator.clipboard.writeText(msg).then(()=>alert("Mensagem copiada."));}
+ else{prompt("Copie a mensagem:",msg);}
+};
+})();
+
+/* ===== MÓDULO CONSOLIDADO ===== */
+
+(function(){
+  function whatsappDigits(phone){
+    let d=String(phone||'').replace(/\D/g,'');
+    if(!d)return '';
+    if(d.startsWith('55')&&(d.length===12||d.length===13))return d;
+    if(d.length===10||d.length===11)return '55'+d;
+    return d;
+  }
+
+  window.openAddressWhatsApp=function(id){
+    const s=db.sales.find(x=>x.id===id);
+    if(!s)return;
+    const phone=whatsappDigits(s.phone);
+    const msg="Olá! 😊 Para organizarmos seu embarque, poderia nos informar o endereço completo onde você estará hospedado em Santiago? Caso esteja em hotel, basta informar o nome. Obrigado!";
+    if(!phone){alert("O telefone do cliente não está cadastrado.");return;}
+    window.open("https://wa.me/"+phone+"?text="+encodeURIComponent(msg),"_blank");
+  };
+
+  const previous=window.renderDashboard;
+  window.renderDashboard=function(){
+    if(previous)previous();
+    const alerts=document.getElementById("alertsList");
+    if(!alerts)return;
+    alerts.querySelectorAll(".alertitem").forEach(item=>{
+      const title=item.querySelector("strong");
+      if(!title||!/Endereço pendente/i.test(title.textContent||""))return;
+      const match=item.innerHTML.match(/openDetail\((\d+)\)/);
+      const btn=item.querySelector('button[onclick*="copyAddressMessage"]');
+      if(!match||!btn)return;
+      btn.textContent="Abrir WhatsApp";
+      btn.setAttribute("onclick","event.stopPropagation();openAddressWhatsApp("+match[1]+")");
+    });
+  };
+
+  if(typeof renderDashboard==="function")renderDashboard();
+})();
+
+/* ===== MÓDULO CONSOLIDADO ===== */
+
+(function(){
+
+(function(){
+ const HEROES=[
+  {title:'Cordilheira dos Andes',subtitle:'Organize suas vendas com a mesma clareza de uma manhã na montanha.',img:'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1800&q=86'},
+  {title:'Experiências inesquecíveis',subtitle:'Clientes, passeios, valores e comissões reunidos em um só lugar.',img:'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1800&q=86'},
+  {title:'Sua operação sob controle',subtitle:'Menos retrabalho à noite. Mais segurança para vender e acompanhar.',img:'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1800&q=86'}
+ ];
+ function heroMetrics(){
+   const sales=(window.db?.sales||[]),sold=sales.reduce((a,s)=>a+(+s.valueCents||0),0),comm=sales.reduce((a,s)=>a+(+s.commissionCents||0),0);
+   return `<span>${sales.length} vendas</span><span>${typeof fmtMoney==='function'?fmtMoney(sold):sold} vendidos</span><span>${typeof fmtMoney==='function'?fmtMoney(comm):comm} em comissões</span>`;
+ }
+ function installHero(){
+   const view=document.getElementById('inicio'); if(!view||document.getElementById('homeHero'))return;
+   const hero=document.createElement('div');hero.id='homeHero';hero.className='home-hero';
+   hero.innerHTML=`<div class="home-hero-bg"></div><div class="home-hero-content"><div class="home-hero-kicker">ISA Cloud</div><h2></h2><p></p><div class="home-hero-metrics"></div></div><div class="home-hero-dots"></div>`;
+   view.insertBefore(hero,view.firstChild);
+   let idx=0,bg=hero.querySelector('.home-hero-bg'),title=hero.querySelector('h2'),sub=hero.querySelector('p'),dots=hero.querySelector('.home-hero-dots');
+   HEROES.forEach((_,i)=>{const b=document.createElement('button');b.type='button';b.onclick=()=>show(i);dots.appendChild(b)});
+   function show(i){idx=i;const h=HEROES[i];bg.style.opacity='.25';setTimeout(()=>{bg.style.backgroundImage=`url("${h.img}")`;title.textContent=h.title;sub.textContent=h.subtitle;hero.querySelector('.home-hero-metrics').innerHTML=heroMetrics();bg.style.opacity='1';bg.style.transform='scale(1.08)';setTimeout(()=>bg.style.transform='scale(1.03)',30);[...dots.children].forEach((d,j)=>d.classList.toggle('active',j===i))},180)}
+   show(0);setInterval(()=>show(
