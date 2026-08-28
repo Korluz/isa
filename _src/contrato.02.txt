@@ -1,0 +1,127 @@
+ddPara(pdf,'2.1. São considerados serviços contratados todos aqueles listados no comprovante de reserva (Anexo 1 do presente contrato). Sendo que o detalhamento do que está incluso ou não nos respectivos passeios se encontram no Portfólio da CONTRATADA (versão vigente da data da compra dos passeios).',y);
+  y = addPara(pdf,'2.2. Todos os passeios estão sujeitos a alteração de data e horário, dependendo das condições climáticas existentes no momento da prestação dos serviços, bem como das regras e condições impostas pelos estabelecimentos de terceiros em que seja imprescindível o funcionamento para a realização do passeio. Caso o passeio já tenha iniciado, alterações de rota poderão ser feitas, caso ocorram imprevistos.',y);
+  y = addPara(pdf,'2.3. Por motivos externos, caso haja cancelamento ou alteração de disponibilidade de passeios, a CONTRATADA resguarda o direito de propor mudanças nos serviços contratados, que poderão ou não',y,{after:0});
+  setTimes(pdf,'normal',9); pdf.text('¹ Contribuinte n.77.461.454-0 Turismo y Transportes Indomito SPA.', M.left, A4H-58);
+}
+function addContractPage2(pdf,d) {
+  addPage(pdf); pageNo(pdf,2,5); let y=92;
+  y = addPara(pdf,'ser aceitas pela CONTRATANTE. No caso de não consentimento pelas alterações os valores dos passeios serão 100% reembolsáveis.',y);
+  y = addPara(pdf,'2.4. Para prestação dos serviços contratados no modelo compartilhado, fica firmado entre as partes, que se faz necessário atingir o número mínimo de passageiros para a realização do passeio, caso em que se este não vier a ocorrer, reserva-se à CONTRATADA o direito de cancelamento ou alteração de passeio, mediante aviso prévio via plataforma de vendas (Whatsapp número: +55 21 97215 4562).',y);
+  y = addPara(pdf,'2.4.1. Para serviços no modelo privativo, não se aplica o disposto no item 2.4.',y);
+  y = addPara(pdf,'2.5. Na hipótese da alteração de passeio, fica firmado entre as partes, que será devido o pagamento da diferença do valor para o caso de passeios mais caros, ou reembolso no caso de passeio mais barato que o originalmente contratado.',y,{after:16});
+  y = addArticle(pdf,'3. DO COMPROMISSO, PREÇO E FORMA DE PAGAMENTO',y);
+  y = addPara(pdf,'3.1. Fica acordado entre as Partes o compromisso do pagamento em sua totalidade dos serviços contratados antes da realização dos passeios, salvo hipótese de parcelamento no cartão de crédito.',y);
+  y = addPara(pdf,`3.2. O valor total do presente contrato é de ${d.valor}.`,y);
+  y = addPara(pdf,'3.3. Os valores detalhados de cada passeio contratado constam no comprovante de reserva (Anexo 1 do presente contrato) e foram repassados à CONTRATANTE no momento da negociação dos serviços.',y);
+  y = addPara(pdf,`3.4. A forma de pagamento escolhida pela CONTRATANTE para liquidar o presente contrato é através de pagamento via ${d.pagamento}`,y,{after:16});
+  y = addArticle(pdf,'4. O PRAZO',y);
+  y = addPara(pdf,'4.1. A vigência do presente contrato se inicia na data da sua assinatura e se encerra após a data do último passeio contratado.',y,{after:16});
+  y = addArticle(pdf,'5. DEVERES DO CONTRATANTE E DA CONTRATADA',y);
+  y = addPara(pdf,'5.1. A CONTRATADA se compromete:',y,{after:4});
+  y = addPara(pdf,'a) A realizar os serviços conforme datas, horários e itinerários contratados. Todavia não responde por quaisquer casos fortuitos e de força maior que não estejam em sua alçada e prejudique a execução dos serviços.',y,{x:M.left+20,maxW:CONTENT_W-20});
+  y = addPara(pdf,'b) A utilizar veículos autorizados e licenciados para realização dos passeios contratados, para os serviços que contemplam Transporte incluído, seja no modo Compartilhado ou Privativo.',y,{x:M.left+20,maxW:CONTENT_W-20});
+}
+function addContractPage3(pdf,d) {
+  addPage(pdf); pageNo(pdf,3,5); let y=78;
+  const ind={x:M.left+20,maxW:CONTENT_W-20};
+  y = addPara(pdf,'c) A manter contato e informar a CONTRATADA na hipótese de alterações e cancelamentos de passeios e oferecer alternativas para o melhor aproveitamento da viagem da CONTRATADA.',y,ind);
+  y = addPara(pdf,'d) Fornecer informações adequadas e claras sobre os diferentes serviços e passeios ofertados, com especificação correta das características, horários, preços, suas variações, possíveis eventos fortuitos e condições indesejáveis, tolerâncias, bem como os riscos que apresentem e especificidade dos passeios, ficando a CONTRATANTE ciente e de acordo com os termos apresentados caso contrate o passeio.',y,ind);
+  y = addPara(pdf,'e) Prestar suporte, seja de locomoção, informativo e orientativo para a CONTRATANTE na ocorrência de eventos adversos durante a realização dos passeios.',y,ind);
+  y = addPara(pdf,'5.2. A CONTRATANTE se compromete:',y,{after:4});
+  y = addPara(pdf,'a) A quitar a totalidade dos valores pendentes referentes aos passeios comprados antes da realização do primeiro tour contratado, sob pena de não realização dos passeios.',y,ind);
+  y = addPara(pdf,'b) A portar consigo documento de identificação (Passaporte ou Carteira de Identidade) durante a realização dos passeios.',y,ind);
+  y = addPara(pdf,'c) Providenciar a guarda e a segurança da sua bolsa e objetos pessoais durante a realização dos tours compartilhados, não sendo a CONTRATADA responsabilizada por perdas e danos.',y,ind);
+  y = addPara(pdf,'d) Informar todas as condições de saúde pessoais atuais que possam influenciar e interferir na segurança e realização dos passeios.',y,ind);
+  y = addPara(pdf,'e) Estar pronto, na recepção do hotel ou ponto de encontro, no horário informado no voucher do passeio compartilhado.',y,{...ind,after:14});
+  y = addArticle(pdf,'6. RESCISÃO, CANCELAMENTOS E REEMBOLSOS',y);
+  y = addPara(pdf,'6.1. O presente contrato poderá ser rescindido por qualquer uma das partes, mediante notificação à outra, por escrito e com envio ao correio eletrônico (e-mail) informado neste contrato e pela plataforma de vendas (Whatsapp número: +55 21 97215 4562), com prazo máximo de 48 (quarenta e oito) horas de antecedência a realização do primeiro passeio.',y);
+  y = addPara(pdf,'6.2. Pedidos de cancelamentos de passeios feitos com antecedência de 48 (quarenta e oito) horas ao horário do tour serão reembolsáveis 100% (cem por cento), após esse horário não haverá reembolso.',y);
+  y = addPara(pdf,'6.3. O prazo para pagamento do reembolso ou estorno de cobrança feita no cartão de crédito é de até 5 (cinco) dias úteis, contados da data do pedido de reembolso, que deverá ser feito através da plataforma de vendas (Whatsapp número: +56 9 8706 4691) com o fornecimento dos dados bancários para pagamento e o ‘de acordo’ com o valor a ser reembolsado.',y,{});
+  y = addPara(pdf,'6.4. Alguns dos serviços contratados podem envolver ingressos, tickets, reservas ou serviços de terceiros adquiridos antecipadamente pela CONTRATADA. Quando tais itens forem efetivamente adquiridos em condição não reembolsável pelo respectivo fornecedor, o valor correspondente ao item poderá ser retido em caso de cancelamento solicitado pela CONTRATANTE, limitado ao montante efetivamente não recuperável. Esta regra não afasta direitos de reembolso assegurados pela legislação aplicável nem se aplica a valores que possam ser recuperados junto ao respectivo fornecedor.',y,{size:10.7,lh:12.7});
+  y = addPara(pdf,'6.4.1. Os passeios sujeitos a essa condição estarão expressamente identificados no Quadro de Serviços Contratados deste instrumento com a indicação “TICKET/RESERVA NÃO REEMBOLSÁVEL APÓS EMISSÃO”.',y,{size:10.7,lh:12.7});
+  y = addArticle(pdf,'7. COMUNICAÇÕES E NOTIFICAÇÕES',y);
+  y = addPara(pdf,'7.1. Todos os avisos e comunicações entre as Partes, bem como aqueles que tenham efeito em relação ao Contrato, ainda que não expressamente previstos, serão enviados de forma digital através da plataforma de vendas.',y,{});
+}
+function addContractPage4(pdf,d) {
+  addPage(pdf); pageNo(pdf,4,5); let y=92;
+  y = addArticle(pdf,'8. CONDIÇÕES GERAIS',y);
+  y = addPara(pdf,'8.1. Eventuais inclusões de outras cláusulas, exclusões ou alterações das já existentes, serão consignadas em “Termo Aditivo”, por escrito, a ser devidamente assinado pelas Partes, que passará a fazer parte integrante deste Contrato.',y);
+  y = addPara(pdf,'8.2. As Partes declaram-se agindo de boa-fé, com lealdade e probidade, plenamente capazes civilmente, para levar a bom termo este contrato e para tê-lo como válido e eficaz.',y,{after:18});
+  y = addArticle(pdf,'9. DO FORO',y);
+  y = addPara(pdf,'9.1. As Partes elegem o foro da Comarca de Bauru/SP, com renúncia expressa a qualquer outro, por mais especial ou privilegiado que seja, para dirimir quaisquer controvérsias decorrentes do presente Contrato e sua execução.',y);
+  y = addPara(pdf,'E, por estarem assim justas e contratadas, as Partes assinam o presente Contrato, que será encaminhado de forma digital.',y);
+  y = addPara(pdf,'O presente contrato passa a vigorar entre as partes a partir da assinatura do mesmo.',y,{after:16});
+  const dataTexto = hojeExtenso();
+  const dateX = A4W/2 - 72;
+  setTimes(pdf,'normal',11.8);
+  pdf.text('Bauru/SP, ', dateX, y);
+  pdf.setTextColor(220,0,0);
+  pdf.text(dataTexto + '.', dateX + 56, y);
+  pdf.setTextColor(0,0,0);
+}
+
+function addContractPage5(pdf,d) {
+  addPage(pdf); pageNo(pdf,5,5); let y=78;
+  y = addArticle(pdf,'QUADRO DE SERVIÇOS CONTRATADOS E CIÊNCIA ESPECÍFICA',y);
+
+  const tours=Array.isArray(d.tours)?d.tours:[];
+  if(tours.length){
+    tours.forEach((t,idx)=>{
+      const date=t.date?(' • '+formatDateBR(t.date)):'';
+      const condition=t.ticketNonRefundable
+        ?'TICKET/RESERVA NÃO REEMBOLSÁVEL APÓS EMISSÃO'
+        :'Regra geral de cancelamento e reembolso do contrato';
+      y = addPara(pdf,`${idx+1}. ${t.name}${date}`,y,{bold:true,size:10.8,lh:12.8,after:2});
+      y = addPara(pdf,condition,y,{x:M.left+18,maxW:CONTENT_W-18,size:10.2,lh:12.0,after:8});
+      if(y>A4H-315){
+        addPage(pdf); y=78;
+        headerTitle(pdf,'QUADRO DE SERVIÇOS — CONTINUAÇÃO',y,12.5); y+=28;
+      }
+    });
+  } else {
+    y = addPara(pdf,'Os serviços contratados constam no comprovante de reserva (voucher) anexado a este contrato. Nenhuma classificação automática de ticket foi carregada porque o contrato foi aberto sem uma venda vinculada no ISA.',y,{size:10.6,lh:12.6,after:16});
+  }
+
+  const ticketTours=tours.filter(t=>t.ticketNonRefundable);
+  if(ticketTours.length){
+    y = addPara(pdf,'DECLARAÇÃO DE CIÊNCIA: A CONTRATANTE declara estar ciente de que os passeios acima identificados como “TICKET/RESERVA NÃO REEMBOLSÁVEL APÓS EMISSÃO” possuem componente adquirido antecipadamente de terceiro e sujeito às condições específicas de cancelamento descritas neste contrato.',y,{bold:true,size:10.2,lh:12.2,after:14});
+  }
+
+  if(d.acceptedAt){
+    y = addPara(pdf,`Aceite registrado neste documento em ${d.acceptedAt}.`,y,{size:10.2,lh:12.2,after:14});
+  }
+
+  setTimes(pdf,'bold',11.8); pdf.text('CONTRATADA:',M.left,y); y += 8;
+  const sigW = 190, sigH = 74;
+  const sigX = (A4W - sigW)/2;
+  pdf.addImage(ASSINATURA,'PNG',sigX,y,sigW,sigH); y += sigH + 2;
+  const lineW = 285, lineX = (A4W - lineW)/2;
+  pdf.setLineWidth(0.5); pdf.line(lineX,y,lineX+lineW,y); y += 12;
+  setTimes(pdf,'bold',11.2); pdf.text('TURISMO E TRANSPORTE INDOMITO LTDA',A4W/2,y,{align:'center'}); y += 14;
+  setTimes(pdf,'normal',11.2); pdf.text('Por: Felipe Sebastian Vidal Burgos',A4W/2,y,{align:'center'}); y += 14;
+  pdf.text('Diretor',A4W/2,y,{align:'center'}); y += 42;
+
+  setTimes(pdf,'bold',11.8); pdf.text('CONTRATANTE:',M.left,y); y += 8;
+  if(d.signatureData){
+    try{
+      pdf.addImage(d.signatureData,'PNG',(A4W-220)/2,y,220,75);
+      y += 78;
+    }catch(e){
+      y += 62;
+    }
+  } else {
+    y += 62;
+  }
+  const clineW = 305, clineX = (A4W - clineW)/2;
+  pdf.line(clineX,y,clineX+clineW,y); y += 15;
+  setTimes(pdf,'normal',11.2); pdf.text(d.nome,A4W/2,y,{align:'center'});
+}
+
+function formatDateBR(v){
+  if(!v)return '';
+  const m=String(v).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return m?`${m[3]}/${m[2]}/${m[1]}`:String(v);
+}
+
+
+async function fileTo
