@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Indômito Contract Manager — V10.5</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;color:#111}
+.app{max-width:1120px;margin:22px auto;padding:0 14px}
+.card{background:#fff;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.08);padding:22px;margin-bottom:22px}
+h1{margin:0 0 6px;font-size:26px} .sub{margin:0 0 18px;color:#555;line-height:1.35}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}
+.field{display:flex;flex-direction:column;gap:5px} label{font-weight:700;font-size:13px}
+input,textarea,select{border:1px solid #d1d5db;border-radius:9px;padding:10px 11px;font-size:15px} textarea{min-height:72px;resize:vertical}
+.full{grid-column:1/-1} .section-title{margin:20px 0 12px;font-size:17px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}
+.actions{display:flex;gap:12px;align-items:center;margin-top:18px;flex-wrap:wrap} button{border:0;border-radius:12px;padding:13px 18px;font-weight:800;cursor:pointer;font-size:15px}
+.primary{background:#111827;color:#fff} .secondary{background:#e5e7eb;color:#111} .status{color:#374151;font-size:14px}
+.note{font-size:13px;color:#555;background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:12px;line-height:1.4}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+
+
+.signature-panel{margin-top:10px;border:1px solid #d1d5db;border-radius:12px;padding:12px;background:#fafafa}
+.signature-pad{width:100%;height:190px;border:2px dashed #9ca3af;border-radius:10px;background:#fff;touch-action:none;display:block}
+.signature-tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;align-items:center}
+.ticket-preview{display:grid;gap:8px;margin-top:8px}
+.ticket-row{padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px;background:#fff}
+.ticket-row.alert{border-color:#f3c96a;background:#fff8e8}
+.ticket-chip{display:inline-block;border-radius:999px;padding:4px 8px;font-size:11px;font-weight:800;background:#fff1c2;color:#7a5200;margin-top:5px}
+.accept-box{display:flex;gap:9px;align-items:flex-start;margin-top:10px;padding:11px;border-radius:10px;background:#fff8e8;border:1px solid #f3c96a;font-size:13px;line-height:1.4}
+.accept-box input{margin-top:2px;transform:scale(1.15)}
+
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body>
+<div class="app">
+ <div class="card">
+  <h1>Indômito Contract Manager</h1>
+  <p class="sub">Contrato integrado ao ISA, com ciência específica de tickets, quadro de serviços e assinatura do contratante.</p>
+  <form id="form" onsubmit="return false;">
+   <div class="section-title">Dados do contratante</div>
+   <div class="grid">
+    <div class="field"><label>Nome completo</label><input id="nome" required value="Lucas Gonzaga Barros"></div>
+    <div class="field"><label>Nacionalidade</label><input id="nacionalidade" value="brasileiro"></div>
+    <div class="field"><label>Estado civil</label><input id="estadoCivil" value="casado"></div>
+    <div class="field"><label>Data de nascimento</label><input id="nascimento" placeholder="dd/mm/aaaa" value="11/07/1994"></div>
+    <div class="field"><label>CPF</label><input id="cpf" placeholder="000.000.000-00" value="097.840.614-14"></div>
+    <div class="field"><label>Telefone/WhatsApp</label><input id="telefone" placeholder="(00) 00000-0000" value="(81) 98700-6042"></div>
+    <div class="field full"><label>E-mail</label><input id="email" type="email" value="lucasgonzagabarros2025@gmail.com"></div>
+    <div class="field full"><label>Endereço completo</label><input id="endereco" placeholder="Rua, número, bairro, cidade/UF" value="Rua Hercílio Teixeira Lins 34A, CEP: 50910-560"></div>
+    <div class="field"><label>CEP</label><input id="cep" placeholder="00000-000" value="50910-560"></div>
+   </div>
+   <div class="section-title">Financeiro</div>
+   <div class="grid">
+    <div class="field"><label>Valor total</label><input id="valor" placeholder="R$ 0,00" value="R$ 2.000,00"></div>
+    <div class="field full"><label>Forma de pagamento / observação</label><textarea id="pagamento" placeholder="Ex.: Pagamento via PIX à vista em 06/07/2026">Pagamento via PIX à vista em 06/07/2026</textarea></div>
+   </div>
+
+   <div class="section-title">Passeios e condição de ticket</div>
+   <div class="note">Quando este contrato é aberto a partir de uma venda do ISA, os passeios são carregados automaticamente. Os itens identificados com ticket/reserva de terceiro serão destacados no PDF.</div>
+   <div id="servicesPreview" class="ticket-preview"><div class="ticket-row">Nenhuma venda vinculada. Os serviços continuarão constando no voucher anexado.</div></div>
+
+   <div class="section-title">Assinatura do contratante</div>
+   <div class="note">Opcional nesta versão. O cliente pode assinar com o dedo ou mouse antes da geração do PDF. Esta assinatura local não substitui, por si só, uma plataforma de assinatura remota com trilha completa de auditoria.</div>
+   <div class="signature-panel">
+    <canvas id="signaturePad" class="signature-pad"></canvas>
+    <div class="signature-tools">
+     <button type="button" class="secondary" id="clearSignature">Limpar assinatura</button>
+     <span class="status" id="signatureStatus">Sem assinatura.</span>
+    </div>
+    <label class="accept-box">
+     <input type="checkbox" id="aceiteContrato">
+     <span>O CONTRATANTE declara que leu o contrato e está ciente de que os passeios identificados no Quadro de Serviços como “TICKET/RESERVA NÃO REEMBOLSÁVEL APÓS EMISSÃO” possuem componente adquirido antecipadamente de terceiro, sujeito às condições específicas de cancelamento previstas neste instrumento.</span>
+    </label>
+   </div>
+
+   <div class="section-title">Anexos</div>
+   <div class="grid">
+    <div class="field"><label>Comprovante de pagamento</label><input id="comprovante" type="file" accept="application/pdf,image/png,image/jpeg,image/webp"></div>
+    <div class="field"><label>Voucher</label><input id="voucher" type="file" accept="application/pdf,image/png,image/jpeg,image/webp"></div>
+   </div>
+   <div class="actions">
+    <button type="button" class="primary" id="gerar">Gerar contrato PDF</button>
+    <button type="button" class="secondary" id="limpar">Limpar formulário</button>
+    <span class="status" id="status"></span>
+   </div>
+  </form>
+ </div>
+ <div class="card note">
+  <b>Nota técnica da V9:</b> preserva a geração direta no PDF da V8, com fonte Times, anexos em escala maior e assinatura ajustada ao padrão enviado.
+ </div>
+</div>
+
+
+
+
+
+
+<script>
+if (window.pdfjsLib) { pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; }
+const ASSINATURA = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAATIAAACgAQAAAACnZN2UAAADwUlEQVR42uVYwW7bRhB9uyYcHYqYOcVAgUqfkGMOAcRP8a3X/oHWf5A/sD6gBx9zSmkgQAL0YqA99aSiPhgpENCJgVAKzdeDJIq7O0NSNhCkyJ4k6nF25s2b2VkZwltpAWldWP/78hbyCnD/fhiG+3U0CMfzg0G4OlNgMF68q0OaIfG+B9yQfa+0bQPccfvLjVNxJ+0vf841HL1wfz/XcLUD8l2qjzXcHdCiZZ5quPfNCykAVBquoeW2BIBDDfdu++HTXwB1/hqHrn4EkCUariHsnXXwLVoxSy9NHvxmA5oJAJzgBLWnCRvQvF4ZskA51qe5eaEAYHIZt8ImH1WgHC0O06JIwLVrtwLUOK63nJWbBwsZd9l6eAgDZB3+Zd7OIm4eOlrIuLbqEz1eT0gEgImI26XturN+77znrsWPqqv4F+und73yDdlpj7200/ptIAWPauunF/7eQ+IAMBJxlwBQt/VUi7id2iaI+moLN/F+WPT451pKSCQcgzOh8JQh+cfOLNa+EJ9puLvOZHXyLL6yEqrHqfaSXnu3fkQTeM3fSkl3XfaCRJXdeasUEdq4uwyZI2B6cXNhb9efj8qPzWqySvvryHT5V7u94lWa6w5XDdSVkYpcyMcK9/SvlP0rJJkUMS7ptr93HV0HEq1HD7N3uT8vVpgHrVZjtpTfnXQ05xaOEbOLgfEey7hM6i9phKtDc7XCgVOLrrtvjGR7dz0JUONV/FuF/bR8mP6Kgbik5wC2ctdV4x2J+HJgHIcRLo+oS8V904HxupasrcCU1WQv2yM0fgJ7mSgBG36qowwkP4hvRHIuHqSXeIhYPMheGZ24ch3ZgfZiOediH0qiTpGKfW0RPxt5h48VvK4BYF4P4oXyOXMpH6lJp71Ro4BoPphHHc15F13Vv+X6Phrg4om02NxHA3uNnH/BqXlkjD0zT4FVS+UkyXpGkvxH+JtkvfI1Lmh2ZDndunK0xtlTY4zZpMO8no5JLoEkQ8XqiCVujNcCfv7t6AtJjkkuyZKsuJiS/OwwbfYtuF1nJEvyb7LKNs5VUzK38vByNmGS/7T+fJA38d409sYkSxYAMONubex9DC9cY2ek+6rfnZMlFjPx/Ahn4llEuNjnn9TKvXGnn8lpguoxeu1dXMBgptTvKt2VxTRXCobkcrzlqTwg3z5va6jN37LRY/kCeP7G9c5Df3T2l93feW+6+1Cz0auBc1iu3YCtLytq07sFgMf7zHr3nZ+/D1ym3DJFe7l2Vvy/eDHfet4WX33fei977v77/ge+X4Q6R/45VwAAAABJRU5ErkJggg==';
+
+const $ = id => document.getElementById(id);
+const val = id => ($(id).value || '').trim();
+const A4W = 595.28, A4H = 841.89;
+const M = { left: 56, right: 56, top: 68, bottom: 58 };
+const CONTENT_W = A4W - M.left - M.right;
+function hojeExtenso() {
+  const d = new Date();
+  const meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  return `${String(d.getDate()).padStart(2,'0')} de ${meses[d.getMonth()]} de ${d.getFullYear()}`;
+}
+function safeName(s) { return (s||'Cliente').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9 ]/gi,'').trim().replace(/\s+/g,' '); }
+function setTimes(pdf, style='normal', size=11.8) { pdf.setFont('times', style); pdf.setFontSize(size); }
+function pageNo(pdf, n, total=4) { setTimes(pdf,'normal',11.5); pdf.text(`Pág. ${n} de ${total}`, A4W - M.right, 55, {align:'right'}); }
+function headerTitle(pdf, txt, y, size=13.8) { setTimes(pdf,'bold',size); pdf.text(txt, A4W/2, y, {align:'center'}); }
+
+function addWrapped(pdf, text, x, y, maxW=CONTENT_W, opts={}) {
+  const size = opts.size || 11.8;
+  // V10: aumenta levemente o espaçamento vertical sem alterar a assinatura nem o voucher.
+  const lh = opts.lh || 15.0;
+  setTimes(pdf, opts.bold?'bold':'normal', size);
+  const lines = pdf.splitTextToSize(text, maxW);
+  pdf.text(lines, x, y, {lineHeightFactor: lh/size, align: opts.align || 'left'});
+  return y + (lines.length * lh) + (opts.after ?? 6);
+}
+function addPara(pdf, text, y, opts={}) { return addWrapped(pdf, text, opts.x || M.left, y, opts.maxW || CONTENT_W, {size: opts.size||11.8, lh: opts.lh||14.2, bold: opts.bold||false, after: opts.after ?? 8}); }
+function addArticle(pdf, text, y) { headerTitle(pdf, text, y, 13.2); return y + 24; }
+function addPage(pdf) { pdf.addPage('a4','portrait'); }
+
+function addContractPage1(pdf, d) {
+  pageNo(pdf,1,5); let y=112; headerTitle(pdf,'CONTRATO DE PRESTAÇÃO DE SERVIÇOS',y,14.2); y += 34;
+  y = addPara(pdf,'Pelo presente instrumento particular, de um lado como CONTRATADA:',y);
+  y = addPara(pdf,'TURISMO E TRANSPORTE INDOMITO LTDA pessoa jurídica de direito privado, inscrita no CNPJ sob nº 52.985.331/0001-21, com endereço à Rua José Versolato, nº 101, Sao Bernardo do Campo/SP, CEP 09.750-730, neste ato representada pelo seu sócio administrador FELIPE SEBASTIAN VIDAL BURGOS, Chileno, solteiro, inscrito no CPF sob nº CPF: 057.047.741-72 e e-mail felipe@indomitotours.cl.',y,{bold:false,after:8});
+  y = addPara(pdf,'E de outro lado, como CONTRATANTE:',y);
+  y = addPara(pdf,`${d.nome}, ${d.nacionalidade}, ${d.estadoCivil}, inscrito(a) no CPF sob nº ${d.cpf}, com domicílio na ${d.endereco}, com telefone sob nº ${d.telefone} e e-mail ${d.email}.`,y,{after:9});
+  y = addPara(pdf,'As partes acima identificadas têm, entre si, justo e acertado o presente “Contrato de Prestação de Serviços” (“Contrato”), segundo as disposições a seguir:',y,{after:14});
+  y = addArticle(pdf,'1. DO OBJETO DO CONTRATO',y);
+  y = addPara(pdf,'1.1. O presente Contrato tem como objeto a aquisição de passeios turísticos para as datas, destinos e quantidades de pessoas estabelecidas no comprovante de reserva (Anexo 1 do presente contrato).',y);
+  y = addPara(pdf,'1.2. A CONTRATADA é uma agência de viagem com sede no Brasil e também com registro no Chile¹ que vende passeios turísticos em território Chileno e Argentino. Os passeios ora contratados são para o destino: Chile e serão realizados sob a execução e/ou supervisão da CONTRATADA.',y);
+  y = addPara(pdf,'1.3. A CONTRATANTE é pessoa física, responsável pela reserva e aquisição dos passeios.',y,{after:14});
+  y = addArticle(pdf,'2. DOS SERVIÇOS CONTRATADOS',y);
+  y = a
