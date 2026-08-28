@@ -1,0 +1,126 @@
+e:E('sellerNameInput').value.trim(),phone:E('sellerPhoneInput').value.trim(),email:E('sellerEmailInput').value.trim(),team:E('sellerTeamInput').value.trim(),notes:E('sellerNotesInput').value.trim(),avatarPath:db.sellerProfile?.avatarPath||''};db.seller=db.sellerProfile.name;save();if(user){const{error}=await sb.from('profiles').update({full_name:db.sellerProfile.name,email:db.sellerProfile.email||user.email,phone_original:db.sellerProfile.phone,team:db.sellerProfile.team,notes:db.sellerProfile.notes,avatar_path:db.sellerProfile.avatarPath||null}).eq('id',user.id);if(error)return alert(error.message);await sb.auth.updateUser({data:{full_name:db.sellerProfile.name}})}alert('Perfil salvo.')};
+async function avatarBlob(f){const b=await createImageBitmap(f),s=Math.min(1,500/Math.max(b.width,b.height)),c=document.createElement('canvas');c.width=Math.round(b.width*s);c.height=Math.round(b.height*s);c.getContext('2d').drawImage(b,0,0,c.width,c.height);b.close();return await new Promise(r=>c.toBlob(r,'image/jpeg',.82))}
+window.uploadProfilePhoto=async ev=>{const f=ev.target.files?.[0];if(!f||!user)return;try{const path=user.id+'/avatar.jpg',blob=await avatarBlob(f),{error}=await sb.storage.from('profile-photos').upload(path,blob,{upsert:true,contentType:'image/jpeg'});if(error)throw error;db.sellerProfile=db.sellerProfile||{};db.sellerProfile.avatarPath=path;save();await sb.from('profiles').update({avatar_path:path}).eq('id',user.id);await loadAvatar()}catch(e){alert(e.message)}finally{ev.target.value=''}};
+window.removeProfilePhoto=async()=>{if(!user)return;const p=db.sellerProfile?.avatarPath;if(p)await sb.storage.from('profile-photos').remove([p]);if(db.sellerProfile)db.sellerProfile.avatarPath='';save();await sb.from('profiles').update({avatar_path:null}).eq('id',user.id);applyAvatar('')};
+function applyAvatar(url){const ini=(db.sellerProfile?.name||db.seller||user?.email||'V').trim().charAt(0).toUpperCase();[E('profileAvatarPreview'),E('avatar')].forEach(x=>{if(!x)return;if(url){x.style.backgroundImage=`url("${url}")`;x.style.backgroundSize='cover';x.style.backgroundPosition='center';x.textContent=''}else{x.style.backgroundImage='';x.textContent=ini}})}
+async function loadAvatar(){const p=db.sellerProfile?.avatarPath;if(!p)return applyAvatar('');const{data,error}=await sb.storage.from('profile-photos').createSignedUrl(p,3600);applyAvatar(error?'':data.signedUrl)}
+const oldRender=window.renderAll;window.renderAll=function(){oldRender();if(user)loadAvatar()};
+
+window.uploadSaleAttachment=async saleId=>{if(!sb||!user)return alert('Faça login novamente.');const s=db.sales.find(x=>x.id===saleId);if(!s)return;normalizeSaleV8(s);const input=E('attachmentFile_'+saleId),kind=E('attachmentKind_'+saleId).value,file=input.files?.[0];if(!file)return alert('Escolha um arquivo.');if(file.size>20*1024*1024)return alert('O arquivo deve ter no máximo 20 MB.');const safe=file.name.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9._-]/g,'_'),path=user.id+'/'+saleId+'/'+Date.now()+'_'+safe;try{const{error}=await sb.storage.from('attachments').upload(path,file,{contentType:file.type||'application/octet-stream'});if(error)throw error;s.attachments.push({kind,name:file.name,path,size:file.size,mime:file.type||'',createdAt:new Date().toISOString()});if(kind==='voucher'){s.voucherFile=file.name;s.reservationDone=true}if(kind==='contract')s.contractFile=file.name;addHistory(s,attachmentLabel(kind)+' anexado: '+file.name);save();openDetail(saleId)}catch(e){alert('Erro ao anexar: '+e.message)}};
+window.openSaleAttachment=async(saleId,index)=>{const s=db.sales.find(x=>x.id===saleId),a=s?.attachments?.[index];if(!a)return;const{data,error}=await sb.storage.from('attachments').createSignedUrl(a.path,300);if(error)return alert(error.message);window.open(data.signedUrl,'_blank')};
+window.deleteSaleAttachment=async(saleId,index)=>{const s=db.sales.find(x=>x.id===saleId),a=s?.attachments?.[index];if(!a||!confirm('Excluir este arquivo?'))return;const{error}=await sb.storage.from('attachments').remove([a.path]);if(error)return alert(error.message);s.attachments.splice(index,1);if(a.kind==='voucher'&&!s.attachments.some(x=>x.kind==='voucher'))s.voucherFile='';addHistory(s,'Arquivo excluído: '+a.name);save();openDetail(saleId)};
+async function boot(){
+ if(!init())return;
+
+ const params=new URLSearchParams(location.search);
+ const hashParams=new URLSearchParams(location.hash.replace(/^#/,''));
+
+ const openRecovery=()=>{
+  E('authScreen').style.display='none';
+  E('recoveryScreen').classList.add('open');
+  E('recoveryScreen').setAttribute('aria-hidden','false');
+  recoveryMsg('Link confirmado. Defina sua nova senha.',true);
+ };
+
+ // IMPORTANTE: o listener entra imediatamente após createClient, antes de getSession().
+ // O Supabase usa PASSWORD_RECOVERY para distinguir este acesso de um login normal.
+ sb.auth.onAuthStateChange((event,s)=>setTimeout(async()=>{
+  if(event==='PASSWORD_RECOVERY'){
+   recoveryLanding=true;
+   openRecovery();
+   return;
+  }
+  // Se a URL original já identificava recuperação, não deixa a sessão normal
+  // esconder a tela de nova senha enquanto o Supabase termina de processar o link.
+  if(recoveryLanding && s){
+   openRecovery();
+   return;
+  }
+  await session(s);
+ },0));
+
+ if(params.get('confirmed')==='1')msg('E-mail confirmado. Você já pode entrar.',true);
+
+ const authError=params.get('error_description')||hashParams.get('error_description');
+ if(authError){
+  msg(decodeURIComponent(authError.replace(/\+/g,' ')));
+ }
+
+ const {data,error}=await sb.auth.getSession();
+ if(error){
+  msg('Não foi possível validar o link de acesso: '+error.message);
+  return;
+ }
+
+ // Fallback: se o listener não disparar por alguma particularidade do navegador,
+ // a URL original + uma sessão válida ainda levam à tela correta.
+ if(recoveryLanding && data.session){
+  openRecovery();
+ }else{
+  await session(data.session);
+ }
+}
+
+// ===== ISA V10.5 — ADMINISTRAÇÃO =====
+let adminCache={profiles:[],states:[],members:[],selectedId:null,loadedAt:null};
+
+function applyAdminAccess(){
+ const btn=E('adminMenuButton');
+ const isAdmin=window.ISA_ROLE==='admin'&&window.ISA_ACTIVE!==false&&window.ISA_STATUS!=='blocked';
+ if(btn)btn.style.display=isAdmin?'':'none';
+ if(!isAdmin&&document.querySelector('.view#admin.active')){
+  if(typeof window.goV23==='function')window.goV23('inicio');else if(typeof go==='function')go('inicio');
+ }
+}
+window.applyAdminAccess=applyAdminAccess;
+
+function admEsc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function admMoney(c){return (Number(c||0)/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
+function admDateTime(v){if(!v)return'Sem sincronização';try{return new Date(v).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}catch(e){return String(v)}}
+function admTomorrowISO(){const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()+1);return[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')}
+function admActiveSale(s){return s&&s.status!=='Cancelado'}
+function admActiveTour(t){return t&&!t.cancelled&&t.cancelChecked!==true}
+function admSummary(state){
+ const sales=Array.isArray(state?.sales)?state.sales:[],active=sales.filter(admActiveSale),tomorrow=admTomorrowISO();
+ const sold=active.reduce((a,s)=>a+Number(s.valueCents||0),0),received=active.reduce((a,s)=>a+Number(s.paidCents||0),0),commission=active.reduce((a,s)=>a+Number(s.commissionCents||0),0);
+ const tomorrowTours=active.flatMap(s=>(Array.isArray(s.tours)?s.tours:[]).filter(t=>admActiveTour(t)&&t.date===tomorrow));
+ return{sales:active.length,sold,received,commission,tomorrow:tomorrowTours.length,contracts:active.filter(s=>!s.contractSent).length,schedules:tomorrowTours.filter(t=>!t.messageSent).length};
+}
+function rebuildAdminMembers(){
+ adminCache.members=adminCache.profiles.map(p=>{const row=adminCache.states.find(s=>String(s.user_id)===String(p.id)),state=row?.state&&typeof row.state==='object'?row.state:{sales:[]};return{...p,state,stateUpdatedAt:row?.updated_at||null,summary:admSummary(state)}});
+}
+
+window.loadAdminPanel=async function(force=false){
+ if(window.ISA_ROLE!=='admin')return;
+ const section=E('admin');if(section)section.classList.add('admin-refreshing');
+ try{
+  const[pr,st]=await Promise.all([
+   sb.from('profiles').select('id,email,full_name,phone_original,team,role,status,active,created_at,updated_at').order('created_at',{ascending:true}),
+   sb.from('app_state').select('user_id,state,updated_at').order('updated_at',{ascending:false})
+  ]);
+  if(pr.error)throw pr.error;if(st.error)throw st.error;
+  adminCache.profiles=Array.isArray(pr.data)?pr.data:[];adminCache.states=Array.isArray(st.data)?st.data:[];adminCache.loadedAt=new Date().toISOString();rebuildAdminMembers();
+  if(!adminCache.selectedId){const first=adminCache.members.find(m=>m.role==='seller')||adminCache.members[0];adminCache.selectedId=first?.id||null}
+  if(adminCache.selectedId&&!adminCache.members.some(m=>String(m.id)===String(adminCache.selectedId)))adminCache.selectedId=adminCache.members[0]?.id||null;
+  renderAdminDashboard();
+ }catch(err){
+  const text='Não foi possível carregar a equipe: '+String(err?.message||err);
+  if(E('adminUsersList'))E('adminUsersList').innerHTML=`<div class="admin-empty">${admEsc(text)}</div>`;
+  if(E('adminSellerDetail'))E('adminSellerDetail').innerHTML='<div class="admin-empty">Seu perfil foi reconhecido como administrador, mas o Supabase não liberou a leitura gerencial. Confira as políticas de profiles e app_state.</div>';
+ }finally{if(section)section.classList.remove('admin-refreshing')}
+};
+
+window.renderAdminDashboard=function(){
+ const members=adminCache.members||[],all=members.reduce((a,m)=>{a.sales+=m.summary.sales;a.sold+=m.summary.sold;a.commission+=m.summary.commission;a.tomorrow+=m.summary.tomorrow;a.contracts+=m.summary.contracts;a.schedules+=m.summary.schedules;return a},{sales:0,sold:0,commission:0,tomorrow:0,contracts:0,schedules:0});
+ if(E('admUsers'))E('admUsers').textContent=members.length;if(E('admActiveSellers'))E('admActiveSellers').textContent=members.filter(m=>m.role==='seller'&&m.active!==false&&m.status!=='blocked').length;
+ if(E('admSales'))E('admSales').textContent=all.sales;if(E('admSold'))E('admSold').textContent=admMoney(all.sold);if(E('admCommission'))E('admCommission').textContent=admMoney(all.commission);
+ if(E('admTomorrow'))E('admTomorrow').textContent=all.tomorrow;if(E('admContracts'))E('admContracts').textContent=all.contracts;if(E('admSchedules'))E('admSchedules').textContent=all.schedules;
+ renderAdminUsers();renderAdminSellerDetail();
+};
+
+window.renderAdminUsers=function(){
+ const box=E('adminUsersList');if(!box)return;
+ const q=(E('adminUserSearch')?.value||'').trim().toLowerCase(),filter=E('adminUserFilter')?.value||'';
+ const rows=(adminCache.members||[]).filter(m=>{const hay=((m.full_name||'')+' '+(m.email||'')+' '+(m.team||'')).toLowerCase();if(q&&!hay.includes(q))return false;if(filter==='seller'&&m.role!=='seller')return false;if(filter==='admin'&&m.role!=='admin')return false;if(filter==='blocked'&&m.active!==false&&m.status!=='blocked')return false;return true});
+ if(!rows.length){box.innerHTML='<div class="admin-empty">Nenhuma conta encontrada.</div>';return}
+ box.innerHTML=rows.map(m=>{const selected=String(m.id)===String(adminCache.selectedId),blocked=m.active===false||m.status==='blocked';return `<div class="admin-user ${selected?'selected':''}"><div class="admin-user-head"><div><div class="admin-user-name">${admEsc(m.full_name||m.state?.seller||'Sem nome')}</div><div class="admin-user-email">${admEsc(m.email||'')}</div>${m.team?`<div class="admin-user-email">Equipe: ${admEsc(m.team)}</div>`:''}</div><div class="admin-badges"><span class="admin-role ${m.role==='seller'?'seller':''}">${m.role==='admin'?'👑 Administrador':'● Vendedor'}</span><span class="admin-status ${blocked?'blocked':'active'}">${blocked?'
