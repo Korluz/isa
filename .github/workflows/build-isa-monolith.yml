@@ -33,11 +33,32 @@ jobs:
           echo "index.html: $(wc -c < index.html) bytes"
           echo "contrato.html: $(wc -c < contrato.html) bytes"
 
+      - name: Repair transfer boundaries and stamp release
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          repairs={
+            "setInterval(()=>show(idx+1)%HEROES.length),6500);":"setInterval(()=>show((idx+1)%HEROES.length),6500);",
+            "Cloud V10.5</title>":"Cloud V10.5.3</title>",
+            ">v10.5.0</div>":">v10.5.3</div>",
+            "v10.5.0 ⚠ erro:":"v10.5.3 ⚠ erro:"
+          }
+          for old,new in repairs.items():
+              s=s.replace(old,new)
+          p.write_text(s,encoding='utf-8')
+          c=Path('contrato.html')
+          cs=c.read_text(encoding='utf-8').replace('Contract Manager — V10.5','Contract Manager — V10.5.3')
+          c.write_text(cs,encoding='utf-8')
+          PY
+
       - name: Validate inline JavaScript
         shell: bash
         run: |
           python3 - <<'PY'
-          import re, pathlib, subprocess, tempfile
+          import re, pathlib, subprocess
           for filename in ('index.html','contrato.html'):
               html = pathlib.Path(filename).read_text(encoding='utf-8')
               blocks = re.findall(r'<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)</script>', html, flags=re.I)
@@ -62,5 +83,5 @@ jobs:
             echo 'Monolithic files already up to date.'
             exit 0
           fi
-          git commit -m 'Build ISA monolithic files'
+          git commit -m 'Build ISA V10.5.3 monolithic files'
           git push
