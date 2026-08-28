@@ -1,0 +1,78 @@
+recepção do hotel ou ponto de encontro, no horário informado no voucher do passeio compartilhado.'
+  ]],
+  ['6. RESCISÃO, CANCELAMENTOS E REEMBOLSOS',[
+   '6.1. O presente contrato poderá ser rescindido por qualquer uma das partes, mediante notificação à outra, por escrito e com envio ao correio eletrônico (e-mail) informado neste contrato e pela plataforma de vendas (Whatsapp número: +55 21 97215 4562), com prazo máximo de 48 (quarenta e oito) horas de antecedência a realização do primeiro passeio.',
+   '6.2. Pedidos de cancelamentos de passeios feitos com antecedência de 48 (quarenta e oito) horas ao horário do tour serão reembolsáveis 100% (cem por cento), após esse horário não haverá reembolso.',
+   '6.3. O prazo para pagamento do reembolso ou estorno de cobrança feita no cartão de crédito é de até 5 (cinco) dias úteis, contados da data do pedido de reembolso, que deverá ser feito através da plataforma de vendas (Whatsapp número: +56 9 8706 4691) com o fornecimento dos dados bancários para pagamento e o ‘de acordo’ com o valor a ser reembolsado.',
+   '6.4. Alguns dos serviços contratados podem envolver ingressos, tickets, reservas ou serviços de terceiros adquiridos antecipadamente pela CONTRATADA. Quando tais itens forem efetivamente adquiridos em condição não reembolsável pelo respectivo fornecedor, o valor correspondente ao item poderá ser retido em caso de cancelamento solicitado pela CONTRATANTE, limitado ao montante efetivamente não recuperável. Esta regra não afasta direitos de reembolso assegurados pela legislação aplicável nem se aplica a valores que possam ser recuperados junto ao respectivo fornecedor.',
+   '6.4.1. Os passeios sujeitos a essa condição estarão expressamente identificados no Quadro de Serviços Contratados deste instrumento com a indicação “TICKET/RESERVA NÃO REEMBOLSÁVEL APÓS EMISSÃO”.'
+  ]],
+  ['7. COMUNICAÇÕES E NOTIFICAÇÕES',['7.1. Todos os avisos e comunicações entre as Partes, bem como aqueles que tenham efeito em relação ao Contrato, ainda que não expressamente previstos, serão enviados de forma digital através da plataforma de vendas.']],
+  ['8. CONDIÇÕES GERAIS',[
+   '8.1. Eventuais inclusões de outras cláusulas, exclusões ou alterações das já existentes, serão consignadas em “Termo Aditivo”, por escrito, a ser devidamente assinado pelas Partes, que passará a fazer parte integrante deste Contrato.',
+   '8.2. As Partes declaram-se agindo de boa-fé, com lealdade e probidade, plenamente capazes civilmente, para levar a bom termo este contrato e para tê-lo como válido e eficaz.'
+  ]],
+  ['9. DO FORO',['9.1. As Partes elegem o foro da Comarca de Bauru/SP, com renúncia expressa a qualquer outro, por mais especial ou privilegiado que seja, para dirimir quaisquer controvérsias decorrentes do presente Contrato e sua execução.']]
+ ];
+ const closing=['E, por estarem assim justas e contratadas, as Partes assinam o presente Contrato, que será encaminhado de forma digital.','O presente contrato passa a vigorar entre as partes a partir da assinatura do mesmo.'];
+ return {intro,sections,closing};
+}
+function contractPayload(){const d=collectData(),legal=getContractLegalPackage(d);return{contractVersion:'10.6.0',legalVersion:'INDOMITO-2026-08-V1',saleId:String(window.contractSaleId||''),nome:d.nome,nacionalidade:d.nacionalidade,estadoCivil:d.estadoCivil,cpf:d.cpf,nascimento:d.nascimento,telefone:d.telefone,email:d.email,endereco:d.endereco,cep:d.cep,valor:d.valor,pagamento:d.pagamento,tours:d.tours,legalIntro:legal.intro,legalSections:legal.sections,legalClosing:legal.closing,createdAt:new Date().toISOString()}}
+function setRemoteState(text,ok=false){const e=document.getElementById('remoteSignState');if(e){e.textContent=text;e.style.color=ok?'#15803d':'#374151'}}
+function signaturePageUrl(token){return location.origin+location.pathname.replace(/contrato\.html$/,'assinatura.html')+'?t='+encodeURIComponent(token)}
+window.createRemoteSignatureRequest=async function(){
+ if(!contractSb)return alert('Supabase não carregou. Confira a internet.');
+ const p=contractPayload();if(!p.nome||!p.cpf)return alert('Preencha pelo menos nome e CPF do contratante antes de criar o link.');
+ const{data:session}=await contractSb.auth.getSession();if(!session?.session)return alert('Sua sessão do ISA não foi encontrada. Abra este contrato a partir do ISA já logado.');
+ setRemoteState('Criando link seguro...');
+ const{data,error}=await contractSb.rpc('create_contract_signature_request',{p_sale_id:p.saleId||'avulso',p_payload:p,p_expires_days:14});
+ if(error){setRemoteState('Não foi possível criar o link.');return alert('Assinatura remota ainda não está ativada no Supabase ou ocorreu um erro: '+error.message)}
+ const row=Array.isArray(data)?data[0]:data,token=row?.token,id=row?.id;if(!token)return alert('O Supabase não retornou o token do contrato.');
+ const link=signaturePageUrl(token);window.currentSignatureRequestId=id;window.currentSignatureLink=link;
+ const out=document.getElementById('signatureLinkOutput');out.value=link;out.style.display='block';document.getElementById('copySignatureLink').style.display='inline-block';document.getElementById('whatsappSignatureLink').style.display='inline-block';setRemoteState('Link criado. Válido por 14 dias.',true);
+};
+window.copyCurrentSignatureLink=async function(){if(!window.currentSignatureLink)return;try{await navigator.clipboard.writeText(window.currentSignatureLink);alert('Link copiado.')}catch(e){prompt('Copie o link:',window.currentSignatureLink)}};
+window.openCurrentSignatureWhatsApp=async function(){if(!window.currentSignatureLink)return;try{if(window.currentSignatureRequestId)await contractSb.from('contract_signature_requests').update({status:'sent'}).eq('id',window.currentSignatureRequestId)}catch(e){}let d=val('telefone').replace(/\D/g,'');if(d&&!d.startsWith('55')&&(d.length===10||d.length===11))d='55'+d;const msg=`Olá, ${val('nome')}! 😊 Seu contrato está pronto para conferência e assinatura eletrônica. Abra o link abaixo, leia o documento e assine pelo próprio celular:\n\n${window.currentSignatureLink}`;window.open(d?`https://wa.me/${d}?text=${encodeURIComponent(msg)}`:`https://wa.me/?text=${encodeURIComponent(msg)}`,'_blank')};
+async function loadSignedRequestFromQuery(){
+ const id=new URLSearchParams(location.search).get('request');if(!id||!contractSb)return;
+ const{data,error}=await contractSb.from('contract_signature_requests').select('*').eq('id',id).maybeSingle();if(error||!data)return;
+ const p=data.payload||{},put=(id,v)=>{const e=document.getElementById(id);if(e&&v!=null)e.value=String(v)};put('nome',p.nome);put('nacionalidade',p.nacionalidade);put('estadoCivil',p.estadoCivil);put('cpf',p.cpf);put('nascimento',p.nascimento);put('telefone',p.telefone);put('email',p.email);put('endereco',p.endereco);put('cep',p.cep);put('valor',p.valor);put('pagamento',p.pagamento);window.contractTours=Array.isArray(p.tours)?p.tours:[];window.contractSaleId=p.saleId||data.sale_id||'';renderContractServices();
+ if(data.status==='signed'){window.remoteSignatureData=data.signature_data||null;window.remoteAcceptedAt=data.signed_at?new Date(data.signed_at).toLocaleString('pt-BR'):'';window.remoteSignatureProtocol=data.id;window.remotePayloadHash=data.payload_hash||'';setRemoteState('Contrato assinado eletronicamente. Gere o PDF final para arquivar/enviar.',true);document.getElementById('createSignatureLink').style.display='none'}
+}
+window.addEventListener('DOMContentLoaded',()=>{renderContractServices();document.getElementById('createSignatureLink')?.addEventListener('click',createRemoteSignatureRequest);document.getElementById('copySignatureLink')?.addEventListener('click',copyCurrentSignatureLink);document.getElementById('whatsappSignatureLink')?.addEventListener('click',openCurrentSignatureWhatsApp);loadSignedRequestFromQuery()});
+</script>
+
+<script>
+window.addEventListener('DOMContentLoaded',()=>{
+  try{
+    const raw=localStorage.getItem('isa_contract_handoff');
+    if(!raw) return;
+    const d=JSON.parse(raw);
+    const put=(id,v)=>{
+      const el=document.getElementById(id);
+      if(el && v!==undefined && v!==null){
+        el.value=String(v);
+        el.dispatchEvent(new Event('input',{bubbles:true}));
+        el.dispatchEvent(new Event('change',{bubbles:true}));
+      }
+    };
+    put('nome',d.nome);
+    put('telefone',d.telefone);
+    put('email',d.email);
+    put('endereco',d.endereco);
+    put('valor',d.valor);
+    put('pagamento',d.pagamento);
+    window.contractSaleId=d.saleId||'';
+    window.contractTours=Array.isArray(d.tours)?d.tours:[];
+    if(typeof renderContractServices==='function')renderContractServices();
+
+    // Preserve the handoff only long enough to fill this contract.
+    localStorage.removeItem('isa_contract_handoff');
+  }catch(e){
+    console.warn('Não foi possível preencher o contrato automaticamente.',e);
+  }
+});
+</script>
+
+</body>
+</html>
