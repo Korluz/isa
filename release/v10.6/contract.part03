@@ -1,0 +1,77 @@
+H = 841.89;
+const M = { left: 56, right: 56, top: 68, bottom: 58 };
+const CONTENT_W = A4W - M.left - M.right;
+function hojeExtenso() {
+  const d = new Date();
+  const meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  return `${String(d.getDate()).padStart(2,'0')} de ${meses[d.getMonth()]} de ${d.getFullYear()}`;
+}
+function safeName(s) { return (s||'Cliente').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9 ]/gi,'').trim().replace(/\s+/g,' '); }
+function setTimes(pdf, style='normal', size=11.8) { pdf.setFont('times', style); pdf.setFontSize(size); }
+function pageNo(pdf, n, total=4) { setTimes(pdf,'normal',11.5); pdf.text(`Pág. ${n} de ${total}`, A4W - M.right, 55, {align:'right'}); }
+function headerTitle(pdf, txt, y, size=13.8) { setTimes(pdf,'bold',size); pdf.text(txt, A4W/2, y, {align:'center'}); }
+
+function addWrapped(pdf, text, x, y, maxW=CONTENT_W, opts={}) {
+  const size = opts.size || 11.8;
+  // V10: aumenta levemente o espaçamento vertical sem alterar a assinatura nem o voucher.
+  const lh = opts.lh || 15.0;
+  setTimes(pdf, opts.bold?'bold':'normal', size);
+  const lines = pdf.splitTextToSize(text, maxW);
+  pdf.text(lines, x, y, {lineHeightFactor: lh/size, align: opts.align || 'left'});
+  return y + (lines.length * lh) + (opts.after ?? 6);
+}
+function addPara(pdf, text, y, opts={}) { return addWrapped(pdf, text, opts.x || M.left, y, opts.maxW || CONTENT_W, {size: opts.size||11.8, lh: opts.lh||14.2, bold: opts.bold||false, after: opts.after ?? 8}); }
+function addArticle(pdf, text, y) { headerTitle(pdf, text, y, 13.2); return y + 24; }
+function addPage(pdf) { pdf.addPage('a4','portrait'); }
+
+function addContractPage1(pdf, d) {
+  pageNo(pdf,1,5); let y=112; headerTitle(pdf,'CONTRATO DE PRESTAÇÃO DE SERVIÇOS',y,14.2); y += 34;
+  y = addPara(pdf,'Pelo presente instrumento particular, de um lado como CONTRATADA:',y);
+  y = addPara(pdf,'TURISMO E TRANSPORTE INDOMITO LTDA pessoa jurídica de direito privado, inscrita no CNPJ sob nº 52.985.331/0001-21, com endereço à Rua José Versolato, nº 101, Sao Bernardo do Campo/SP, CEP 09.750-730, neste ato representada pelo seu sócio administrador FELIPE SEBASTIAN VIDAL BURGOS, Chileno, solteiro, inscrito no CPF sob nº CPF: 057.047.741-72 e e-mail felipe@indomitotours.cl.',y,{bold:false,after:8});
+  y = addPara(pdf,'E de outro lado, como CONTRATANTE:',y);
+  y = addPara(pdf,`${d.nome}, ${d.nacionalidade}, ${d.estadoCivil}, inscrito(a) no CPF sob nº ${d.cpf}, com domicílio na ${d.endereco}, com telefone sob nº ${d.telefone} e e-mail ${d.email}.`,y,{after:9});
+  y = addPara(pdf,'As partes acima identificadas têm, entre si, justo e acertado o presente “Contrato de Prestação de Serviços” (“Contrato”), segundo as disposições a seguir:',y,{after:14});
+  y = addArticle(pdf,'1. DO OBJETO DO CONTRATO',y);
+  y = addPara(pdf,'1.1. O presente Contrato tem como objeto a aquisição de passeios turísticos para as datas, destinos e quantidades de pessoas estabelecidas no comprovante de reserva (Anexo 1 do presente contrato).',y);
+  y = addPara(pdf,'1.2. A CONTRATADA é uma agência de viagem com sede no Brasil e também com registro no Chile¹ que vende passeios turísticos em território Chileno e Argentino. Os passeios ora contratados são para o destino: Chile e serão realizados sob a execução e/ou supervisão da CONTRATADA.',y);
+  y = addPara(pdf,'1.3. A CONTRATANTE é pessoa física, responsável pela reserva e aquisição dos passeios.',y,{after:14});
+  y = addArticle(pdf,'2. DOS SERVIÇOS CONTRATADOS',y);
+  y = addPara(pdf,'2.1. São considerados serviços contratados todos aqueles listados no comprovante de reserva (Anexo 1 do presente contrato). Sendo que o detalhamento do que está incluso ou não nos respectivos passeios se encontram no Portfólio da CONTRATADA (versão vigente da data da compra dos passeios).',y);
+  y = addPara(pdf,'2.2. Todos os passeios estão sujeitos a alteração de data e horário, dependendo das condições climáticas existentes no momento da prestação dos serviços, bem como das regras e condições impostas pelos estabelecimentos de terceiros em que seja imprescindível o funcionamento para a realização do passeio. Caso o passeio já tenha iniciado, alterações de rota poderão ser feitas, caso ocorram imprevistos.',y);
+  y = addPara(pdf,'2.3. Por motivos externos, caso haja cancelamento ou alteração de disponibilidade de passeios, a CONTRATADA resguarda o direito de propor mudanças nos serviços contratados, que poderão ou não',y,{after:0});
+  setTimes(pdf,'normal',9); pdf.text('¹ Contribuinte n.77.461.454-0 Turismo y Transportes Indomito SPA.', M.left, A4H-58);
+}
+function addContractPage2(pdf,d) {
+  addPage(pdf); pageNo(pdf,2,5); let y=92;
+  y = addPara(pdf,'ser aceitas pela CONTRATANTE. No caso de não consentimento pelas alterações os valores dos passeios serão 100% reembolsáveis.',y);
+  y = addPara(pdf,'2.4. Para prestação dos serviços contratados no modelo compartilhado, fica firmado entre as partes, que se faz necessário atingir o número mínimo de passageiros para a realização do passeio, caso em que se este não vier a ocorrer, reserva-se à CONTRATADA o direito de cancelamento ou alteração de passeio, mediante aviso prévio via plataforma de vendas (Whatsapp número: +55 21 97215 4562).',y);
+  y = addPara(pdf,'2.4.1. Para serviços no modelo privativo, não se aplica o disposto no item 2.4.',y);
+  y = addPara(pdf,'2.5. Na hipótese da alteração de passeio, fica firmado entre as partes, que será devido o pagamento da diferença do valor para o caso de passeios mais caros, ou reembolso no caso de passeio mais barato que o originalmente contratado.',y,{after:16});
+  y = addArticle(pdf,'3. DO COMPROMISSO, PREÇO E FORMA DE PAGAMENTO',y);
+  y = addPara(pdf,'3.1. Fica acordado entre as Partes o compromisso do pagamento em sua totalidade dos serviços contratados antes da realização dos passeios, salvo hipótese de parcelamento no cartão de crédito.',y);
+  y = addPara(pdf,`3.2. O valor total do presente contrato é de ${d.valor}.`,y);
+  y = addPara(pdf,'3.3. Os valores detalhados de cada passeio contratado constam no comprovante de reserva (Anexo 1 do presente contrato) e foram repassados à CONTRATANTE no momento da negociação dos serviços.',y);
+  y = addPara(pdf,`3.4. A forma de pagamento escolhida pela CONTRATANTE para liquidar o presente contrato é através de pagamento via ${d.pagamento}`,y,{after:16});
+  y = addArticle(pdf,'4. O PRAZO',y);
+  y = addPara(pdf,'4.1. A vigência do presente contrato se inicia na data da sua assinatura e se encerra após a data do último passeio contratado.',y,{after:16});
+  y = addArticle(pdf,'5. DEVERES DO CONTRATANTE E DA CONTRATADA',y);
+  y = addPara(pdf,'5.1. A CONTRATADA se compromete:',y,{after:4});
+  y = addPara(pdf,'a) A realizar os serviços conforme datas, horários e itinerários contratados. Todavia não responde por quaisquer casos fortuitos e de força maior que não estejam em sua alçada e prejudique a execução dos serviços.',y,{x:M.left+20,maxW:CONTENT_W-20});
+  y = addPara(pdf,'b) A utilizar veículos autorizados e licenciados para realização dos passeios contratados, para os serviços que contemplam Transporte incluído, seja no modo Compartilhado ou Privativo.',y,{x:M.left+20,maxW:CONTENT_W-20});
+}
+function addContractPage3(pdf,d) {
+  addPage(pdf); pageNo(pdf,3,5); let y=78;
+  const ind={x:M.left+20,maxW:CONTENT_W-20};
+  y = addPara(pdf,'c) A manter contato e informar a CONTRATADA na hipótese de alterações e cancelamentos de passeios e oferecer alternativas para o melhor aproveitamento da viagem da CONTRATADA.',y,ind);
+  y = addPara(pdf,'d) Fornecer informações adequadas e claras sobre os diferentes serviços e passeios ofertados, com especificação correta das características, horários, preços, suas variações, possíveis eventos fortuitos e condições indesejáveis, tolerâncias, bem como os riscos que apresentem e especificidade dos passeios, ficando a CONTRATANTE ciente e de acordo com os termos apresentados caso contrate o passeio.',y,ind);
+  y = addPara(pdf,'e) Prestar suporte, seja de locomoção, informativo e orientativo para a CONTRATANTE na ocorrência de eventos adversos durante a realização dos passeios.',y,ind);
+  y = addPara(pdf,'5.2. A CONTRATANTE se compromete:',y,{after:4});
+  y = addPara(pdf,'a) A quitar a totalidade dos valores pendentes referentes aos passeios comprados antes da realização do primeiro tour contratado, sob pena de não realização dos passeios.',y,ind);
+  y = addPara(pdf,'b) A portar consigo documento de identificação (Passaporte ou Carteira de Identidade) durante a realização dos passeios.',y,ind);
+  y = addPara(pdf,'c) Providenciar a guarda e a segurança da sua bolsa e objetos pessoais durante a realização dos tours compartilhados, não sendo a CONTRATADA responsabilizada por perdas e danos.',y,ind);
+  y = addPara(pdf,'d) Informar todas as condições de saúde pessoais atuais que possam influenciar e interferir na segurança e realização dos passeios.',y,ind);
+  y = addPara(pdf,'e) Estar pronto, na recepção do hotel ou ponto de encontro, no horário informado no voucher do passeio compartilhado.',y,{...ind,after:14});
+  y = addArticle(pdf,'6. RESCISÃO, CANCELAMENTOS E REEMBOLSOS',y);
+  y = addPara(pdf,'6.1. O presente contrato poderá ser rescindido por qualquer uma das partes, mediante notificação à outra, por escrito e com envio ao correio eletrônico (e-mail) informado neste contrato e pela plataforma de vendas (Whatsapp número: +55 21 97215 4562), com prazo máximo de 48 (quarenta e oito) horas de antecedência a realização do primeiro passeio.',y);
+  y = addPara(pdf,'6.2. Pedidos de cancelamentos de passeios feitos com antecedência de 48 (quarenta e oito) horas ao horário do tour serão reembolsáveis 100% (cem por cento), após esse horário não haverá reembolso.',y);
+  y = addPara(pdf,'6.3. O prazo para pagamento do reembolso ou estorno de cobrança feita no cartão de crédito é de até 5 (cinco) dias úteis, contados da data do pedido de reembolso, que dever
