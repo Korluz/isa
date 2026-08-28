@@ -1,0 +1,24 @@
+{
+  "atacama_discount_percent": 25,
+  "portfolio_backed_prices": [
+    {"tour":"Tour Astronômico","base_brl":349,"final_brl":261.75},
+    {"tour":"Laguna Cejar, Tebenquiche e Ojos del Salar","base_brl":529,"final_brl":396.75},
+    {"tour":"Valle del Arcoiris e Yerbas Buenas","base_brl":429,"final_brl":321.75},
+    {"tour":"Lagunas Escondidas de Baltinache","base_brl":529,"final_brl":396.75},
+    {"tour":"Vallecito Magic Bus","base_brl":349,"final_brl":261.75},
+    {"tour":"Trekking Guatín","base_brl":339,"final_brl":254.25},
+    {"tour":"Geyser del Tatio","base_brl":559,"final_brl":419.25},
+    {"tour":"Valle de la Luna","base_brl":499,"final_brl":374.25},
+    {"tour":"Ruta de los Salares","base_brl":529,"final_brl":396.75},
+    {"tour":"Lagunas Altiplânicas, Piedras Rojas e Laguna Chaxa","base_brl":819,"final_brl":614.25},
+    {"tour":"Termas Purilibre","base_brl":339,"final_brl":254.25},
+    {"tour":"Termas Puritama","base_brl":629,"final_brl":471.75},
+    {"tour":"Trekking Cascadas Perdidas","base_brl":349,"final_brl":261.75},
+    {"tour":"Tour Sunset Bike","base_brl":399,"final_brl":299.25},
+    {"tour":"Sandboard","base_brl":549,"final_brl":411.75},
+    {"tour":"Cavalgada","base_brl":429,"final_brl":321.75},
+    {"tour":"Tour Balão","base_brl":1999,"final_brl":1499.25},
+    {"tour":"Volcán Lascar","base_brl":1399,"final_brl":1049.25}
+  ],
+  "commission_only_no_portfolio_price": ["Transfer Compartido","Trekking Jacuzzi Rustico","Tour Arqueologico","Cerro Toco","Atacama Ancestral","Sairecabur","Uyuni 3 Dias","Uyuni 4 Dias"]
+}
