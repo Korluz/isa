@@ -1,0 +1,71 @@
+name: Deploy ISA V10.6
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/deploy-v10-6.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build V10.6
+        shell: bash
+        run: |
+          set -euo pipefail
+          patch --batch -p1 < release/v10.6/index.patch
+          cat release/v10.6/contract.part00 \
+              release/v10.6/contract.part01 \
+              release/v10.6/contract.part02 \
+              release/v10.6/contract.part03 \
+              release/v10.6/contract.part04 \
+              release/v10.6/contract.part05 \
+              release/v10.6/contract.part06 > contrato.html
+          grep -q 'Cloud V10.6.0' index.html
+          grep -q 'Contract Manager — V10.6.0' contrato.html
+          test -s assinatura.html
+          echo "index.html: $(wc -c < index.html) bytes"
+          echo "contrato.html: $(wc -c < contrato.html) bytes"
+          echo "assinatura.html: $(wc -c < assinatura.html) bytes"
+
+      - name: Validate inline JavaScript
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import re, pathlib, subprocess
+          for filename in ('index.html','contrato.html','assinatura.html'):
+              html = pathlib.Path(filename).read_text(encoding='utf-8')
+              blocks = re.findall(r'<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)</script>', html, flags=re.I)
+              checked = 0
+              for i, block in enumerate(blocks):
+                  if not block.strip():
+                      continue
+                  p = pathlib.Path(f'/tmp/{filename}.{i}.js')
+                  p.write_text(block, encoding='utf-8')
+                  subprocess.run(['node','--check',str(p)], check=True)
+                  checked += 1
+              print(filename, 'inline JS blocks checked:', checked)
+          PY
+
+      - name: Commit release
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html contrato.html assinatura.html
+          if git diff --cached --quiet; then
+            echo 'V10.6 already deployed.'
+            exit 0
+          fi
+          git commit -m 'ISA V10.6 — assinatura remota'
+          git push
