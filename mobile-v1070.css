@@ -1,0 +1,26 @@
+@media (max-width:760px){
+  .side{
+    display:flex!important;
+    flex-direction:column!important;
+    overflow-y:auto!important;
+    overscroll-behavior:contain;
+    padding-bottom:max(20px,env(safe-area-inset-bottom))!important;
+  }
+  .side .menu{
+    flex:0 0 auto!important;
+    padding-bottom:8px!important;
+  }
+  .sidefoot{
+    position:static!important;
+    left:auto!important;
+    right:auto!important;
+    bottom:auto!important;
+    margin-top:14px!important;
+    padding:12px 8px calc(24px + env(safe-area-inset-bottom))!important;
+    flex:0 0 auto!important;
+    border-top:1px solid rgba(255,255,255,.1);
+  }
+  .menu button{
+    flex:0 0 auto!important;
+  }
+}
