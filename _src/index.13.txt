@@ -1,0 +1,238 @@
+vendedor já tenha digitado.
+   let changed=false;
+   db.sales.forEach(s=>{
+     (s.tours||[]).forEach(t=>{
+       if(t.priceCents)return; // já tem valor -> não mexe
+       const item=findCatalogItem(t.name);
+       if(!item||item.adultPrice==null)return;
+       const p=tourPax(t,s);
+       const totalReais=Number(item.adultPrice||0)*p.adults+Number(item.childPrice||0)*p.children;
+       if(totalReais<=0)return;
+       t.priceCents=centsBRL(totalReais);changed=true;
+     });
+   });
+   if(changed)localStorage.setItem(KEY,JSON.stringify(db));
+   return changed;
+ }
+ // V10.2.7: expostas globalmente para poderem ser chamadas de novo depois
+ // que loadState() (sincronização com a nuvem) substitui window.db pelos
+ // dados salvos no Supabase — sem isso, a versão da nuvem (salva antes
+ // dessas migrações existirem) sempre vencia e apagava a correção local
+ // logo após o app abrir.
+ window.applyPriceList2026_08=applyPriceList2026_08;
+ window.seedCatalogCommissionsFromLegacyRules=seedCatalogCommissionsFromLegacyRules;
+ window.backfillTourPrices=backfillTourPrices;
+ function renderCommissionRules(){
+   const body=document.getElementById('commissionRulesBody');if(!body)return;
+   body.innerHTML=COMMISSION_RULES.map(r=>`<tr><td>${esc(r.name)}</td><td>${Number(r.adult).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td><td>${r.child==null?'—':Number(r.child).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td></tr>`).join('');
+ }
+ const oldSave=window.save;
+ window.save=function(){
+   updateCommissions();
+   oldSave();
+ };
+ const oldRenderFinance=window.renderFinance;
+ window.renderFinance=function(){
+   updateCommissions();
+   oldRenderFinance();
+   renderCommissionRules();
+ };
+ const oldOpenDetail=window.openDetail;
+ window.openDetail=function(id){
+   oldOpenDetail(id);
+   const s=db.sales.find(x=>x.id===id);if(!s)return;
+   const calc=calcSaleCommission(s),body=document.getElementById('detailBody');
+   const target=body?.querySelector('.detailgrid > div:first-child');
+   if(target){
+     const box=document.createElement('div');box.className='infobox';
+     box.innerHTML=`<h3>Comissão automática</h3>
+       <div class="commission-summary">
+        <div class="commission-box"><small>Total previsto</small><strong>${fmtMoney(centsBRL(calc.total))}</strong></div>
+        <div class="commission-box"><small>Passeios calculados</small><strong>${calc.details.filter(d=>!d.unmapped&&!d.tour.cancelled).length}</strong></div>
+        <div class="commission-box"><small>Sem regra</small><strong>${calc.unmapped.length}</strong></div>
+        <div class="commission-box"><small>INF</small><strong>R$ 0,00</strong></div>
+       </div>
+       ${calc.details.map(d=>`<div class="sale ${d.tour.cancelled?'cancelled-tour':''}"><strong>${esc(d.tour.name)}</strong><div class="meta">${d.tour.cancelled?'Cancelado — sem comissão':d.unmapped?'Regra de comissão não encontrada':`${d.p.adults} ADT × ${Number(d.rule.adult).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}${d.p.children?` + ${d.p.children} CHD × ${d.rule.child==null?'sem valor':Number(d.rule.child).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}`:''} = ${Number(d.total).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}`}</div>${d.childUnavailable?'<div class="commission-unmapped">A tabela não possui comissão infantil para este passeio.</div>':''}</div>`).join('')}
+       ${calc.unmapped.length?`<div class="commission-unmapped"><strong>Sem regra automática:</strong> ${calc.unmapped.map(esc).join(', ')}</div>`:''}`;
+     target.appendChild(box);
+   }
+ };
+ const oldRenderAll=window.renderAll;
+ window.renderAll=function(){
+   updateCommissions();
+   oldRenderAll();
+   renderCommissionRules();
+ };
+ applyPriceList2026_08();
+ seedCatalogCommissionsFromLegacyRules();
+ updateCommissions();
+ backfillTourPrices();
+ renderCommissionRules();
+ if(typeof renderAll==='function')renderAll();
+})();
+
+/* ===== MÓDULO CONSOLIDADO ===== */
+
+(function(){
+  const $id=id=>document.getElementById(id);
+
+  function cleanNorm(v){
+    return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+      .toLowerCase().replace(/[^a-z0-9:]+/g,' ').replace(/\s+/g,' ').trim();
+  }
+  function activeTour(t){ return !(t.cancelled || t.cancelChecked===true); }
+
+  // 1) Telefone: procura o número diretamente no cabeçalho do PDF.
+  const previousParseVoucher=window.parseVoucher;
+  window.parseVoucher=function(raw){
+    const v=previousParseVoucher(raw);
+    const txt=String(raw||'').replace(/\u00a0/g,' ').replace(/[ \t]+/g,' ');
+    const patterns=[
+      /Telefone\s*:\s*(\(\s*\d{2}\s*\)\s*\d{4,5}\s*[-–]?\s*\d{4})/i,
+      /Telefone\s*:\s*(\d{2}\s+\d{4,5}\s*[-–]?\s*\d{4})/i,
+      /Telefone\s*:\s*(\d{10,11})/i
+    ];
+    for(const p of patterns){
+      const m=txt.match(p);
+      if(m){ v.phone=phoneMask(m[1]); break; }
+    }
+    return v;
+  };
+
+  // 2) City Tour Hop On Hop Off usa comissão do City Walking Tour.
+  const previousCalc=window.calcSaleCommission;
+  function hopOnHopOffCommission(sale,tour){
+    const n=cleanNorm(tour.name);
+    if(!n.includes('hop on hop off')) return null;
+    const adt=Number(tour.adults ?? sale.adults ?? 0);
+    const chd=Number(tour.children ?? sale.children ?? 0);
+    return {total:(adt*18)+(chd*18),adult:adt*18,child:chd*18,p:{adults:adt,children:chd,babies:Number(tour.babies??sale.babies??0)},rule:{name:'Hop On Hop Off',adult:18,child:18},unmapped:false};
+  }
+  window.calcSaleCommission=function(sale){
+    const base=previousCalc(sale);
+    let changed=false,total=0;
+    const details=(sale.tours||[]).map(t=>{
+      let current=base.details.find(d=>d.tour===t) || {};
+      const hop=activeTour(t)?hopOnHopOffCommission(sale,t):null;
+      if(hop){ changed=true; current={tour:t,...hop}; }
+      total+=Number(current.total||0);
+      return current;
+    });
+    return changed?{total,details,unmapped:details.filter(d=>d.unmapped).map(d=>d.tour.name)}:base;
+  };
+
+  // 3) Cliente pagou: funciona mesmo quando a venda não tem valor preenchido.
+  window.confirmPaid=function(id){
+    const s=db.sales.find(x=>x.id===id);
+    if(!s)return;
+    s.paymentConfirmed=true;
+    if(Number(s.valueCents||0)>0)s.paidCents=Number(s.valueCents);
+    s.paymentDate=s.paymentDate||localISO();
+    if(s.status==='Aguardando pagamento')s.status='Pago';
+    addHistory(s,'Pagamento confirmado pelo cliente');
+    save();
+    closeDetail();
+    setTimeout(()=>openDetail(id),30);
+  };
+  const originalPaymentState=window.paymentState;
+  window.paymentState=function(s){
+    if(s.paymentConfirmed)return 'Quitado';
+    return originalPaymentState(s);
+  };
+
+  // 4) Ações rápidas nos alertas.
+  window.quickCancelAnswer=function(saleId,tourIndex,answer){
+    const s=db.sales.find(x=>x.id===saleId),t=s?.tours?.[tourIndex];
+    if(!s||!t)return;
+    if(answer==='no'){
+      t.cancelChecked=false;
+      addHistory(s,'Cliente confirmou que não cancelará: '+t.name);
+    }else{
+      t.cancelChecked=true;t.cancelled=true;
+      addHistory(s,'Passeio cancelado pelo alerta rápido: '+t.name);
+      if((s.tours||[]).every(x=>!activeTour(x)))s.status='Cancelado';
+    }
+    save();
+  };
+  window.quickPaid=function(id){
+    confirmPaid(id);
+  };
+  window.quickScheduleSent=function(saleId,tourIndex){
+    const s=db.sales.find(x=>x.id===saleId),t=s?.tours?.[tourIndex];
+    if(!s||!t)return;
+    t.messageSent=true;
+    if(s.status!=='Cancelado')s.status='Horário enviado';
+    addHistory(s,'Horário marcado como enviado: '+t.name);
+    save();
+  };
+
+  window.renderDashboard=function(){
+    const cancelItems=[],payItems=[],tomorrowItems=[];
+    db.sales.forEach(s=>{
+      if(s.status==='Cancelado')return;
+      (s.tours||[]).forEach((t,i)=>{
+        if(!activeTour(t))return;
+        const d=daysUntil(t.date);
+        if(d>=0&&d<=2&&t.cancelChecked===null)cancelItems.push({s,t,i});
+        if(d>=0&&d<=1&&paymentState(s)!=='Quitado')payItems.push({s,t,i});
+        if(t.date===localISO(1))tomorrowItems.push({s,t,i});
+      });
+    });
+    if($id('kCancel'))$id('kCancel').textContent=cancelItems.length;
+    if($id('kPay'))$id('kPay').textContent=payItems.length;
+    if($id('kTomorrow'))$id('kTomorrow').textContent=tomorrowItems.length;
+
+    const rows=[];
+    cancelItems.forEach(x=>rows.push(`<div class="alertitem red">
+      <div onclick="openDetail(${x.s.id})"><strong>Confirmar cancelamento</strong><small>${esc(x.s.name)} • ${esc(x.t.name)} • ${fmtDate(x.t.date)}</small></div>
+      <div class="quick-actions">
+        <button class="btn light sm" onclick="event.stopPropagation();quickCancelAnswer(${x.s.id},${x.i},'no')">Não vai cancelar</button>
+        <button class="btn red sm" onclick="event.stopPropagation();quickCancelAnswer(${x.s.id},${x.i},'yes')">Cancelar passeio</button>
+      </div></div>`));
+    payItems.forEach(x=>rows.push(`<div class="alertitem orange">
+      <div onclick="openDetail(${x.s.id})"><strong>Cliente pagou?</strong><small>${esc(x.s.name)} • ${esc(x.t.name)} • ${fmtDate(x.t.date)}</small></div>
+      <div class="quick-actions"><button class="btn gold sm" onclick="event.stopPropagation();quickPaid(${x.s.id})">Sim, pagou</button><button class="btn light sm" onclick="event.stopPropagation();openDetail(${x.s.id})">Abrir ficha</button></div>
+      </div>`));
+    tomorrowItems.filter(x=>!x.t.messageSent).forEach(x=>rows.push(`<div class="alertitem blue">
+      <div onclick="openDetail(${x.s.id})"><strong>Horário pendente</strong><small>${esc(x.s.name)} • ${esc(x.t.name)} • amanhã</small></div>
+      <div class="quick-actions"><button class="btn gold sm" onclick="event.stopPropagation();quickScheduleSent(${x.s.id},${x.i})">Horário enviado</button><button class="btn light sm" onclick="event.stopPropagation();openDetail(${x.s.id})">Abrir ficha</button></div>
+      </div>`));
+    $id('alertsList').innerHTML=rows.length?rows.join(''):'<div class="empty">Nenhuma pendência inteligente.</div>';
+  };
+
+  // 5) Validador independente.
+  function selectedSale(){
+    return db.sales.find(s=>String(s.id)===String($id('validatorSale')?.value));
+  }
+  function timeFromMessage(msg){
+    const m=String(msg).match(/\b([01]?\d|2[0-3])\s*[:hH]\s*([0-5]\d)\b/);
+    return m?String(m[1]).padStart(2,'0')+':'+m[2]:'';
+  }
+  function tourScore(name,msg){
+    const words=cleanNorm(name).split(' ').filter(w=>w.length>=4&&!['tour','full','sunset','city'].includes(w));
+    const normalized=cleanNorm(msg);
+    if(!words.length)return 0;
+    return words.filter(w=>normalized.includes(w)).length/words.length;
+  }
+  window.validateMessage=function(){
+    const s=selectedSale(),msg=$id('validatorMessage')?.value.trim();
+    if(!s)return alert('Selecione uma venda.');
+    if(!msg)return alert('Cole a mensagem da logística.');
+    const expected=(s.tours||[]).filter(t=>activeTour(t)&&t.date===localISO(1));
+    if(!expected.length){
+      $id('validatorResult').className='alertbox warn';
+      $id('validatorResult').innerHTML='<strong>Nenhum passeio ativo desta venda está marcado para amanhã.</strong>';
+      return;
+    }
+    const ranked=expected.map(t=>({t,score:tourScore(t.name,msg)})).sort((a,b)=>b.score-a.score);
+    const best=ranked[0],time=timeFromMessage(msg),normMsg=cleanNorm(msg),pax=totalPax(s);
+    const paxOk=new RegExp(`\\b${pax}\\s*(pax|passageiro|passageiros|pessoa|pessoas|adulto|adultos)\\b`,'i').test(normMsg) ||
+                new RegExp(`(pax|passageiro|passageiros|pessoa|pessoas)\\s*[: -]?\\s*${pax}\\b`,'i').test(normMsg);
+    const hotelWords=cleanNorm(s.hotel).split(' ').filter(w=>w.length>=5);
+    const hotelOk=!hotelWords.length?null:hotelWords.some(w=>normMsg.includes(w));
+    const tourOk=best.score>=0.45;
+
+    const card=(title,status,text)=>`<div class="validatorcheck ${status}"><strong>${title}</strong><span>${esc(text)}</span></div>`;
+    $id('validatorResult').className='alertbox '+(tourOk&&time?'ok':'warn');
+    $id('validatorResult').innerHTML=`<strong>${tourOk&&time?'Mensagem analisada':'Conferência necessária'}</strong>
+      <div class=
