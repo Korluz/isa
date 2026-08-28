@@ -1,0 +1,99 @@
+'+i).value;t.location=$('dl_'+i).value;t.messageSent=$('ds_'+i).value==='true';let c=$('dc_'+i).value;t.cancelChecked=c===''?null:c==='true'});if(s.tours.some(t=>t.messageSent))s.status='Horário enviado';addHistory(s,'Informações operacionais atualizadas');save();closeDetail()}
+function renderValidatorSales(){
+ let current=$('validatorSale')?.value||'';
+ $('validatorSale').innerHTML='<option value="">Selecione uma venda...</option>'+db.sales.map(s=>`<option value="${s.id}">${esc(s.name)} — ${s.tours.map(t=>t.name).join(', ')}</option>`).join('');
+ if(current&&db.sales.some(s=>String(s.id)===String(current)))$('validatorSale').value=current;
+ updateValidatorContext()
+}
+function selectedValidatorSale(){return db.sales.find(x=>String(x.id)===String($('validatorSale').value))}
+function updateValidatorContext(){
+ let s=selectedValidatorSale(),expected=s?.tours.filter(t=>t.date===localISO(1))||[];
+ $('validatorExpected').innerHTML=!s?'Selecione uma venda.':expected.length?expected.map(t=>`<strong>${esc(t.name)}</strong> • ${totalPax(s)} passageiro(s) • ${esc(t.location||s.hotel||'hotel não informado')} ${ticketRequired(t.name)?'• 🎟 ticket obrigatório':''}`).join('<br>'):'<strong>Nenhum passeio desta venda está marcado para amanhã.</strong><br><span class="meta">Confira a data do passeio na ficha da venda.</span>';
+ $('validatorResult').className='empty';$('validatorResult').innerHTML='Cole a mensagem e pressione “Analisar mensagem”.'
+}
+function norm(s){return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^\p{L}\p{N}:]/gu,' ').replace(/\s+/g,' ').trim()}
+const STOPWORDS=new Set(['full','day','sunset','tour','city','de','do','da','dos','das','e','del','la','el','the']);
+function usefulTokens(s){return norm(s).split(' ').filter(w=>w.length>=3&&!STOPWORDS.has(w))}
+function scoreTour(name,msg){
+ let tokens=usefulTokens(name),m=norm(msg);if(!tokens.length)return 0;
+ let hits=tokens.filter(t=>m.includes(t)).length;
+ return hits/tokens.length
+}
+function extractTime(msg){
+ let m=msg.match(/\b(?:às?\s*)?([01]?\d|2[0-3])\s*[:hH]\s*([0-5]\d)\b/);
+ if(!m)m=msg.match(/\b(?:pickup|hor[aá]rio|hora)\D{0,12}([01]?\d|2[0-3])\s*([0-5]\d)\b/i);
+ return m?String(m[1]).padStart(2,'0')+':'+m[2]:''
+}
+function paxRecognized(msg,pax){
+ let n=norm(msg);
+ let patterns=[new RegExp('\\b'+pax+'\\s*(?:pax|passageiros?|adt|adultos?|pessoas?)\\b','i'),new RegExp('(?:pax|passageiros?|adt|adultos?|pessoas?)\\s*[:\\-]?\\s*'+pax+'\\b','i')];
+ return patterns.some(r=>r.test(n))
+}
+function hotelRecognized(msg,hotel){
+ if(!hotel)return null;let hs=usefulTokens(hotel).filter(x=>x.length>3),m=norm(msg);
+ return hs.length?hs.some(t=>m.includes(t)):null
+}
+function validatorCard(label,status,detail){
+ let cls=status==='ok'?'ok':status==='danger'?'danger':'warn',icon=status==='ok'?'✓':status==='danger'?'✕':'!';
+ return `<div class="validatorcheck ${cls}"><strong>${icon} ${esc(label)}</strong><span>${esc(detail)}</span></div>`
+}
+function validateMessage(){
+ let s=selectedValidatorSale(),msg=$('validatorMessage').value.trim();
+ if(!s)return alert('Selecione uma venda.');
+ if(!msg)return alert('Cole a mensagem recebida da logística.');
+ let exp=s.tours.filter(t=>t.date===localISO(1));
+ if(!exp.length){$('validatorResult').className='alertbox warn';$('validatorResult').innerHTML='<strong>Nenhum passeio desta venda está marcado para amanhã.</strong><br>Abra a ficha e confira a data cadastrada.';return}
+ let ranked=exp.map(t=>({tour:t,score:scoreTour(t.name,msg)})).sort((a,b)=>b.score-a.score),best=ranked[0];
+ let tourOk=best&&best.score>=0.5, pax=totalPax(s),paxOk=paxRecognized(msg,pax),hotelOk=hotelRecognized(msg,best?.tour?.location||s.hotel),time=extractTime(msg);
+ let cards=[
+  validatorCard('Passeio',tourOk?'ok':'danger',tourOk?`${best.tour.name} reconhecido`:`Esperado: ${exp.map(t=>t.name).join(' ou ')}`),
+  validatorCard('Passageiros',paxOk?'ok':'warn',paxOk?`${pax} passageiro(s) reconhecido(s)`:`Não consegui confirmar claramente ${pax} passageiro(s)`),
+  validatorCard('Hotel / coleta',hotelOk===true?'ok':hotelOk===false?'warn':'warn',hotelOk===true?'Local compatível':hotelOk===false?'O local cadastrado não foi reconhecido':'Não há hotel cadastrado para comparar'),
+  validatorCard('Horário',time?'ok':'warn',time?`Horário reconhecido: ${time}`:'Nenhum horário foi reconhecido')
+ ];
+ let approved=tourOk&&paxOk&&time&&(hotelOk!==false);
+ $('validatorResult').className='alertbox '+(approved?'ok':tourOk?'warn':'danger');
+ $('validatorResult').innerHTML=`<strong>${approved?'✓ Mensagem compatível':'⚠ Conferência necessária'}</strong><div class="validatorgrid">${cards.join('')}</div>${time&&best?`<div class="actions"><button class="btn gold" onclick="applyValidation(${s.id},'${best.tour.name.replace(/'/g,"\\'")}','${time}')">Salvar horário na venda</button></div>`:''}`
+}
+function applyValidation(sid,tname,time){
+ let s=db.sales.find(x=>x.id===sid),t=s?.tours.find(x=>x.name===tname);if(!s||!t)return;
+ t.hour=time;if(!t.location)t.location=s.hotel||'';addHistory(s,`Mensagem logística validada para ${t.name}; horário ${time}`);save();alert('Horário salvo na ficha da venda.')
+}
+function saveSeller(){db.seller=$('sellerNameInput').value.trim();save()}
+function addCatalogTour(){let n=$('newTourName').value.trim();if(!n)return alert('Digite o nome do passeio.');if(db.catalog.some(t=>norm(t.name)===norm(n)))return alert('Esse passeio já está cadastrado.');db.catalog.push({name:n,ticket:$('newTourTicket').value==='true'});$('newTourName').value='';save()}
+function renderCatalog(){$('catalogList').innerHTML=db.catalog.map(t=>`<span class="catalogitem">${esc(t.name)}${t.ticket?' 🎟':''}</span>`).join('')}
+function exportCSV(){if(!db.sales.length)return alert('Não há dados para exportar.');let rows=[['Cliente','WhatsApp','Hotel','Tipo','Adultos','Crianças','Bebês','Valor','Status','Passeio','Data','Preço do passeio','Comissão do passeio','Horário','Local','Mensagem enviada'],...db.sales.flatMap(s=>s.tours.map(t=>[s.name,s.phone,s.hotel,s.type,s.adults,s.children,s.babies,(s.valueCents/100).toFixed(2).replace('.',','),s.status,t.name,t.date,((t.priceCents||0)/100).toFixed(2).replace('.',','),((t.commissionCents||0)/100).toFixed(2).replace('.',','),t.hour,t.location,t.messageSent?'Sim':'Não']))];let csv='\uFEFF'+rows.map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(';')).join('\n');let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='isa_vendas_v2.csv';a.click();URL.revokeObjectURL(a.href)}
+
+function renderFinance(){
+ let q=norm($('financeSearch')?.value||''),f=$('financeStatus')?.value||'';
+ let sold=db.sales.reduce((a,s)=>a+(+s.valueCents||0),0),received=db.sales.reduce((a,s)=>a+(+s.paidCents||0),0),commission=db.sales.reduce((a,s)=>a+(+s.commissionCents||0),0);
+ $('finSold').textContent=fmtMoney(sold);$('finReceived').textContent=fmtMoney(received);$('finBalance').textContent=fmtMoney(Math.max(0,sold-received));$('finCommission').textContent=fmtMoney(commission);
+ let sales=db.sales.filter(s=>norm(s.name).includes(q)&&(!f||paymentState(s)===f));
+ $('financeList').innerHTML=sales.length?sales.map(s=>{let total=+s.valueCents||0,paid=+s.paidCents||0,pct=total?Math.min(100,Math.round(paid/total*100)):0;return `<div class="sale"><div class="saletop"><div><div class="title">${esc(s.name)}</div><div class="meta">${paymentState(s)} • ${esc(s.paymentMethod||'forma não informada')} ${s.paymentDate?'• '+fmtDate(s.paymentDate):''}</div></div><div class="badges"><span class="badge ${paymentState(s)==='Quitado'?'b-ok':paymentState(s)==='Parcial'?'b-warn':'b-red'}">${paymentState(s)}</span></div></div><div class="formgrid" style="margin-top:12px"><div><small>Venda</small><strong style="display:block">${fmtMoney(total)}</strong></div><div><small>Recebido</small><strong style="display:block">${fmtMoney(paid)}</strong></div><div><small>Saldo</small><strong style="display:block">${fmtMoney(Math.max(0,total-paid))}</strong></div><div><small>Comissão</small><strong style="display:block">${fmtMoney(s.commissionCents)}</strong></div></div><table class="tour-finance-table"><thead><tr><th>Passeio</th><th>Data</th><th>Preço</th><th>Comissão</th></tr></thead><tbody>${(s.tours||[]).map(t=>`<tr><td>${esc(t.name)}</td><td>${fmtDate(t.date)}</td><td>${fmtMoney(t.priceCents||0)}</td><td>${fmtMoney(t.commissionCents||0)}</td></tr>`).join('')}</tbody></table><div class="progress"><span style="width:${pct}%"></span></div><div class="actions"><button class="btn light sm" onclick="openSale(${s.id})">Editar valores</button><button class="btn light sm" onclick="openDetail(${s.id})">Abrir ficha</button></div></div>`}).join(''):'<div class="empty">Nenhuma venda encontrada.</div>'
+}
+function exportBackup(){
+ db.lastBackup=new Date().toISOString();localStorage.setItem(KEY,JSON.stringify(db));
+ let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='backup_isa_'+localISO()+'.json';a.click();URL.revokeObjectURL(a.href);renderAll()
+}
+function importBackup(event){
+ let file=event.target.files?.[0];if(!file)return;
+ let reader=new FileReader();reader.onload=()=>{try{let data=JSON.parse(reader.result);if(!data||!Array.isArray(data.sales)||!Array.isArray(data.catalog))throw new Error();if(!confirm('Restaurar este backup substituirá os dados atuais. Continuar?'))return;db=data;db.lastBackup=new Date().toISOString();localStorage.setItem(KEY,JSON.stringify(db));renderAll();alert('Backup restaurado com sucesso.')}catch(e){alert('Arquivo de backup inválido.')}finally{event.target.value=''}};reader.readAsText(file)
+}
+
+function renderAll(){let name=db.seller||'Vendedora';$('sellerNameTop').textContent=name;$('avatar').textContent=name.trim().charAt(0).toUpperCase()||'V';$('sellerNameInput').value=db.seller||'';$('lastBackupLabel').textContent=db.lastBackup?'Último backup: '+fmtDateTime(db.lastBackup):'Nenhum backup registrado.';renderDashboard();renderSales();renderTomorrow();renderValidatorSales();renderFinance();renderCatalog()}
+renderAll();
+
+/* ===== MÓDULO CONSOLIDADO ===== */
+
+(function(){
+ const oldRenderAll=renderAll, oldSave=save, oldOpenSale=openSale, oldRenderSales=renderSales, oldRenderDashboard=renderDashboard, oldRenderFinance=renderFinance;
+ const menu=document.querySelector('.menu');
+ const first=menu.querySelector('button');
+ const imp=document.createElement('button');imp.dataset.view='importar';imp.innerHTML='📄 Importar Voucher';menu.insertBefore(imp,first);
+ const valBtn=menu.querySelector('[data-view="validador"]');const can=document.createElement('button');can.dataset.view='cancelados';can.innerHTML='✕ Cancelados';menu.insertBefore(can,valBtn);
+ document.querySelectorAll('button').forEach(b=>{if(/Nova venda/i.test(b.textContent)){b.textContent='📄 Importar voucher';b.onclick=()=>goV23('importar')}});
+ const salesFilter=document.getElementById('saleFilter');if(salesFilter&&!Array.from(salesFilter.options).some(o=>o.value==='Cancelado'))salesFilter.add(new Option('Cancelado','Cancelado'));
+ const status=document.getElementById('fStatus');if(status&&!Array.from(status.options).some(o=>o.value==='Cancelado'))status.add(new Option('Cancelado','Cancelado'));
+ ['fCommissionReceived','fCommissionDate'].forEach(id=>{const el=document.getElementById(id);if(el)el.closest('.field').classList.add('hidden-v23')});
+ window.statuses=['Aguardando pagamento','Pago','Reserva feita','Horário enviado','Cancelado'];
+ window.goV23=function(id){if(id==='admin'&&window.ISA_ROLE!=='admin')return alert('Área disponível apenas para administradores.');document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===id));document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===id));const m={importar:['Importar voucher','Cadastro automático a partir do PDF'],inicio:['Meu dia','Prioridades comerciais e operacionais'],vendas:['Minhas vendas','Cli
