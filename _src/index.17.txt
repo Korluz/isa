@@ -1,0 +1,117 @@
+Bloqueado':'Ativo'}</span></div></div><div class="admin-user-metrics"><div class="admin-mini"><small>Vendas</small><strong>${m.summary.sales}</strong></div><div class="admin-mini"><small>Carteira</small><strong>${admMoney(m.summary.sold)}</strong></div><div class="admin-mini"><small>Comissão</small><strong>${admMoney(m.summary.commission)}</strong></div></div><div class="admin-user-email" style="margin-top:8px">Última sincronização: ${admEsc(admDateTime(m.stateUpdatedAt))}</div><div class="admin-actions"><button class="btn light sm" type="button" onclick="selectAdminUser('${admEsc(m.id)}')">Ver operação</button></div></div>`}).join('');
+};
+
+window.selectAdminUser=function(id){adminCache.selectedId=id;renderAdminUsers();renderAdminSellerDetail()};
+
+window.renderAdminSellerDetail=function(){
+ const box=E('adminSellerDetail');if(!box)return;
+ const m=(adminCache.members||[]).find(x=>String(x.id)===String(adminCache.selectedId));if(!m){box.innerHTML='<div class="admin-empty">Selecione uma conta.</div>';return}
+ const blocked=m.active===false||m.status==='blocked',isSelf=user&&String(m.id)===String(user.id);
+ const sales=(Array.isArray(m.state?.sales)?m.state.sales:[]).filter(admActiveSale).slice().reverse();
+ box.innerHTML=`<div class="admin-detail-head"><div><h2 style="margin:0">${admEsc(m.full_name||m.state?.seller||'Conta')}</h2><div class="meta">${admEsc(m.email||'')} • ${m.role==='admin'?'Administrador':'Vendedor'} • ${blocked?'Bloqueado':'Ativo'}</div></div><div class="admin-badges"><span class="admin-status ${blocked?'blocked':'active'}">${blocked?'Acesso bloqueado':'Acesso liberado'}</span></div></div>
+ <div class="financegrid"><div class="moneycard"><small>Carteira registrada</small><strong>${admMoney(m.summary.sold)}</strong></div><div class="moneycard"><small>Recebido</small><strong>${admMoney(m.summary.received)}</strong></div><div class="moneycard"><small>Comissão prevista</small><strong>${admMoney(m.summary.commission)}</strong></div><div class="moneycard"><small>Passeios amanhã</small><strong>${m.summary.tomorrow}</strong></div></div>
+ <div class="admin-actions" style="margin:13px 0">${isSelf?'<span class="admin-note">Sua própria conta administrativa não pode ser bloqueada ou rebaixada por esta tela.</span>':`<button class="btn ${blocked?'gold':'red'} sm" type="button" onclick="adminSetUserStatus('${admEsc(m.id)}',${blocked?'true':'false'})">${blocked?'Desbloquear conta':'Bloquear conta'}</button><button class="btn light sm" type="button" onclick="adminSetUserRole('${admEsc(m.id)}','${m.role==='admin'?'seller':'admin'}')">${m.role==='admin'?'Tornar vendedor':'Tornar administrador'}</button>`}</div>
+ <div class="cardhead" style="margin-top:10px"><div><h2>Vendas registradas</h2><div class="meta">${sales.length} venda(s) ativa(s) • somente leitura</div></div></div>
+ <div class="admin-sales">${sales.length?sales.map(s=>{const tours=(s.tours||[]).filter(admActiveTour),balance=Math.max(0,Number(s.valueCents||0)-Number(s.paidCents||0));return `<div class="admin-sale"><div class="admin-sale-top"><div><div class="admin-sale-title">${admEsc(s.name||'Cliente')}</div><div class="meta">${admEsc(s.phone||'Sem telefone')} • ${admEsc(s.status||'')}</div></div><div style="text-align:right"><strong>${admMoney(s.valueCents)}</strong><div class="meta">Comissão ${admMoney(s.commissionCents)}</div></div></div><div class="admin-sale-tours">${tours.map(t=>`${admEsc(t.name||'Passeio')} • ${admEsc(t.date||'sem data')} • ${admMoney(t.priceCents||0)} • comissão ${admMoney(t.commissionCents||0)}`).join('<br>')||'Sem passeios ativos.'}</div>${balance>0?`<div class="quick-warning" style="margin-top:8px">Saldo do cliente: ${admMoney(balance)}</div>`:''}</div>`}).join(''):'<div class="admin-empty">Esta conta ainda não possui vendas registradas.</div>'}</div>`;
+};
+
+window.adminSetUserStatus=async function(id,enable){
+ if(window.ISA_ROLE!=='admin'||!user)return;if(String(id)===String(user.id))return alert('Por segurança, sua própria conta administrativa não pode ser bloqueada aqui.');
+ const member=adminCache.members.find(m=>String(m.id)===String(id));if(!member)return;const action=enable?'desbloquear':'bloquear';if(!confirm(`Deseja ${action} a conta de ${member.full_name||member.email}?`))return;
+ const{error}=await sb.from('profiles').update({active:!!enable,status:enable?'active':'blocked'}).eq('id',id);if(error)return alert('Não foi possível alterar o acesso: '+error.message);await loadAdminPanel(true);
+};
+
+window.adminSetUserRole=async function(id,newRole){
+ if(window.ISA_ROLE!=='admin'||!user)return;if(String(id)===String(user.id))return alert('Por segurança, sua própria conta administrativa não pode ser rebaixada aqui.');if(!['seller','admin'].includes(newRole))return;
+ const member=adminCache.members.find(m=>String(m.id)===String(id));if(!member)return;const label=newRole==='admin'?'Administrador':'Vendedor';if(!confirm(`Alterar ${member.full_name||member.email} para ${label}?`))return;
+ const{error}=await sb.from('profiles').update({role:newRole}).eq('id',id);if(error)return alert('Não foi possível alterar o papel: '+error.message);await loadAdminPanel(true);
+};
+
+boot();
+})();
+
+
+function wireCloudAuthTabs(){
+ const loginTab=document.getElementById('loginTab'),registerTab=document.getElementById('registerTab');
+ const loginPane=document.getElementById('loginPane'),registerPane=document.getElementById('registerPane');
+ if(!loginTab||!registerTab||!loginPane||!registerPane)return;
+ loginTab.onclick=()=>{loginPane.hidden=false;registerPane.hidden=true;loginTab.classList.add('active');registerTab.classList.remove('active')};
+ registerTab.onclick=()=>{loginPane.hidden=true;registerPane.hidden=false;registerTab.classList.add('active');loginTab.classList.remove('active')};
+}
+wireCloudAuthTabs();
+
+function getContractUrl(){
+ // V10.2.2: o Contract Manager agora vive em contrato.html (arquivo próprio),
+ // publicado junto do index.html na mesma pasta do GitHub. Antes ficava
+ // embutido como string JS gigante (CONTRACT_HTML) dentro deste arquivo.
+ return 'contrato.html';
+}
+window.openBlankContract=function(){
+ localStorage.removeItem('isa_contract_handoff');
+ window.open(getContractUrl(),'_blank');
+}
+window.openContractForSaleId=function(id){
+ const s=db.sales.find(x=>String(x.id)===String(id));
+ if(!s)return alert('Venda não encontrada.');
+ const handoff={
+  saleId:s.id,
+  nome:s.name||'',
+  telefone:s.phone||'',
+  email:s.email||'',
+  endereco:s.hotel||s.address||'',
+  valor:Number(s.valueCents||0)/100,
+  pagamento:s.paymentMethod||'',
+  tours:(s.tours||[]).map(t=>{
+    const item=window.findCatalogItem?window.findCatalogItem(t.name):null;
+    return {
+      name:t.name||'',
+      date:t.date||'',
+      price:Number(t.priceCents||0)/100,
+      ticketNonRefundable:!!item?.nonRefundableTicket
+    };
+  })
+ };
+ localStorage.setItem('isa_contract_handoff',JSON.stringify(handoff));
+ window.open(getContractUrl(),'_blank');
+}
+window.openContractFromSale=function(){
+ const id=document.getElementById('contractSaleSelect').value;
+ if(!id)return alert('Selecione uma venda.');
+ openContractForSaleId(id);
+}
+function renderContractSales(){
+ const sel=document.getElementById('contractSaleSelect');if(!sel)return;
+ sel.innerHTML='<option value="">Selecione uma venda...</option>'+db.sales.map(s=>`<option value="${s.id}">${esc(s.name)} — ${(s.tours||[]).map(t=>t.name).join(', ')}</option>`).join('');
+}
+
+
+function auditRows(){
+ const start=document.getElementById('auditStart')?.value||'',end=document.getElementById('auditEnd')?.value||'',q=(document.getElementById('auditSearch')?.value||'').toLowerCase(),status=document.getElementById('auditStatus')?.value||'active';
+ const rows=[];
+ db.sales.forEach(s=>{const calc=window.calcSaleCommission?window.calcSaleCommission(s):{details:[]};
+  (calc.details||[]).forEach(d=>{const t=d.tour,cancelled=!!(t.cancelled||t.cancelChecked===true||s.status==='Cancelado');
+   if(status==='active'&&cancelled||status==='cancelled'&&!cancelled)return;if(start&&t.date<start||end&&t.date>end)return;
+   if(q&&!(`${s.name} ${s.voucherFile||''} ${t.name}`.toLowerCase().includes(q)))return;
+   const p=d.p||{adults:t.adults??s.adults??0,children:t.children??s.children??0};
+   rows.push({date:t.date,client:s.name,voucher:s.voucherFile||'',tour:t.name,adt:p.adults||0,chd:p.children||0,saleValue:Number(s.valueCents||0)/100,adtRate:d.rule?.adult??null,chdRate:d.rule?.child??null,commission:Number(d.total||0),cancelled,rule:d.rule?.name||'Sem regra'});
+  });
+ });
+ return rows.sort((a,b)=>a.date.localeCompare(b.date)||a.client.localeCompare(b.client));
+}
+window.renderAuditReport=function(){
+ const rows=auditRows(),total=rows.reduce((a,r)=>a+r.commission,0);
+ document.getElementById('auditCommissionTotal').textContent=total.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+ document.getElementById('auditSalesCount').textContent=new Set(rows.map(r=>r.client+'|'+r.voucher)).size;
+ document.getElementById('auditToursCount').textContent=rows.length;document.getElementById('auditUnmappedCount').textContent=rows.filter(r=>r.rule==='Sem regra').length;
+ document.getElementById('auditTableWrap').innerHTML=rows.length?`<div class="table-wrap"><table class="audit-table"><thead><tr><th>Data</th><th>Voucher</th><th>Cliente</th><th>Passeio</th><th>ADT</th><th>CHD</th><th>Valor venda</th><th>Comissão ADT</th><th>Comissão CHD</th><th>Comissão passeio</th><th>Regra aplicada</th><th>Status</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${fmtDate(r.date)}</td><td>${esc(r.voucher||'-')}</td><td>${esc(r.client)}</td><td>${esc(r.tour)}</td><td>${r.adt}</td><td>${r.chd}</td><td>${r.saleValue.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td><td>${r.adtRate==null?'—':Number(r.adtRate).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td><td>${r.chdRate==null?'—':Number(r.chdRate).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td><td><strong>${r.commission.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</strong></td><td>${esc(r.rule)}</td><td>${r.cancelled?'Cancelado':'Ativo'}</td></tr>`).join('')}<tr class="audit-total"><td colspan="9">TOTAL</td><td>${total.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td><td colspan="2"></td></tr></tbody></table></div>`:'<div class="empty">Nenhum lançamento no período.</div>';
+}
+window.exportAuditCSV=function(){
+ const rows=auditRows(),head=['Data','Voucher','Cliente','Passeio','ADT','CHD','Valor da venda','Comissão ADT','Comissão CHD','Comissão do passeio','Regra aplicada','Status'];
+ const data=[head,...rows.map(r=>[r.date,r.voucher,r.client,r.tour,r.adt,r.chd,r.saleValue.toFixed(2).replace('.',','),r.adtRate??'',r.chdRate??'',r.commission.toFixed(2).replace('.',','),r.rule,r.cancelled?'Cancelado':'Ativo'])];
+ data.push(['','','','','','','','','','TOTAL',rows.reduce((a,r)=>a+r.commission,0).toFixed(2).replace('.',','),'']);
+ const csv='\uFEFF'+data.map(row=>row.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(';')).join('\n');
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='relatorio_comissoes_'+(CURRENT_USER.split('@')[0]||'vendedor')+'.csv';a.click();URL.revokeObjectURL(a.href);
+}
+window.printAuditPDF=function(){
+ const rows=auditRows(),total=rows.reduce((a,r)=>a+r.commission,0),sellerName=db.sellerProfile?.name||user?.user_metadata?.full_name||db.seller||'Vendedor';
+ const w=window.open('','_blank');w.document.write(`<html><head><title>Relatório de Comissões</title></head><body><h1>Relatório de Comissões</h1><p>Vendedor: ${esc(sellerName)} • Emitido em: ${new Date().toLocaleString('pt-BR')}</p><table><thead><tr><th>Data</th><th>Voucher</th><th>Cliente</th><th>Passeio</th><th>ADT</th><th>CHD</th><th>Valor venda</th><th>Comissão</th><th>Regra</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${fmtDate(r.date)}</td><td>${r.voucher}</td><td>${r.client}</td><td>${r.tour}</td><td>${r.adt}</td><td>${r.chd}</td><td>${r.saleValue.toLocaleString
