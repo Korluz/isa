@@ -1,0 +1,128 @@
+--- a/index.html
++++ b/index.html
+@@ -3,7 +3,7 @@
+ <head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+-<title>ISA by Korluz — Cloud V10.5.3</title>
++<title>ISA by Korluz — Cloud V10.6.0</title>
+ <style>
+ :root{
+  --navy:#0b2136;--navy2:#153752;--gold:#dfa82f;--bg:#f4f7fb;--card:#fff;
+@@ -396,6 +396,10 @@
+ @media(max-width:950px){.admin-grid{grid-template-columns:1fr}.admin-kpis{grid-template-columns:1fr 1fr}}
+ @media(max-width:560px){.admin-user-metrics{grid-template-columns:1fr 1fr}.admin-detail-head{flex-direction:column}.admin-user-head{flex-direction:column}.admin-badges{justify-content:flex-start}}
+ 
++
++/* ISA V10.6 — assinatura remota */
++.sign-list{display:grid;gap:10px}.sign-item{border:1px solid var(--line);border-radius:14px;padding:14px;background:#fff}.sign-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.sign-title{font-weight:900;color:var(--navy)}.sign-meta{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.45}.sign-status{border-radius:999px;padding:5px 9px;font-size:10px;font-weight:900;white-space:nowrap}.sign-status.created{background:#fff3cd;color:#915206}.sign-status.sent{background:#dbeafe;color:#1d4ed8}.sign-status.viewed{background:#ede9fe;color:#5b3ab4}.sign-status.signed{background:#dcfce7;color:#166534}.sign-status.expired{background:#fee2e2;color:#991b1b}.sign-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
++
+ </style>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+ 
+@@ -404,8 +408,8 @@
+ <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+ </head>
+ <body>
+-<div id="appVersionBadge" style="position:fixed;bottom:4px;right:6px;z-index:9999;font-size:10px;color:#999;background:rgba(255,255,255,.85);padding:2px 6px;border-radius:6px;pointer-events:none;font-family:monospace">v10.5.3</div>
+-<script>window.addEventListener('error',function(e){const b=document.getElementById('appVersionBadge');if(b)b.textContent='v10.5.3 ⚠ erro: '+(e.message||'').slice(0,60);b&&(b.style.color='red')})</script>
++<div id="appVersionBadge" style="position:fixed;bottom:4px;right:6px;z-index:9999;font-size:10px;color:#999;background:rgba(255,255,255,.85);padding:2px 6px;border-radius:6px;pointer-events:none;font-family:monospace">v10.6.0</div>
++<script>window.addEventListener('error',function(e){const b=document.getElementById('appVersionBadge');if(b)b.textContent='v10.6.0 ⚠ erro: '+(e.message||'').slice(0,60);b&&(b.style.color='red')})</script>
+ <!-- ISA V10.2.1 Recovery: base estável V10.1.1 -->
+ 
+ <div id="cloudConfig" class="cloud-config">
+@@ -579,17 +583,21 @@
+ 
+ <section class="view" id="contratos">
+  <div class="card">
+-  <div class="cardhead"><div><h2>Gerador de contratos</h2><div class="meta">Selecione uma venda para preencher automaticamente os dados disponíveis.</div></div></div>
++  <div class="cardhead"><div><h2>Contratos e assinatura remota</h2><div class="meta">Gere o contrato, crie o link e acompanhe o aceite do cliente.</div></div><button class="btn light sm" type="button" onclick="loadRemoteSignatures(true)">Atualizar</button></div>
+   <div class="toolbar">
+    <select id="contractSaleSelect"></select>
+    <button class="btn gold" onclick="openContractFromSale()">Abrir contrato preenchido</button>
+    <button class="btn light" onclick="openBlankContract()">Abrir contrato vazio</button>
+   </div>
+   <div class="alertbox ok">
+-   <strong>Modo leve ativado</strong><br>
+-   O gerador abre em uma aba separada e reduz fotos grandes antes de criar o PDF. Isso diminui bastante o consumo de memória no celular e no iPad.
++   <strong>Fluxo remoto</strong><br>
++   Preencha e confira o contrato no gerador. Lá, use <b>Criar link de assinatura</b> e envie o link ao cliente pelo WhatsApp. O cliente assina no próprio celular.
+   </div>
+  </div>
++ <div class="card" style="margin-top:16px">
++  <div class="cardhead"><div><h2>Acompanhamento de assinaturas</h2><div class="meta">Links criados nesta conta e status do cliente.</div></div></div>
++  <div id="remoteSignatureList"><div class="empty">Carregando assinaturas...</div></div>
++ </div>
+ </section>
+ 
+ <section class="view" id="auditoria">
+@@ -1994,6 +2002,7 @@
+  const rawUrl=location.href;
+  recoveryLanding=/(?:[?#&])type=recovery(?:&|$)/i.test(rawUrl)||/[?&]recovery=1(?:&|$)/i.test(rawUrl);
+  sb=window.supabase.createClient(c.url,c.key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
++ window.ISA_SUPABASE=sb;
+  return true
+ }
+ async function ensureProfile(){
+@@ -2067,7 +2076,7 @@
+ window.cancelPasswordRecovery=()=>{E('recoveryScreen').classList.remove('open');history.replaceState({},'',location.pathname)};
+ window.logoutLocal=async()=>{if(sb)await sb.auth.signOut()};
+ async function session(s){
+- user=s?.user||null;
++ user=s?.user||null;window.ISA_AUTH_USER=user;
+  if(!user){ready=false;E('authScreen').style.display='flex';status('Nuvem desconectada');window.ISA_ROLE='seller';window.ISA_STATUS='active';window.ISA_ACTIVE=true;applyAdminAccess();return}
+  E('authScreen').style.display='none';
+  if(E('loggedUserMini'))E('loggedUserMini').textContent=(user.user_metadata?.full_name||user.email)+' • '+user.email;
+@@ -2291,6 +2300,43 @@
+  sel.innerHTML='<option value="">Selecione uma venda...</option>'+db.sales.map(s=>`<option value="${s.id}">${esc(s.name)} — ${(s.tours||[]).map(t=>t.name).join(', ')}</option>`).join('');
+ }
+ 
++const SIGN_PAGE_URL=()=>location.origin+location.pathname.replace(/index\.html$/,'').replace(/\/$/,'')+'/assinatura.html';
++function signStatusLabel(status,expiresAt){
++ if(expiresAt&&new Date(expiresAt)<new Date()&&status!=='signed')return['expired','Expirado'];
++ return({created:['created','Link criado'],sent:['sent','Enviado'],viewed:['viewed','Visualizado'],signed:['signed','Assinado']}[status]||['created',status||'Criado']);
++}
++window.loadRemoteSignatures=async function(force=false){
++ const box=document.getElementById('remoteSignatureList');if(!box)return;
++ const sb=window.ISA_SUPABASE;
++ if(!sb){box.innerHTML='<div class="empty">Conectando ao Supabase...</div>';return}
++ box.innerHTML='<div class="empty">Atualizando...</div>';
++ try{
++  const{data,error}=await sb.from('contract_signature_requests').select('id,sale_id,status,public_token,payload,payload_hash,created_at,expires_at,viewed_at,signed_at,signer_name').order('created_at',{ascending:false}).limit(50);
++  if(error)throw error;
++  const rows=Array.isArray(data)?data:[];
++  if(!rows.length){box.innerHTML='<div class="empty">Nenhum link de assinatura criado ainda. Abra um contrato preenchido e use “Criar link de assinatura”.</div>';return}
++  box.innerHTML='<div class="sign-list">'+rows.map(r=>{
++   const sale=db.sales.find(s=>String(s.id)===String(r.sale_id));
++   const client=r.payload?.nome||sale?.name||'Cliente';
++   const [cls,label]=signStatusLabel(r.status,r.expires_at);
++   const link=SIGN_PAGE_URL()+'?t='+encodeURIComponent(r.public_token||'');
++   return `<div class="sign-item"><div class="sign-head"><div><div class="sign-title">${esc(client)}</div><div class="sign-meta">${esc((r.payload?.tours||[]).map(t=>t.name).join(', ')||'Contrato')}<br>Criado: ${new Date(r.created_at).toLocaleString('pt-BR')}${r.signed_at?` • Assinado: ${new Date(r.signed_at).toLocaleString('pt-BR')}`:''}</div></div><span class="sign-status ${cls}">${label}</span></div><div class="sign-actions">${cls!=='signed'&&cls!=='expired'?`<button class="btn light sm" onclick="copyRemoteSignatureLink('${encodeURIComponent(link)}')">Copiar link</button><button class="btn gold sm" onclick="openRemoteSignatureWhatsApp('${encodeURIComponent(link)}','${String(sale?.phone||r.payload?.telefone||'').replace(/'/g,'')}','${String(client).replace(/'/g,"\\'")}', '${r.id}')">WhatsApp</button>`:''}${cls==='signed'?`<button class="btn gold sm" onclick="window.open('contrato.html?request=${r.id}','_blank')">Abrir contrato assinado</button>`:''}</div></div>`;
++  }).join('')+'</div>';
++ }catch(e){
++  const m=String(e?.message||e);
++  box.innerHTML=`<div class="alertbox warn"><strong>Assinatura remota ainda não ativada no Supabase.</strong><br>${esc(m)}<br><span class="meta">Execute o arquivo SUPABASE_V10_6_ASSINATURA_REMOTA.sql uma única vez.</span></div>`;
++ }
++};
++window.copyRemoteSignatureLink=async function(encoded){const link=decodeURIComponent(encoded);try{await navigator.clipboard.writeText(link);alert('Link de assinatura copiado.')}catch(e){prompt('Copie o link:',link)}};
++window.openRemoteSignatureWhatsApp=async function(encoded,phone,client,requestId){
++ const link=decodeURIComponent(encoded),sb=window.ISA_SUPABASE;
++ try{if(sb&&requestId)await sb.from('contract_signature_requests').update({status:'sent'}).eq('id',requestId)}catch(e){}
++ let d=String(phone||'').replace(/\D/g,'');if(d&&!d.startsWith('55')&&(d.length===10||d.length===11))d='55'+d;
++ const msg=`Olá, ${client||''}! 😊 Seu contrato está pronto para conferência e assinatura eletrônica. Abra o link abaixo, leia o documento e assine pelo próprio celular:\n\n${link}`;
++ window.open(d?`https://wa.me/${d}?text=${encodeURIComponent(msg)}`:`https://wa.me/?text=${encodeURIComponent(msg)}`,'_blank');
++ setTimeout(()=>loadRemoteSignatures(true),400);
++};
++
+ 
+ function auditRows(){
+  const start=document.getElementById('auditStart')?.value||'',end=document.getElementById('auditEnd')?.value||'',q=(document.getElementById('auditSearch')?.value||'').toLowerCase(),status=document.getElementById('auditStatus')?.value||'active';
+@@ -2326,7 +2372,7 @@
+ 
+ const oldRenderAllV4=window.renderAll;
+ window.renderAll=function(){oldRenderAllV4();normalizeSalesV8();renderContractSales();renderAuditReport();setTimeout(refreshIcons,0)}
+-document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.view==='contratos'){renderContractSales()}if(b.dataset.view==='auditoria')renderAuditReport()}));
++document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.view==='contratos'){renderContractSales();setTimeout(()=>loadRemoteSignatures(),0)}if(b.dataset.view==='auditoria')renderAuditReport()}));
+ // V10.2.6: recalcula comissão AGORA, depois que todos os patches acima
+ // (inclusive o caso especial do Hop On Hop Off) já reescreveram
+ // window.calcSaleCommission. A primeira chamada a updateCommissions() lá
