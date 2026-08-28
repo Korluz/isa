@@ -1,0 +1,147 @@
+d" minlength="6" autocomplete="new-password">
+    <div id="recoveryMessage" class="auth-message"></div>
+    <div class="recovery-actions"><button class="btn light" type="button" onclick="cancelPasswordRecovery()">Cancelar</button><button class="btn gold" type="button" onclick="saveNewPassword()">Salvar nova senha</button></div>
+  </div>
+</div>
+
+<div id="authScreen" class="auth-screen">
+  <div class="auth-card">
+    <div class="auth-brand"><div class="auth-logo">ISA</div><div><h1>Indômito Seller Assistant</h1><p>Acesso individual do vendedor</p></div></div>
+    <div class="auth-tabs"><button id="loginTab" class="active" type="button">Entrar</button><button id="registerTab" type="button">Criar conta</button></div>
+    <div id="loginPane">
+      <label>E-mail</label><input id="loginEmail" type="email" autocomplete="username">
+      <label>Senha</label><input id="loginPassword" type="password" autocomplete="current-password">
+      <button class="btn gold auth-submit" type="button" onclick="loginLocal()">Entrar</button><button class="auth-secondary" type="button" onclick="resetCloudPassword()">Esqueci minha senha</button>
+    </div>
+    <div id="registerPane" hidden>
+      <label>Nome do vendedor</label><input id="registerName">
+      <label>E-mail</label><input id="registerEmail" type="email">
+      <label>Senha</label><input id="registerPassword" type="password">
+      <label>Confirmar senha</label><input id="registerConfirm" type="password">
+      <button class="btn gold auth-submit" type="button" onclick="registerLocal()">Criar conta</button>
+    </div>
+    <div id="authMessage" class="auth-message"></div>
+    <p class="auth-note"><strong>ISA Cloud:</strong> sua conta e seus dados são sincronizados com segurança pelo Supabase. Você pode acessar em outros aparelhos usando o mesmo e-mail e senha.</p>
+  </div>
+</div>
+
+<div class="app">
+<aside class="side" id="side">
+ <div class="brand"><div class="logo">ISA</div><div><strong>Indômito Seller</strong><small>Assistente pessoal</small></div></div>
+ <nav class="menu">
+  <button class="active" data-view="inicio">▦ Meu dia</button>
+  <button data-view="vendas">◉ Minhas vendas</button>
+  <button data-view="amanha">☀ Amanhã</button>
+  <button data-view="validador">✓ Validador</button>
+  <button data-view="financeiro">R$ Financeiro</button>
+  <button data-view="contratos">▧ Contratos</button>
+<button data-view="auditoria">▤ Auditoria de comissões</button>
+<button id="adminMenuButton" data-view="admin" style="display:none">👑 Administração</button>
+<button data-view="config">⚙ Configurações</button>
+ </nav>
+ <div class="sidefoot"><div id="loggedUserMini"></div><div class="cloud-status"><span id="cloudDot" class="cloud-dot"></span><span id="cloudStatusText">Nuvem desconectada</span></div><button class="logout-btn" onclick="logoutLocal()">Sair</button><br>Dados separados por login neste aparelho</div>
+</aside>
+<main class="main">
+<header class="top">
+ <div style="display:flex;gap:11px;align-items:center"><button class="mobile" id="mobileBtn">☰</button><div><h1 id="pageTitle">Meu dia</h1><p id="pageSub">Prioridades comerciais e operacionais</p></div></div>
+ <div class="seller"><div style="text-align:right"><strong id="sellerNameTop">Vendedora</strong><div style="font-size:11px;color:var(--muted)">Painel pessoal</div></div><div class="avatar" id="avatar">V</div></div>
+</header>
+<div class="content">
+
+<section class="view" id="importar">
+ <div class="card"><div class="cardhead"><div><h2>Importar voucher</h2><div class="meta">Envie o PDF da plataforma da empresa. O ISA criará a venda automaticamente.</div></div></div>
+ <div class="importdrop" id="voucherDrop"><input id="voucherFile" type="file" accept="application/pdf,.pdf"><div class="importicon">📄</div><strong>Toque aqui para escolher o voucher</strong><div class="meta" style="margin-top:6px">Ou arraste o PDF para esta área.</div></div><div id="importStatus" class="importstatus" style="display:none"></div></div>
+ <div class="card" id="voucherReviewCard" style="display:none;margin-top:18px"><div class="cardhead"><div><h2>Conferência do voucher</h2><div class="meta">Revise os dados antes de criar a venda.</div></div><span class="badge b-ok" id="voucherConfidence">Dados reconhecidos</span></div>
+ <div class="reviewgrid"><div class="reviewitem"><small>Voucher</small><strong id="rvFile">—</strong></div><div class="reviewitem"><small>Cliente</small><strong id="rvClient">—</strong></div><div class="reviewitem"><small>Telefone</small><strong id="rvPhone">—</strong></div><div class="reviewitem"><small>E-mail</small><strong id="rvEmail">—</strong></div><div class="reviewitem"><small>Vendedor</small><strong id="rvSeller">—</strong></div><div class="reviewitem"><small>Ponto de encontro</small><strong id="rvHotel">—</strong></div></div>
+ <h3>Passeios encontrados</h3><div id="rvTours"></div><h3>Passageiros encontrados</h3><div class="passengerbox" id="rvPassengers"></div>
+ <div class="actions"><button class="btn gold" onclick="saveImportedVoucher()">Confirmar e criar venda</button><button class="btn light" onclick="editImportedVoucher()">Revisar manualmente</button><button class="btn light" onclick="resetImporter()">Cancelar</button></div></div>
+</section>
+
+<section class="view active" id="inicio">
+ <div class="grid4">
+  <div class="stat red"><small>Alertas de cancelamento</small><strong id="stCancel">0</strong><small>Passeios próximos de 48h</small></div>
+  <div class="stat orange"><small>Pagamentos urgentes</small><strong id="stPay">0</strong><small>Até 24h do passeio</small></div>
+  <div class="stat"><small>Passeios de amanhã</small><strong id="stTomorrow">0</strong><small>Programações esperadas</small></div>
+ </div>
+ <div class="dashboard">
+  <div class="card"><div class="cardhead"><h2>Alertas inteligentes</h2><button class="btn light sm" onclick="renderAll()">Atualizar</button></div><div id="alertsList" class="alerts"></div></div>
+  <div class="card"><div class="cardhead"><h2>Ações rápidas</h2></div>
+   <div class="actions" style="display:grid">
+    <button class="btn gold" onclick="openSale()">+ Nova venda</button>
+    <button class="btn light" onclick="go('amanha')">Ver passeios de amanhã</button>
+    <button class="btn light" onclick="go('validador')">Validar mensagem da logística</button>
+    <button class="btn light" onclick="exportCSV()">Exportar dados</button>
+   </div>
+  </div>
+ </div>
+ <div class="card" style="margin-top:18px"><div class="cardhead"><h2>Passeios de amanhã</h2><button class="btn light sm" onclick="go('amanha')">Abrir tela completa</button></div><div id="homeTomorrow"></div></div>
+</section>
+
+<section class="view" id="vendas">
+ <div class="card"><div class="cardhead"><h2>Minhas vendas</h2><button class="btn gold" onclick="openSale()">+ Nova venda</button></div>
+ <div class="toolbar"><input id="saleSearch" placeholder="Buscar cliente, telefone ou passeio..." oninput="renderSales()"><select id="saleFilter" onchange="renderSales()"><option value="">Todos os status</option><option>Aguardando pagamento</option><option>Pago</option><option>Reserva feita</option><option>Horário enviado</option></select></div>
+ <div id="salesList"></div></div>
+</section>
+
+<section class="view" id="amanha">
+ <div class="card"><div class="cardhead"><div><h2>Passeios de amanhã</h2><div class="meta" id="tomorrowDateLabel"></div></div><button class="btn light" onclick="renderTomorrow()">Atualizar</button></div><div id="tomorrowList"></div></div>
+</section>
+
+
+<section class="view" id="cancelados"><div class="card"><div class="cardhead"><div><h2>Passeios cancelados</h2><div class="meta">Histórico separado dos passeios ativos.</div></div></div><div class="toolbar"><input id="cancelSearch" placeholder="Buscar cliente, voucher ou passeio..." oninput="renderCancelled()"></div><div id="cancelledList"></div></div></section>
+
+
+<section class="view" id="horarios">
+ <div class="schedule-kpis">
+  <div class="schedule-kpi"><small>Clientes de amanhã</small><strong id="schExpected">0</strong></div>
+  <div class="schedule-kpi"><small>Horários recebidos</small><strong id="schReceived">0</strong></div>
+  <div class="schedule-kpi"><small>Aguardando logística</small><strong id="schWaiting">0</strong></div>
+  <div class="schedule-kpi"><small>Aguardando envio</small><strong id="schToSend">0</strong></div>
+ </div>
+ <div class="schedule-import">
+  <h2 style="margin:0 0 5px">🌙 Central de Horários</h2>
+  <div class="meta">Cole de uma vez as mensagens publicadas pela logística. O ISA cruza cliente, passeio e data com as vendas de amanhã.</div>
+  <textarea id="scheduleBulkInput" placeholder="Cole aqui o bloco de mensagens da logística...&#10;&#10;Se possível, mantenha uma linha em branco entre clientes diferentes."></textarea>
+  <div class="schedule-actions"><button class="btn gold" type="button" onclick="analyzeScheduleBatch()">Analisar bloco</button><button class="btn light" type="button" onclick="clearScheduleBatch()">Limpar</button></div>
+  <div id="scheduleBatchSummary" class="meta" style="margin-top:10px"></div>
+ </div>
+ <div class="card" id="scheduleReviewCard" style="display:none;margin-bottom:16px">
+  <div class="cardhead"><div><h2>Conferência automática</h2><div class="meta">Correspondências seguras podem ser salvas em lote; as duvidosas ficam para revisão.</div></div><button class="btn gold sm" onclick="saveSafeScheduleMatches()">Salvar seguras</button></div>
+  <div id="scheduleReview" class="schedule-review"></div>
+ </div>
+ <div class="card">
+  <div class="cardhead"><div><h2>Horários de amanhã</h2><div class="meta" id="scheduleTomorrowLabel"></div></div><button class="btn light sm" onclick="renderScheduleCenter()">Atualizar</button></div>
+  <div id="scheduleClientList" class="schedule-list"></div>
+ </div>
+</section>
+
+
+<section class="view" id="validador">
+ <div class="card"><div class="cardhead"><h2>Validador da logística</h2><button class="btn" onclick="validateMessage()">Analisar mensagem</button></div>
+ <div class="formgrid">
+  <div class="field full"><label>Venda</label><select id="validatorSale" onchange="updateValidatorContext()"></select></div>
+  <div class="field full"><label>Passeio esperado para amanhã</label><div id="validatorExpected" class="infobox">Selecione uma venda.</div></div>
+  <div class="field full"><label>Mensagem recebida da logística</label><textarea id="validatorMessage" rows="9" placeholder="Cole aqui a mensagem recebida da logística."></textarea></div>
+ </div><div id="validatorResult" class="empty">Selecione uma venda e cole a mensagem.</div></div>
+</section>
+
+
+<section class="view" id="financeiro">
+ <div class="financegrid">
+  <div class="moneycard"><small>Total vendido</small><strong id="finSold">R$ 0,00</strong></div>
+  <div class="moneycard"><small>Total recebido</small><strong id="finReceived">R$ 0,00</strong></div>
+  <div class="moneycard"><small>Saldo de clientes</small><strong id="finBalance">R$ 0,00</strong></div>
+  <div class="moneycard"><small>Comissão prevista</small><strong id="finCommission">R$ 0,00</strong></div>
+ </div>
+ <div class="card">
+  <div class="cardhead"><div><h2>Organizador financeiro</h2><div class="meta">A comissão é calculada automaticamente conforme passeio, ADT e CHD.</div></div></div>
+  <div class="toolbar">
+   <input id="financeSearch" placeholder="Buscar cliente..." oninput="renderFinance()">
+   <select id="financeStatus" onchange="renderFinance()"><option value="">Todos os pagamentos</option><option>Pendente</option><option>Parcial</option><option>Quitado</option></select>
+  </div>
+  <div id="financeList"></div>
+ </div>
+
+ <div class="card price-commission-card">
+  <div class="cardhead"><div><h2>Tabela vigente de preços e comissões</h2><div class="meta">Santiago conforme a tabela enviada. Atacama usa o preço do portfólio oficial com 25% de desconto. Comissão em reais por passageiro elegível.</div></div></div>
+  <div class="price-commission-wrap"><table class="price-commission-table"><thead><tr><th>Tour</th><th>Real Adulto</th><th>Real Niño</th><th>Comissão ven
