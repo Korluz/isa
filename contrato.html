@@ -1,1 +1,500 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Contrato V10.5</title><style>body{font-family:system-ui;background:#0b2136;color:white;display:grid;place-items:center;min-height:100vh;margin:0}.x{text-align:center;padding:24px}small{opacity:.75}</style></head><body><div class="x"><strong>Carregando Contrato V10.5…</strong><br><small>ISA by Korluz</small></div><script>(async()=>{try{const f=['_src/contrato.01.txt?v=1050','_src/contrato.02.txt?v=1050','_src/contrato.03.txt?v=1050'];let h='';for(const p of f){const r=await fetch(p);if(!r.ok)throw new Error(p+' '+r.status);h+=await r.text()}document.open();document.write(h);document.close()}catch(e){document.body.innerHTML='<div class="x"><strong>Falha ao carregar a aplicação.</strong><br><small>'+String(e)+'</small></div>'}})();</script></body></html>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Indômito Contract Manager — V10.5.3</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;color:#111}
+.app{max-width:1120px;margin:22px auto;padding:0 14px}
+.card{background:#fff;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.08);padding:22px;margin-bottom:22px}
+h1{margin:0 0 6px;font-size:26px} .sub{margin:0 0 18px;color:#555;line-height:1.35}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}
+.field{display:flex;flex-direction:column;gap:5px} label{font-weight:700;font-size:13px}
+input,textarea,select{border:1px solid #d1d5db;border-radius:9px;padding:10px 11px;font-size:15px} textarea{min-height:72px;resize:vertical}
+.full{grid-column:1/-1} .section-title{margin:20px 0 12px;font-size:17px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}
+.actions{display:flex;gap:12px;align-items:center;margin-top:18px;flex-wrap:wrap} button{border:0;border-radius:12px;padding:13px 18px;font-weight:800;cursor:pointer;font-size:15px}
+.primary{background:#111827;color:#fff} .secondary{background:#e5e7eb;color:#111} .status{color:#374151;font-size:14px}
+.note{font-size:13px;color:#555;background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:12px;line-height:1.4}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+
+
+.signature-panel{margin-top:10px;border:1px solid #d1d5db;border-radius:12px;padding:12px;background:#fafafa}
+.signature-pad{width:100%;height:190px;border:2px dashed #9ca3af;border-radius:10px;background:#fff;touch-action:none;display:block}
+.signature-tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;align-items:center}
+.ticket-preview{display:grid;gap:8px;margin-top:8px}
+.ticket-row{padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px;background:#fff}
+.ticket-row.alert{border-color:#f3c96a;background:#fff8e8}
+.ticket-chip{display:inline-block;border-radius:999px;padding:4px 8px;font-size:11px;font-weight:800;background:#fff1c2;color:#7a5200;margin-top:5px}
+.accept-box{display:flex;gap:9px;align-items:flex-start;margin-top:10px;padding:11px;border-radius:10px;background:#fff8e8;border:1px solid #f3c96a;font-size:13px;line-height:1.4}
+.accept-box input{margin-top:2px;transform:scale(1.15)}
+
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body>
+<div class="app">
+ <div class="card">
+  <h1>Indômito Contract Manager</h1>
+  <p class="sub">Contrato integrado ao ISA, com ciência específica de tickets, quadro de serviços e assinatura do contratante.</p>
+  <form id="form" onsubmit="return false;">
+   <div class="section-title">Dados do contratante</div>
+   <div class="grid">
+    <div class="field"><label>Nome completo</label><input id="nome" required value="Lucas Gonzaga Barros"></div>
+    <div class="field"><label>Nacionalidade</label><input id="nacionalidade" value="brasileiro"></div>
+    <div class="field"><label>Estado civil</label><input id="estadoCivil" value="casado"></div>
+    <div class="field"><label>Data de nascimento</label><input id="nascimento" placeholder="dd/mm/aaaa" value="11/07/1994"></div>
+    <div class="field"><label>CPF</label><input id="cpf" placeholder="000.000.000-00" value="097.840.614-14"></div>
+    <div class="field"><label>Telefone/WhatsApp</label><input id="telefone" placeholder="(00) 00000-0000" value="(81) 98700-6042"></div>
+    <div class="field full"><label>E-mail</label><input id="email" type="email" value="lucasgonzagabarros2025@gmail.com"></div>
+    <div class="field full"><label>Endereço completo</label><input id="endereco" placeholder="Rua, número, bairro, cidade/UF" value="Rua Hercílio Teixeira Lins 34A, CEP: 50910-560"></div>
+    <div class="field"><label>CEP</label><input id="cep" placeholder="00000-000" value="50910-560"></div>
+   </div>
+   <div class="section-title">Financeiro</div>
+   <div class="grid">
+    <div class="field"><label>Valor total</label><input id="valor" placeholder="R$ 0,00" value="R$ 2.000,00"></div>
+    <div class="field full"><label>Forma de pagamento / observação</label><textarea id="pagamento" placeholder="Ex.: Pagamento via PIX à vista em 06/07/2026">Pagamento via PIX à vista em 06/07/2026</textarea></div>
+   </div>
+
+   <div class="section-title">Passeios e condição de ticket</div>
+   <div class="note">Quando este contrato é aberto a partir de uma venda do ISA, os passeios são carregados automaticamente. Os itens identificados com ticket/reserva de terceiro serão destacados no PDF.</div>
+   <div id="servicesPreview" class="ticket-preview"><div class="ticket-row">Nenhuma venda vinculada. Os serviços continuarão constando no voucher anexado.</div></div>
+
+   <div class="section-title">Assinatura do contratante</div>
+   <div class="note">Opcional nesta versão. O cliente pode assinar com o dedo ou mouse antes da geração do PDF. Esta assinatura local não substitui, por si só, uma plataforma de assinatura remota com trilha completa de auditoria.</div>
+   <div class="signature-panel">
+    <canvas id="signaturePad" class="signature-pad"></canvas>
+    <div class="signature-tools">
+     <button type="button" class="secondary" id="clearSignature">Limpar assinatura</button>
+     <span class="status" id="signatureStatus">Sem assinatura.</span>
+    </div>
+    <label class="accept-box">
+     <input type="checkbox" id="aceiteContrato">
+     <span>O CONTRATANTE declara que leu o contrato e está ciente de que os passeios identificados no Quadro de Serviços como “TICKET/RESERVA NÃO REEMBOLSÁVEL APÓS EMISSÃO” possuem componente adquirido antecipadamente de terceiro, sujeito às condições específicas de cancelamento previstas neste instrumento.</span>
+    </label>
+   </div>
+
+   <div class="section-title">Anexos</div>
+   <div class="grid">
+    <div class="field"><label>Comprovante de pagamento</label><input id="comprovante" type="file" accept="application/pdf,image/png,image/jpeg,image/webp"></div>
+    <div class="field"><label>Voucher</label><input id="voucher" type="file" accept="application/pdf,image/png,image/jpeg,image/webp"></div>
+   </div>
+   <div class="actions">
+    <button type="button" class="primary" id="gerar">Gerar contrato PDF</button>
+    <button type="button" class="secondary" id="limpar">Limpar formulário</button>
+    <span class="status" id="status"></span>
+   </div>
+  </form>
+ </div>
+ <div class="card note">
+  <b>Nota técnica da V9:</b> preserva a geração direta no PDF da V8, com fonte Times, anexos em escala maior e assinatura ajustada ao padrão enviado.
+ </div>
+</div>
+
+
+
+
+
+
+<script>
+if (window.pdfjsLib) { pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; }
+const ASSINATURA = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAATIAAACgAQAAAACnZN2UAAADwUlEQVR42uVYwW7bRhB9uyYcHYqYOcVAgUqfkGMOAcRP8a3X/oHWf5A/sD6gBx9zSmkgQAL0YqA99aSiPhgpENCJgVAKzdeDJIq7O0NSNhCkyJ4k6nF25s2b2VkZwltpAWldWP/78hbyCnD/fhiG+3U0CMfzg0G4OlNgMF68q0OaIfG+B9yQfa+0bQPccfvLjVNxJ+0vf841HL1wfz/XcLUD8l2qjzXcHdCiZZ5quPfNCykAVBquoeW2BIBDDfdu++HTXwB1/hqHrn4EkCUariHsnXXwLVoxSy9NHvxmA5oJAJzgBLWnCRvQvF4ZskA51qe5eaEAYHIZt8ImH1WgHC0O06JIwLVrtwLUOK63nJWbBwsZd9l6eAgDZB3+Zd7OIm4eOlrIuLbqEz1eT0gEgImI26XturN+77znrsWPqqv4F+und73yDdlpj7200/ptIAWPauunF/7eQ+IAMBJxlwBQt/VUi7id2iaI+moLN/F+WPT451pKSCQcgzOh8JQh+cfOLNa+EJ9puLvOZHXyLL6yEqrHqfaSXnu3fkQTeM3fSkl3XfaCRJXdeasUEdq4uwyZI2B6cXNhb9efj8qPzWqySvvryHT5V7u94lWa6w5XDdSVkYpcyMcK9/SvlP0rJJkUMS7ptr93HV0HEq1HD7N3uT8vVpgHrVZjtpTfnXQ05xaOEbOLgfEey7hM6i9phKtDc7XCgVOLrrtvjGR7dz0JUONV/FuF/bR8mP6Kgbik5wC2ctdV4x2J+HJgHIcRLo+oS8V904HxupasrcCU1WQv2yM0fgJ7mSgBG36qowwkP4hvRHIuHqSXeIhYPMheGZ24ch3ZgfZiOediH0qiTpGKfW0RPxt5h48VvK4BYF4P4oXyOXMpH6lJp71Ro4BoPphHHc15F13Vv+X6Phrg4om02NxHA3uNnH/BqXlkjD0zT4FVS+UkyXpGkvxH+JtkvfI1Lmh2ZDndunK0xtlTY4zZpMO8no5JLoEkQ8XqiCVujNcCfv7t6AtJjkkuyZKsuJiS/OwwbfYtuF1nJEvyb7LKNs5VUzK38vByNmGS/7T+fJA38d409sYkSxYAMONubex9DC9cY2ek+6rfnZMlFjPx/Ahn4llEuNjnn9TKvXGnn8lpguoxeu1dXMBgptTvKt2VxTRXCobkcrzlqTwg3z5va6jN37LRY/kCeP7G9c5Df3T2l93feW+6+1Cz0auBc1iu3YCtLytq07sFgMf7zHr3nZ+/D1ym3DJFe7l2Vvy/eDHfet4WX33fei977v77/ge+X4Q6R/45VwAAAABJRU5ErkJggg==';
+
+const $ = id => document.getElementById(id);
+const val = id => ($(id).value || '').trim();
+const A4W = 595.28, A4H = 841.89;
+const M = { left: 56, right: 56, top: 68, bottom: 58 };
+const CONTENT_W = A4W - M.left - M.right;
+function hojeExtenso() {
+  const d = new Date();
+  const meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  return `${String(d.getDate()).padStart(2,'0')} de ${meses[d.getMonth()]} de ${d.getFullYear()}`;
+}
+function safeName(s) { return (s||'Cliente').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9 ]/gi,'').trim().replace(/\s+/g,' '); }
+function setTimes(pdf, style='normal', size=11.8) { pdf.setFont('times', style); pdf.setFontSize(size); }
+function pageNo(pdf, n, total=4) { setTimes(pdf,'normal',11.5); pdf.text(`Pág. ${n} de ${total}`, A4W - M.right, 55, {align:'right'}); }
+function headerTitle(pdf, txt, y, size=13.8) { setTimes(pdf,'bold',size); pdf.text(txt, A4W/2, y, {align:'center'}); }
+
+function addWrapped(pdf, text, x, y, maxW=CONTENT_W, opts={}) {
+  const size = opts.size || 11.8;
+  // V10: aumenta levemente o espaçamento vertical sem alterar a assinatura nem o voucher.
+  const lh = opts.lh || 15.0;
+  setTimes(pdf, opts.bold?'bold':'normal', size);
+  const lines = pdf.splitTextToSize(text, maxW);
+  pdf.text(lines, x, y, {lineHeightFactor: lh/size, align: opts.align || 'left'});
+  return y + (lines.length * lh) + (opts.after ?? 6);
+}
+function addPara(pdf, text, y, opts={}) { return addWrapped(pdf, text, opts.x || M.left, y, opts.maxW || CONTENT_W, {size: opts.size||11.8, lh: opts.lh||14.2, bold: opts.bold||false, after: opts.after ?? 8}); }
+function addArticle(pdf, text, y) { headerTitle(pdf, text, y, 13.2); return y + 24; }
+function addPage(pdf) { pdf.addPage('a4','portrait'); }
+
+function addContractPage1(pdf, d) {
+  pageNo(pdf,1,5); let y=112; headerTitle(pdf,'CONTRATO DE PRESTAÇÃO DE SERVIÇOS',y,14.2); y += 34;
+  y = addPara(pdf,'Pelo presente instrumento particular, de um lado como CONTRATADA:',y);
+  y = addPara(pdf,'TURISMO E TRANSPORTE INDOMITO LTDA pessoa jurídica de direito privado, inscrita no CNPJ sob nº 52.985.331/0001-21, com endereço à Rua José Versolato, nº 101, Sao Bernardo do Campo/SP, CEP 09.750-730, neste ato representada pelo seu sócio administrador FELIPE SEBASTIAN VIDAL BURGOS, Chileno, solteiro, inscrito no CPF sob nº CPF: 057.047.741-72 e e-mail felipe@indomitotours.cl.',y,{bold:false,after:8});
+  y = addPara(pdf,'E de outro lado, como CONTRATANTE:',y);
+  y = addPara(pdf,`${d.nome}, ${d.nacionalidade}, ${d.estadoCivil}, inscrito(a) no CPF sob nº ${d.cpf}, com domicílio na ${d.endereco}, com telefone sob nº ${d.telefone} e e-mail ${d.email}.`,y,{after:9});
+  y = addPara(pdf,'As partes acima identificadas têm, entre si, justo e acertado o presente “Contrato de Prestação de Serviços” (“Contrato”), segundo as disposições a seguir:',y,{after:14});
+  y = addArticle(pdf,'1. DO OBJETO DO CONTRATO',y);
+  y = addPara(pdf,'1.1. O presente Contrato tem como objeto a aquisição de passeios turísticos para as datas, destinos e quantidades de pessoas estabelecidas no comprovante de reserva (Anexo 1 do presente contrato).',y);
+  y = addPara(pdf,'1.2. A CONTRATADA é uma agência de viagem com sede no Brasil e também com registro no Chile¹ que vende passeios turísticos em território Chileno e Argentino. Os passeios ora contratados são para o destino: Chile e serão realizados sob a execução e/ou supervisão da CONTRATADA.',y);
+  y = addPara(pdf,'1.3. A CONTRATANTE é pessoa física, responsável pela reserva e aquisição dos passeios.',y,{after:14});
+  y = addArticle(pdf,'2. DOS SERVIÇOS CONTRATADOS',y);
+  y = addPara(pdf,'2.1. São considerados serviços contratados todos aqueles listados no comprovante de reserva (Anexo 1 do presente contrato). Sendo que o detalhamento do que está incluso ou não nos respectivos passeios se encontram no Portfólio da CONTRATADA (versão vigente da data da compra dos passeios).',y);
+  y = addPara(pdf,'2.2. Todos os passeios estão sujeitos a alteração de data e horário, dependendo das condições climáticas existentes no momento da prestação dos serviços, bem como das regras e condições impostas pelos estabelecimentos de terceiros em que seja imprescindível o funcionamento para a realização do passeio. Caso o passeio já tenha iniciado, alterações de rota poderão ser feitas, caso ocorram imprevistos.',y);
+  y = addPara(pdf,'2.3. Por motivos externos, caso haja cancelamento ou alteração de disponibilidade de passeios, a CONTRATADA resguarda o direito de propor mudanças nos serviços contratados, que poderão ou não',y,{after:0});
+  setTimes(pdf,'normal',9); pdf.text('¹ Contribuinte n.77.461.454-0 Turismo y Transportes Indomito SPA.', M.left, A4H-58);
+}
+function addContractPage2(pdf,d) {
+  addPage(pdf); pageNo(pdf,2,5); let y=92;
+  y = addPara(pdf,'ser aceitas pela CONTRATANTE. No caso de não consentimento pelas alterações os valores dos passeios serão 100% reembolsáveis.',y);
+  y = addPara(pdf,'2.4. Para prestação dos serviços contratados no modelo compartilhado, fica firmado entre as partes, que se faz necessário atingir o número mínimo de passageiros para a realização do passeio, caso em que se este não vier a ocorrer, reserva-se à CONTRATADA o direito de cancelamento ou alteração de passeio, mediante aviso prévio via plataforma de vendas (Whatsapp número: +55 21 97215 4562).',y);
+  y = addPara(pdf,'2.4.1. Para serviços no modelo privativo, não se aplica o disposto no item 2.4.',y);
+  y = addPara(pdf,'2.5. Na hipótese da alteração de passeio, fica firmado entre as partes, que será devido o pagamento da diferença do valor para o caso de passeios mais caros, ou reembolso no caso de passeio mais barato que o originalmente contratado.',y,{after:16});
+  y = addArticle(pdf,'3. DO COMPROMISSO, PREÇO E FORMA DE PAGAMENTO',y);
+  y = addPara(pdf,'3.1. Fica acordado entre as Partes o compromisso do pagamento em sua totalidade dos serviços contratados antes da realização dos passeios, salvo hipótese de parcelamento no cartão de crédito.',y);
+  y = addPara(pdf,`3.2. O valor total do presente contrato é de ${d.valor}.`,y);
+  y = addPara(pdf,'3.3. Os valores detalhados de cada passeio contratado constam no comprovante de reserva (Anexo 1 do presente contrato) e foram repassados à CONTRATANTE no momento da negociação dos serviços.',y);
+  y = addPara(pdf,`3.4. A forma de pagamento escolhida pela CONTRATANTE para liquidar o presente contrato é através de pagamento via ${d.pagamento}`,y,{after:16});
+  y = addArticle(pdf,'4. O PRAZO',y);
+  y = addPara(pdf,'4.1. A vigência do presente contrato se inicia na data da sua assinatura e se encerra após a data do último passeio contratado.',y,{after:16});
+  y = addArticle(pdf,'5. DEVERES DO CONTRATANTE E DA CONTRATADA',y);
+  y = addPara(pdf,'5.1. A CONTRATADA se compromete:',y,{after:4});
+  y = addPara(pdf,'a) A realizar os serviços conforme datas, horários e itinerários contratados. Todavia não responde por quaisquer casos fortuitos e de força maior que não estejam em sua alçada e prejudique a execução dos serviços.',y,{x:M.left+20,maxW:CONTENT_W-20});
+  y = addPara(pdf,'b) A utilizar veículos autorizados e licenciados para realização dos passeios contratados, para os serviços que contemplam Transporte incluído, seja no modo Compartilhado ou Privativo.',y,{x:M.left+20,maxW:CONTENT_W-20});
+}
+function addContractPage3(pdf,d) {
+  addPage(pdf); pageNo(pdf,3,5); let y=78;
+  const ind={x:M.left+20,maxW:CONTENT_W-20};
+  y = addPara(pdf,'c) A manter contato e informar a CONTRATADA na hipótese de alterações e cancelamentos de passeios e oferecer alternativas para o melhor aproveitamento da viagem da CONTRATADA.',y,ind);
+  y = addPara(pdf,'d) Fornecer informações adequadas e claras sobre os diferentes serviços e passeios ofertados, com especificação correta das características, horários, preços, suas variações, possíveis eventos fortuitos e condições indesejáveis, tolerâncias, bem como os riscos que apresentem e especificidade dos passeios, ficando a CONTRATANTE ciente e de acordo com os termos apresentados caso contrate o passeio.',y,ind);
+  y = addPara(pdf,'e) Prestar suporte, seja de locomoção, informativo e orientativo para a CONTRATANTE na ocorrência de eventos adversos durante a realização dos passeios.',y,ind);
+  y = addPara(pdf,'5.2. A CONTRATANTE se compromete:',y,{after:4});
+  y = addPara(pdf,'a) A quitar a totalidade dos valores pendentes referentes aos passeios comprados antes da realização do primeiro tour contratado, sob pena de não realização dos passeios.',y,ind);
+  y = addPara(pdf,'b) A portar consigo documento de identificação (Passaporte ou Carteira de Identidade) durante a realização dos passeios.',y,ind);
+  y = addPara(pdf,'c) Providenciar a guarda e a segurança da sua bolsa e objetos pessoais durante a realização dos tours compartilhados, não sendo a CONTRATADA responsabilizada por perdas e danos.',y,ind);
+  y = addPara(pdf,'d) Informar todas as condições de saúde pessoais atuais que possam influenciar e interferir na segurança e realização dos passeios.',y,ind);
+  y = addPara(pdf,'e) Estar pronto, na recepção do hotel ou ponto de encontro, no horário informado no voucher do passeio compartilhado.',y,{...ind,after:14});
+  y = addArticle(pdf,'6. RESCISÃO, CANCELAMENTOS E REEMBOLSOS',y);
+  y = addPara(pdf,'6.1. O presente contrato poderá ser rescindido por qualquer uma das partes, mediante notificação à outra, por escrito e com envio ao correio eletrônico (e-mail) informado neste contrato e pela plataforma de vendas (Whatsapp número: +55 21 97215 4562), com prazo máximo de 48 (quarenta e oito) horas de antecedência a realização do primeiro passeio.',y);
+  y = addPara(pdf,'6.2. Pedidos de cancelamentos de passeios feitos com antecedência de 48 (quarenta e oito) horas ao horário do tour serão reembolsáveis 100% (cem por cento), após esse horário não haverá reembolso.',y);
+  y = addPara(pdf,'6.3. O prazo para pagamento do reembolso ou estorno de cobrança feita no cartão de crédito é de até 5 (cinco) dias úteis, contados da data do pedido de reembolso, que deverá ser feito através da plataforma de vendas (Whatsapp número: +56 9 8706 4691) com o fornecimento dos dados bancários para pagamento e o ‘de acordo’ com o valor a ser reembolsado.',y,{});
+  y = addPara(pdf,'6.4. Alguns dos serviços contratados podem envolver ingressos, tickets, reservas ou serviços de terceiros adquiridos antecipadamente pela CONTRATADA. Quando tais itens forem efetivamente adquiridos em condição não reembolsável pelo respectivo fornecedor, o valor correspondente ao item poderá ser retido em caso de cancelamento solicitado pela CONTRATANTE, limitado ao montante efetivamente não recuperável. Esta regra não afasta direitos de reembolso assegurados pela legislação aplicável nem se aplica a valores que possam ser recuperados junto ao respectivo fornecedor.',y,{size:10.7,lh:12.7});
+  y = addPara(pdf,'6.4.1. Os passeios sujeitos a essa condição estarão expressamente identificados no Quadro de Serviços Contratados deste instrumento com a indicação “TICKET/RESERVA NÃO REEMBOLSÁVEL APÓS EMISSÃO”.',y,{size:10.7,lh:12.7});
+  y = addArticle(pdf,'7. COMUNICAÇÕES E NOTIFICAÇÕES',y);
+  y = addPara(pdf,'7.1. Todos os avisos e comunicações entre as Partes, bem como aqueles que tenham efeito em relação ao Contrato, ainda que não expressamente previstos, serão enviados de forma digital através da plataforma de vendas.',y,{});
+}
+function addContractPage4(pdf,d) {
+  addPage(pdf); pageNo(pdf,4,5); let y=92;
+  y = addArticle(pdf,'8. CONDIÇÕES GERAIS',y);
+  y = addPara(pdf,'8.1. Eventuais inclusões de outras cláusulas, exclusões ou alterações das já existentes, serão consignadas em “Termo Aditivo”, por escrito, a ser devidamente assinado pelas Partes, que passará a fazer parte integrante deste Contrato.',y);
+  y = addPara(pdf,'8.2. As Partes declaram-se agindo de boa-fé, com lealdade e probidade, plenamente capazes civilmente, para levar a bom termo este contrato e para tê-lo como válido e eficaz.',y,{after:18});
+  y = addArticle(pdf,'9. DO FORO',y);
+  y = addPara(pdf,'9.1. As Partes elegem o foro da Comarca de Bauru/SP, com renúncia expressa a qualquer outro, por mais especial ou privilegiado que seja, para dirimir quaisquer controvérsias decorrentes do presente Contrato e sua execução.',y);
+  y = addPara(pdf,'E, por estarem assim justas e contratadas, as Partes assinam o presente Contrato, que será encaminhado de forma digital.',y);
+  y = addPara(pdf,'O presente contrato passa a vigorar entre as partes a partir da assinatura do mesmo.',y,{after:16});
+  const dataTexto = hojeExtenso();
+  const dateX = A4W/2 - 72;
+  setTimes(pdf,'normal',11.8);
+  pdf.text('Bauru/SP, ', dateX, y);
+  pdf.setTextColor(220,0,0);
+  pdf.text(dataTexto + '.', dateX + 56, y);
+  pdf.setTextColor(0,0,0);
+}
+
+function addContractPage5(pdf,d) {
+  addPage(pdf); pageNo(pdf,5,5); let y=78;
+  y = addArticle(pdf,'QUADRO DE SERVIÇOS CONTRATADOS E CIÊNCIA ESPECÍFICA',y);
+
+  const tours=Array.isArray(d.tours)?d.tours:[];
+  if(tours.length){
+    tours.forEach((t,idx)=>{
+      const date=t.date?(' • '+formatDateBR(t.date)):'';
+      const condition=t.ticketNonRefundable
+        ?'TICKET/RESERVA NÃO REEMBOLSÁVEL APÓS EMISSÃO'
+        :'Regra geral de cancelamento e reembolso do contrato';
+      y = addPara(pdf,`${idx+1}. ${t.name}${date}`,y,{bold:true,size:10.8,lh:12.8,after:2});
+      y = addPara(pdf,condition,y,{x:M.left+18,maxW:CONTENT_W-18,size:10.2,lh:12.0,after:8});
+      if(y>A4H-315){
+        addPage(pdf); y=78;
+        headerTitle(pdf,'QUADRO DE SERVIÇOS — CONTINUAÇÃO',y,12.5); y+=28;
+      }
+    });
+  } else {
+    y = addPara(pdf,'Os serviços contratados constam no comprovante de reserva (voucher) anexado a este contrato. Nenhuma classificação automática de ticket foi carregada porque o contrato foi aberto sem uma venda vinculada no ISA.',y,{size:10.6,lh:12.6,after:16});
+  }
+
+  const ticketTours=tours.filter(t=>t.ticketNonRefundable);
+  if(ticketTours.length){
+    y = addPara(pdf,'DECLARAÇÃO DE CIÊNCIA: A CONTRATANTE declara estar ciente de que os passeios acima identificados como “TICKET/RESERVA NÃO REEMBOLSÁVEL APÓS EMISSÃO” possuem componente adquirido antecipadamente de terceiro e sujeito às condições específicas de cancelamento descritas neste contrato.',y,{bold:true,size:10.2,lh:12.2,after:14});
+  }
+
+  if(d.acceptedAt){
+    y = addPara(pdf,`Aceite registrado neste documento em ${d.acceptedAt}.`,y,{size:10.2,lh:12.2,after:14});
+  }
+
+  setTimes(pdf,'bold',11.8); pdf.text('CONTRATADA:',M.left,y); y += 8;
+  const sigW = 190, sigH = 74;
+  const sigX = (A4W - sigW)/2;
+  pdf.addImage(ASSINATURA,'PNG',sigX,y,sigW,sigH); y += sigH + 2;
+  const lineW = 285, lineX = (A4W - lineW)/2;
+  pdf.setLineWidth(0.5); pdf.line(lineX,y,lineX+lineW,y); y += 12;
+  setTimes(pdf,'bold',11.2); pdf.text('TURISMO E TRANSPORTE INDOMITO LTDA',A4W/2,y,{align:'center'}); y += 14;
+  setTimes(pdf,'normal',11.2); pdf.text('Por: Felipe Sebastian Vidal Burgos',A4W/2,y,{align:'center'}); y += 14;
+  pdf.text('Diretor',A4W/2,y,{align:'center'}); y += 42;
+
+  setTimes(pdf,'bold',11.8); pdf.text('CONTRATANTE:',M.left,y); y += 8;
+  if(d.signatureData){
+    try{
+      pdf.addImage(d.signatureData,'PNG',(A4W-220)/2,y,220,75);
+      y += 78;
+    }catch(e){
+      y += 62;
+    }
+  } else {
+    y += 62;
+  }
+  const clineW = 305, clineX = (A4W - clineW)/2;
+  pdf.line(clineX,y,clineX+clineW,y); y += 15;
+  setTimes(pdf,'normal',11.2); pdf.text(d.nome,A4W/2,y,{align:'center'});
+}
+
+function formatDateBR(v){
+  if(!v)return '';
+  const m=String(v).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return m?`${m[3]}/${m[2]}/${m[1]}`:String(v);
+}
+
+
+async function fileToDataURL(file) { return await new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); }); }
+function cropWhiteCanvas(canvas, padding=28) {
+  const ctx = canvas.getContext('2d');
+  const {width:w,height:h}=canvas;
+  const img = ctx.getImageData(0,0,w,h).data;
+  let minX=w,minY=h,maxX=0,maxY=0,found=false;
+  for(let y=0;y<h;y+=3){
+    for(let x=0;x<w;x+=3){
+      const i=(y*w+x)*4, r=img[i], g=img[i+1], b=img[i+2], a=img[i+3];
+      if(a>20 && !(r>245 && g>245 && b>245)) { found=true; if(x<minX)minX=x; if(y<minY)minY=y; if(x>maxX)maxX=x; if(y>maxY)maxY=y; }
+    }
+  }
+  if(!found) return canvas;
+  minX=Math.max(0,minX-padding); minY=Math.max(0,minY-padding);
+  maxX=Math.min(w,maxX+padding); maxY=Math.min(h,maxY+padding);
+  const cw=maxX-minX, ch=maxY-minY;
+  const out=document.createElement('canvas'); out.width=cw; out.height=ch;
+  out.getContext('2d').drawImage(canvas,minX,minY,cw,ch,0,0,cw,ch);
+  return out;
+}
+async function renderPdfFile(file, maxPages=99, crop=false) {
+  if(!file) return [];
+  if(file.type.startsWith('image/')) return [await fileToDataURL(file)];
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({data: buf}).promise;
+  const imgs=[];
+  for(let i=1;i<=Math.min(pdf.numPages,maxPages);i++) {
+    const page = await pdf.getPage(i);
+    const viewport = page.getViewport({scale: 2.4});
+    const canvas = document.createElement('canvas'); canvas.width=viewport.width; canvas.height=viewport.height;
+    const ctx = canvas.getContext('2d'); await page.render({canvasContext:ctx, viewport}).promise;
+    const finalCanvas = crop ? cropWhiteCanvas(canvas, 34) : canvas;
+    imgs.push(finalCanvas.toDataURL('image/jpeg',0.95));
+  }
+  return imgs;
+}
+function fitImage(pdf, dataUrl, x, y, maxW, maxH) {
+  const props = pdf.getImageProperties(dataUrl);
+  let w = maxW, h = w * props.height / props.width;
+  if(h > maxH) { h = maxH; w = h * props.width / props.height; }
+  pdf.addImage(dataUrl, dataUrl.includes('image/png')?'PNG':'JPEG', x, y, w, h);
+  return {w,h};
+}
+function addAttachments(pdf, compImgs, voucherImgs) {
+  const totalAnexos = 5 + 1 + Math.max(voucherImgs.length, 1) + Math.max(compImgs.length - 1, 0);
+  let page = 6;
+  addPage(pdf); pageNo(pdf,page,totalAnexos); let y=82;
+  setTimes(pdf,'bold',13.5); pdf.text('Dados para Ativação da Reserva',M.left,y); y += 42;
+  setTimes(pdf,'bold',12.3); pdf.text('Comprovante de pagamento:',M.left,y); y += 18;
+  if(compImgs[0]) {
+    const r=fitImage(pdf,compImgs[0],M.left-18,y,CONTENT_W+36,470);
+    y += r.h + 34;
+  } else {
+    setTimes(pdf,'normal',11.5); pdf.text('Nenhum comprovante anexado.',M.left,y); y += 34;
+  }
+  for(const img of compImgs.slice(1)) {
+    page++; addPage(pdf); pageNo(pdf,page,totalAnexos);
+    setTimes(pdf,'bold',13.2); pdf.text('Comprovante de pagamento - continuação',M.left,82);
+    fitImage(pdf,img,M.left,114,CONTENT_W,665);
+  }
+  // Voucher começa em nova página para permitir escala legível.
+  page++; addPage(pdf); pageNo(pdf,page,totalAnexos);
+  y=82;
+  setTimes(pdf,'bold',13.2); pdf.text('Voucher:',M.left,y); y += 22;
+  if(voucherImgs[0]) {
+    fitImage(pdf,voucherImgs[0],M.left,y,CONTENT_W,695);
+  } else {
+    setTimes(pdf,'normal',11.5); pdf.text('Nenhum voucher anexado.',M.left,y);
+  }
+  for(const img of voucherImgs.slice(1)) {
+    page++; addPage(pdf); pageNo(pdf,page,totalAnexos);
+    setTimes(pdf,'bold',13.2); pdf.text('Voucher - continuação',M.left,82);
+    fitImage(pdf,img,M.left,114,CONTENT_W,665);
+  }
+}
+
+function collectData() {
+ const signed=window.signaturePadHasInk===true;
+ const accepted=document.getElementById('aceiteContrato')?.checked===true;
+ return {
+  nome:val('nome'), nacionalidade:val('nacionalidade'), estadoCivil:val('estadoCivil'),
+  cpf:val('cpf'), nascimento:val('nascimento'), telefone:val('telefone'), email:val('email'),
+  endereco:val('endereco'), cep:val('cep'), valor:val('valor'), pagamento:val('pagamento'),
+  tours:Array.isArray(window.contractTours)?window.contractTours:[],
+  signatureData:signed?document.getElementById('signaturePad')?.toDataURL('image/png'):null,
+  acceptedAt:(signed&&accepted)?new Date().toLocaleString('pt-BR'):'',
+  accepted
+ };
+}
+async function gerarPDF() {
+  const d = collectData(); if(!d.nome) { alert('Informe o nome completo.'); return; }
+  if(d.signatureData && !d.accepted){ alert('Para inserir a assinatura do cliente no PDF, marque primeiro a declaração de ciência e aceite.'); return; }
+  $('status').textContent = 'Lendo anexos...';
+  const compImgs = await renderPdfFile($('comprovante').files[0], 99, true);
+  const voucherImgs = await renderPdfFile($('voucher').files[0], 99, false);
+  $('status').textContent = 'Gerando PDF...';
+  const {jsPDF} = window.jspdf;
+  const pdf = new jsPDF({orientation:'portrait',unit:'pt',format:'a4',compress:true});
+  pdf.setProperties({title:`Contrato - ${d.nome}`, subject:'Contrato de prestação de serviços', author:'Indômito Tours'});
+  addContractPage1(pdf,d); addContractPage2(pdf,d); addContractPage3(pdf,d); addContractPage4(pdf,d); addContractPage5(pdf,d); addAttachments(pdf,compImgs,voucherImgs);
+  pdf.save(`Contrato - ${safeName(d.nome)}.pdf`);
+  $('status').textContent = 'Contrato gerado.';
+}
+
+
+
+
+function setStatus(msg){ const el=document.getElementById('status'); if(el) el.textContent=msg; }
+window.addEventListener('error', (e)=>{ setStatus('Erro: ' + (e.message || 'falha desconhecida')); });
+window.addEventListener('unhandledrejection', (e)=>{ setStatus('Erro: ' + (e.reason && e.reason.message ? e.reason.message : e.reason)); });
+async function gerarPDFSeguro(){
+  try {
+    if(!window.jspdf || !window.jspdf.jsPDF){
+      setStatus('Erro: biblioteca jsPDF não carregou. Verifique a internet ou use Chrome/Edge.');
+      alert('A biblioteca jsPDF não carregou. Esta versão usa bibliotecas online. Verifique a internet e abra no Chrome/Edge.');
+      return;
+    }
+    if(!window.pdfjsLib){
+      setStatus('Erro: biblioteca PDF.js não carregou. Verifique a internet ou use Chrome/Edge.');
+      alert('A biblioteca PDF.js não carregou. Esta versão usa bibliotecas online. Verifique a internet e abra no Chrome/Edge.');
+      return;
+    }
+    if(window.pdfjsLib && pdfjsLib.GlobalWorkerOptions){
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+    await gerarPDF();
+  } catch (err) {
+    console.error(err);
+    setStatus('Erro ao gerar: ' + (err && err.message ? err.message : err));
+    alert('Erro ao gerar PDF: ' + (err && err.message ? err.message : err));
+  }
+}
+window.addEventListener('DOMContentLoaded',()=>{
+  const btn=document.getElementById('gerar');
+  const limpar=document.getElementById('limpar');
+  if(btn) btn.addEventListener('click', gerarPDFSeguro);
+  if(limpar) limpar.addEventListener('click',()=>{ document.querySelectorAll('input,textarea').forEach(e=>{ if(e.type==='file') e.value=''; else e.value=''; }); setStatus('Formulário limpo.'); });
+});
+
+
+window.contractTours=window.contractTours||[];
+window.signaturePadHasInk=false;
+
+function renderContractServices(){
+ const box=document.getElementById('servicesPreview');if(!box)return;
+ const tours=Array.isArray(window.contractTours)?window.contractTours:[];
+ if(!tours.length){
+  box.innerHTML='<div class="ticket-row">Nenhuma venda vinculada. Os serviços continuarão constando no voucher anexado.</div>';
+  return;
+ }
+ box.innerHTML=tours.map(t=>`<div class="ticket-row ${t.ticketNonRefundable?'alert':''}">
+   <strong>${String(t.name||'Passeio')}</strong>${t.date?` • ${formatDateBR(t.date)}`:''}
+   ${t.price?`<div style="margin-top:4px">Valor registrado: ${Number(t.price).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</div>`:''}
+   <div class="${t.ticketNonRefundable?'ticket-chip':''}" style="${t.ticketNonRefundable?'':'margin-top:5px;color:#555'}">${t.ticketNonRefundable?'TICKET/RESERVA NÃO REEMBOLSÁVEL APÓS EMISSÃO':'Regra geral de cancelamento/reembolso'}</div>
+  </div>`).join('');
+}
+
+function setupSignaturePad(){
+ const canvas=document.getElementById('signaturePad');if(!canvas)return;
+ const ctx=canvas.getContext('2d');
+ let drawing=false,last=null;
+ function resize(){
+  const ratio=Math.max(window.devicePixelRatio||1,1);
+  const rect=canvas.getBoundingClientRect();
+  const oldInk=window.signaturePadHasInk;
+  const snapshot=oldInk?canvas.toDataURL('image/png'):null;
+  canvas.width=Math.max(1,Math.floor(rect.width*ratio));
+  canvas.height=Math.max(1,Math.floor(rect.height*ratio));
+  ctx.setTransform(ratio,0,0,ratio,0,0);
+  ctx.lineWidth=2.2;ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='#111827';
+  if(snapshot){
+    const img=new Image();img.onload=()=>ctx.drawImage(img,0,0,rect.width,rect.height);img.src=snapshot;
+  }
+ }
+ function point(ev){
+  const rect=canvas.getBoundingClientRect(),p=ev.touches?.[0]||ev.changedTouches?.[0]||ev;
+  return {x:p.clientX-rect.left,y:p.clientY-rect.top};
+ }
+ function start(ev){ev.preventDefault();drawing=true;last=point(ev)}
+ function move(ev){if(!drawing)return;ev.preventDefault();const p=point(ev);ctx.beginPath();ctx.moveTo(last.x,last.y);ctx.lineTo(p.x,p.y);ctx.stroke();last=p;window.signaturePadHasInk=true;const st=document.getElementById('signatureStatus');if(st)st.textContent='Assinatura capturada.'}
+ function end(ev){if(drawing){ev.preventDefault();drawing=false;last=null}}
+ resize();window.addEventListener('resize',resize);
+ canvas.addEventListener('pointerdown',start);canvas.addEventListener('pointermove',move);window.addEventListener('pointerup',end);
+ canvas.addEventListener('touchstart',start,{passive:false});canvas.addEventListener('touchmove',move,{passive:false});canvas.addEventListener('touchend',end,{passive:false});
+ document.getElementById('clearSignature')?.addEventListener('click',()=>{
+  const rect=canvas.getBoundingClientRect();ctx.clearRect(0,0,rect.width,rect.height);window.signaturePadHasInk=false;
+  const st=document.getElementById('signatureStatus');if(st)st.textContent='Sem assinatura.';
+ });
+}
+
+window.addEventListener('DOMContentLoaded',()=>{
+ setupSignaturePad();
+ renderContractServices();
+});
+
+</script>
+
+<script>
+window.addEventListener('DOMContentLoaded',()=>{
+  try{
+    const raw=localStorage.getItem('isa_contract_handoff');
+    if(!raw) return;
+    const d=JSON.parse(raw);
+    const put=(id,v)=>{
+      const el=document.getElementById(id);
+      if(el && v!==undefined && v!==null){
+        el.value=String(v);
+        el.dispatchEvent(new Event('input',{bubbles:true}));
+        el.dispatchEvent(new Event('change',{bubbles:true}));
+      }
+    };
+    put('nome',d.nome);
+    put('telefone',d.telefone);
+    put('email',d.email);
+    put('endereco',d.endereco);
+    put('valor',d.valor);
+    put('pagamento',d.pagamento);
+    window.contractTours=Array.isArray(d.tours)?d.tours:[];
+    if(typeof renderContractServices==='function')renderContractServices();
+
+    // Preserve the handoff only long enough to fill this contract.
+    localStorage.removeItem('isa_contract_handoff');
+  }catch(e){
+    console.warn('Não foi possível preencher o contrato automaticamente.',e);
+  }
+});
+</script>
+
+</body>
+</html>
