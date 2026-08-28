@@ -1,0 +1,107 @@
+turn; }
+  $('status').textContent = 'Lendo anexos...';
+  const compImgs = await renderPdfFile($('comprovante').files[0], 99, true);
+  const voucherImgs = await renderPdfFile($('voucher').files[0], 99, false);
+  $('status').textContent = 'Gerando PDF...';
+  const {jsPDF} = window.jspdf;
+  const pdf = new jsPDF({orientation:'portrait',unit:'pt',format:'a4',compress:true});
+  pdf.setProperties({title:`Contrato - ${d.nome}`, subject:'Contrato de prestação de serviços', author:'Indômito Tours'});
+  addContractPage1(pdf,d); addContractPage2(pdf,d); addContractPage3(pdf,d); addContractPage4(pdf,d); addContractPage5(pdf,d); addAttachments(pdf,compImgs,voucherImgs);
+  pdf.save(`Contrato - ${safeName(d.nome)}.pdf`);
+  $('status').textContent = 'Contrato gerado.';
+}
+
+
+
+
+function setStatus(msg){ const el=document.getElementById('status'); if(el) el.textContent=msg; }
+window.addEventListener('error', (e)=>{ setStatus('Erro: ' + (e.message || 'falha desconhecida')); });
+window.addEventListener('unhandledrejection', (e)=>{ setStatus('Erro: ' + (e.reason && e.reason.message ? e.reason.message : e.reason)); });
+async function gerarPDFSeguro(){
+  try {
+    if(!window.jspdf || !window.jspdf.jsPDF){
+      setStatus('Erro: biblioteca jsPDF não carregou. Verifique a internet ou use Chrome/Edge.');
+      alert('A biblioteca jsPDF não carregou. Esta versão usa bibliotecas online. Verifique a internet e abra no Chrome/Edge.');
+      return;
+    }
+    if(!window.pdfjsLib){
+      setStatus('Erro: biblioteca PDF.js não carregou. Verifique a internet ou use Chrome/Edge.');
+      alert('A biblioteca PDF.js não carregou. Esta versão usa bibliotecas online. Verifique a internet e abra no Chrome/Edge.');
+      return;
+    }
+    if(window.pdfjsLib && pdfjsLib.GlobalWorkerOptions){
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+    await gerarPDF();
+  } catch (err) {
+    console.error(err);
+    setStatus('Erro ao gerar: ' + (err && err.message ? err.message : err));
+    alert('Erro ao gerar PDF: ' + (err && err.message ? err.message : err));
+  }
+}
+window.addEventListener('DOMContentLoaded',()=>{
+  const btn=document.getElementById('gerar');
+  const limpar=document.getElementById('limpar');
+  if(btn) btn.addEventListener('click', gerarPDFSeguro);
+  if(limpar) limpar.addEventListener('click',()=>{ document.querySelectorAll('input,textarea').forEach(e=>{ if(e.type==='file') e.value=''; else e.value=''; }); setStatus('Formulário limpo.'); });
+});
+
+
+window.contractTours=window.contractTours||[];
+window.contractSaleId=window.contractSaleId||'';
+window.remoteSignatureData=null;
+window.remoteAcceptedAt='';
+window.remoteSignatureProtocol='';
+window.remotePayloadHash='';
+const ISA_SUPABASE_URL='https://cajrgongdxhzfudbheiv.supabase.co';
+const ISA_SUPABASE_KEY='sb_publishable_6ydTiQ192A9XfGzIAUtIrw_R7zBbq7h';
+const contractSb=window.supabase?.createClient(ISA_SUPABASE_URL,ISA_SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+
+function renderContractServices(){
+ const box=document.getElementById('servicesPreview');if(!box)return;
+ const tours=Array.isArray(window.contractTours)?window.contractTours:[];
+ if(!tours.length){box.innerHTML='<div class="ticket-row">Os serviços contratados constam no voucher anexado ao contrato.</div>';return}
+ box.innerHTML=tours.map(t=>`<div class="ticket-row ${t.ticketNonRefundable?'alert':''}"><strong>${String(t.name||'Passeio')}</strong>${t.date?` • ${formatDateBR(t.date)}`:''}${t.price?`<div style="margin-top:4px">Valor registrado: ${Number(t.price).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</div>`:''}<div class="${t.ticketNonRefundable?'ticket-chip':''}" style="${t.ticketNonRefundable?'':'margin-top:5px;color:#555'}">${t.ticketNonRefundable?'TICKET/RESERVA NÃO REEMBOLSÁVEL APÓS EMISSÃO':'Regra geral de cancelamento/reembolso'}</div></div>`).join('');
+}
+function getContractLegalPackage(d){
+ const intro=[
+  'Pelo presente instrumento particular, de um lado como CONTRATADA:',
+  'TURISMO E TRANSPORTE INDOMITO LTDA pessoa jurídica de direito privado, inscrita no CNPJ sob nº 52.985.331/0001-21, com endereço à Rua José Versolato, nº 101, Sao Bernardo do Campo/SP, CEP 09.750-730, neste ato representada pelo seu sócio administrador FELIPE SEBASTIAN VIDAL BURGOS, Chileno, solteiro, inscrito no CPF sob nº CPF: 057.047.741-72 e e-mail felipe@indomitotours.cl.',
+  'E de outro lado, como CONTRATANTE:',
+  `${d.nome}, ${d.nacionalidade}, ${d.estadoCivil}, inscrito(a) no CPF sob nº ${d.cpf}, com domicílio na ${d.endereco}, com telefone sob nº ${d.telefone} e e-mail ${d.email}.`,
+  'As partes acima identificadas têm, entre si, justo e acertado o presente “Contrato de Prestação de Serviços” (“Contrato”), segundo as disposições a seguir:'
+ ];
+ const sections=[
+  ['1. DO OBJETO DO CONTRATO',[
+   '1.1. O presente Contrato tem como objeto a aquisição de passeios turísticos para as datas, destinos e quantidades de pessoas estabelecidas no comprovante de reserva (Anexo 1 do presente contrato).',
+   '1.2. A CONTRATADA é uma agência de viagem com sede no Brasil e também com registro no Chile¹ que vende passeios turísticos em território Chileno e Argentino. Os passeios ora contratados são para o destino: Chile e serão realizados sob a execução e/ou supervisão da CONTRATADA.',
+   '1.3. A CONTRATANTE é pessoa física, responsável pela reserva e aquisição dos passeios.'
+  ]],
+  ['2. DOS SERVIÇOS CONTRATADOS',[
+   '2.1. São considerados serviços contratados todos aqueles listados no comprovante de reserva (Anexo 1 do presente contrato). Sendo que o detalhamento do que está incluso ou não nos respectivos passeios se encontram no Portfólio da CONTRATADA (versão vigente da data da compra dos passeios).',
+   '2.2. Todos os passeios estão sujeitos a alteração de data e horário, dependendo das condições climáticas existentes no momento da prestação dos serviços, bem como das regras e condições impostas pelos estabelecimentos de terceiros em que seja imprescindível o funcionamento para a realização do passeio. Caso o passeio já tenha iniciado, alterações de rota poderão ser feitas, caso ocorram imprevistos.',
+   '2.3. Por motivos externos, caso haja cancelamento ou alteração de disponibilidade de passeios, a CONTRATADA resguarda o direito de propor mudanças nos serviços contratados, que poderão ou não ser aceitas pela CONTRATANTE. No caso de não consentimento pelas alterações os valores dos passeios serão 100% reembolsáveis.',
+   '2.4. Para prestação dos serviços contratados no modelo compartilhado, fica firmado entre as partes, que se faz necessário atingir o número mínimo de passageiros para a realização do passeio, caso em que se este não vier a ocorrer, reserva-se à CONTRATADA o direito de cancelamento ou alteração de passeio, mediante aviso prévio via plataforma de vendas (Whatsapp número: +55 21 97215 4562).',
+   '2.4.1. Para serviços no modelo privativo, não se aplica o disposto no item 2.4.',
+   '2.5. Na hipótese da alteração de passeio, fica firmado entre as partes, que será devido o pagamento da diferença do valor para o caso de passeios mais caros, ou reembolso no caso de passeio mais barato que o originalmente contratado.'
+  ]],
+  ['3. DO COMPROMISSO, PREÇO E FORMA DE PAGAMENTO',[
+   '3.1. Fica acordado entre as Partes o compromisso do pagamento em sua totalidade dos serviços contratados antes da realização dos passeios, salvo hipótese de parcelamento no cartão de crédito.',
+   `3.2. O valor total do presente contrato é de ${d.valor}.`,
+   '3.3. Os valores detalhados de cada passeio contratado constam no comprovante de reserva (Anexo 1 do presente contrato) e foram repassados à CONTRATANTE no momento da negociação dos serviços.',
+   `3.4. A forma de pagamento escolhida pela CONTRATANTE para liquidar o presente contrato é através de pagamento via ${d.pagamento}`
+  ]],
+  ['4. O PRAZO',['4.1. A vigência do presente contrato se inicia na data da sua assinatura e se encerra após a data do último passeio contratado.']],
+  ['5. DEVERES DO CONTRATANTE E DA CONTRATADA',[
+   '5.1. A CONTRATADA se compromete:',
+   'a) A realizar os serviços conforme datas, horários e itinerários contratados. Todavia não responde por quaisquer casos fortuitos e de força maior que não estejam em sua alçada e prejudique a execução dos serviços.',
+   'b) A utilizar veículos autorizados e licenciados para realização dos passeios contratados, para os serviços que contemplam Transporte incluído, seja no modo Compartilhado ou Privativo.',
+   'c) A manter contato e informar a CONTRATADA na hipótese de alterações e cancelamentos de passeios e oferecer alternativas para o melhor aproveitamento da viagem da CONTRATADA.',
+   'd) Fornecer informações adequadas e claras sobre os diferentes serviços e passeios ofertados, com especificação correta das características, horários, preços, suas variações, possíveis eventos fortuitos e condições indesejáveis, tolerâncias, bem como os riscos que apresentem e especificidade dos passeios, ficando a CONTRATANTE ciente e de acordo com os termos apresentados caso contrate o passeio.',
+   'e) Prestar suporte, seja de locomoção, informativo e orientativo para a CONTRATANTE na ocorrência de eventos adversos durante a realização dos passeios.',
+   '5.2. A CONTRATANTE se compromete:',
+   'a) A quitar a totalidade dos valores pendentes referentes aos passeios comprados antes da realização do primeiro tour contratado, sob pena de não realização dos passeios.',
+   'b) A portar consigo documento de identificação (Passaporte ou Carteira de Identidade) durante a realização dos passeios.',
+   'c) Providenciar a guarda e a segurança da sua bolsa e objetos pessoais durante a realização dos tours compartilhados, não sendo a CONTRATADA responsabilizada por perdas e danos.',
+   'd) Informar todas as condições de saúde pessoais atuais que possam influenciar e interferir na segurança e realização dos passeios.',
+   'e) Estar pronto, na 
