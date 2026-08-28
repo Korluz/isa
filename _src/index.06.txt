@@ -1,0 +1,105 @@
+ll)t.commissionCents=0}));
+if(!Array.isArray(db.catalog)||!db.catalog.length)db.catalog=DEFAULT_TOURS;
+if(!Array.isArray(db.sales))db.sales=[];
+db.sales.forEach(s=>{
+ if(!Array.isArray(s.history))s.history=[];
+ if(s.paidCents==null)s.paidCents=s.status==='Aguardando pagamento'?0:(s.valueCents||0);
+ if(s.commissionCents==null)s.commissionCents=0;
+ if(s.commissionReceivedCents==null)s.commissionReceivedCents=0;
+ if(!s.paymentMethod)s.paymentMethod='';
+ if(!s.paymentDate)s.paymentDate='';
+ if(!s.commissionDate)s.commissionDate='';
+});
+normalizeSalesV8();
+let editingId=null;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+function save(){localStorage.setItem(KEY,JSON.stringify(db));renderAll()}
+function localISO(offset=0){let d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()+offset);return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')}
+function daysUntil(date){let a=new Date();a.setHours(12,0,0,0);let [y,m,d]=date.split('-').map(Number);let b=new Date(y,m-1,d,12);return Math.round((b-a)/86400000)}
+function fmtDate(v){if(!v)return '-';let [y,m,d]=v.split('-');return `${d}/${m}/${y}`}
+function fmtMoney(cents){return (Number(cents||0)/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
+function phoneMask(v){let n=v.replace(/\D/g,'').slice(0,13);if(n.startsWith('55'))n=n.slice(2);n=n.slice(0,11);if(n.length<=2)return n?'+55 ('+n:'';let d=n.slice(0,2),r=n.slice(2);return '+55 ('+d+') '+(r.length>5?r.slice(0,5)+'-'+r.slice(5):r)}
+$('fPhone').addEventListener('input',e=>e.target.value=phoneMask(e.target.value));
+function bindMoney(id){const el=$(id);if(!el)return;el.addEventListener('input',e=>{let n=e.target.value.replace(/\D/g,'');e.target.dataset.cents=n||'0';e.target.value=fmtMoney(n)})}
+['fValue','fPaidValue','fCommission','fCommissionReceived'].forEach(bindMoney);
+function addHistory(s,text){if(!Array.isArray(s.history))s.history=[];s.history.unshift({at:new Date().toISOString(),text});s.history=s.history.slice(0,100)}
+function fmtDateTime(v){if(!v)return '-';return new Date(v).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}
+function paymentState(s){let total=Number(s.valueCents||0),paid=Number(s.paidCents||0);return paid<=0?'Pendente':paid<total?'Parcial':'Quitado'}
+const titles={inicio:['Meu dia','Prioridades comerciais e operacionais'],vendas:['Minhas vendas','Pacotes e acompanhamento individual'],amanha:['Amanhã','Clientes que precisam receber a programação'],validador:['Validador','Compare a logística com a venda cadastrada'],financeiro:['Financeiro','Valores, pagamentos e comissões'],admin:['Administração','Equipe, vendas e controle de acessos'],config:['Configurações','Personalização, catálogo e segurança dos dados']};
+function go(id){document.querySelectorAll('.view').forEach(x=>x.classList.toggle('active',x.id===id));document.querySelectorAll('.menu button').forEach(x=>x.classList.toggle('active',x.dataset.view===id));$('pageTitle').textContent=titles[id][0];$('pageSub').textContent=titles[id][1];$('side').classList.remove('open')}
+document.querySelectorAll('.menu button').forEach(b=>b.onclick=()=>go(b.dataset.view));
+$('mobileBtn').onclick=()=>$('side').classList.toggle('open');
+
+function ticketRequired(name){return !!db.catalog.find(t=>t.name===name)?.ticket}
+function tourOptions(selected=''){return '<option value="">Selecione...</option>'+db.catalog.map(t=>`<option ${t.name===selected?'selected':''}>${esc(t.name)}</option>`).join('')}
+function suggestTourRowPrice(wrap){
+ const sel=wrap.querySelector('.tr-name'),priceInput=wrap.querySelector('.tr-price');
+ if(!sel||!priceInput||Number(priceInput.dataset.cents||0)>0)return; // já tem valor -> não mexe
+ const item=window.findCatalogItem?window.findCatalogItem(sel.value):null;
+ if(!item||item.adultPrice==null)return;
+ const adults=Number($('fAdults')?.value||0),children=Number($('fChildren')?.value||0);
+ const totalReais=Number(item.adultPrice||0)*adults+Number(item.childPrice||0)*children;
+ if(totalReais<=0)return;
+ const cents=Math.round(totalReais*100);
+ priceInput.dataset.cents=String(cents);priceInput.value=fmtMoney(cents);
+}
+['fAdults','fChildren'].forEach(id=>{const el=$(id);if(el)el.addEventListener('input',()=>document.querySelectorAll('.tourrow').forEach(suggestTourRowPrice))});
+function addTourRow(data={name:'',date:'',priceCents:0,commissionCents:0,cancelChecked:null,hour:'',location:'',messageSent:false}){
+ let wrap=document.createElement('div');wrap.className='tourrow';
+ wrap.innerHTML=`<div class="field"><label>Passeio</label><select class="tr-name">${tourOptions(data.name)}</select><div class="ticketflag"></div></div>
+ <div class="field"><label>Data</label><input class="tr-date" type="date" value="${esc(data.date)}"></div>
+ <div class="field tour-money"><label>Preço do passeio</label><input class="tr-price money" inputmode="numeric" data-cents="${Number(data.priceCents||0)}" value="${data.priceCents?fmtMoney(data.priceCents):''}" placeholder="R$ 0,00"></div>
+ <div class="field tour-money"><label>Comissão</label><input class="tr-commission money" inputmode="numeric" data-cents="${Number(data.commissionCents||0)}" value="${data.commissionCents?fmtMoney(data.commissionCents):''}" placeholder="R$ 0,00"></div>
+ <button class="btn red sm" type="button">Remover</button>
+ <input type="hidden" class="tr-cancel" value="${data.cancelChecked===true?'yes':data.cancelChecked===false?'no':''}">
+ <input type="hidden" class="tr-hour" value="${esc(data.hour||'')}"><input type="hidden" class="tr-location" value="${esc(data.location||'')}"><input type="hidden" class="tr-sent" value="${data.messageSent?'1':'0'}">`;
+ let sel=wrap.querySelector('.tr-name'),flag=wrap.querySelector('.ticketflag');
+ function flagUpdate(){flag.textContent=ticketRequired(sel.value)?'🎟 Ticket obrigatório — será cobrado na véspera':'';suggestTourRowPrice(wrap)}
+ sel.onchange=flagUpdate;flagUpdate();wrap.querySelector('button').onclick=()=>wrap.remove();wrap.querySelectorAll('.money').forEach(bindMoney);$('tourRows').appendChild(wrap)
+}
+function openSale(id=null){
+ editingId=id;$('tourRows').innerHTML='';
+ let x=id?db.sales.find(s=>s.id===id):null;
+ $('saleModalTitle').textContent=x?'Editar venda':'Nova venda';
+ $('fName').value=x?.name||'';$('fPhone').value=x?.phone||'';$('fHotel').value=x?.hotel||'';$('fType').value=x?.type||'Regular';
+ $('fAdults').value=x?.adults??1;$('fChildren').value=x?.children??0;$('fBabies').value=x?.babies??0;
+ $('fValue').dataset.cents=String(x?.valueCents||0);$('fValue').value=x?fmtMoney(x.valueCents):'';
+ $('fPaidValue').dataset.cents=String(x?.paidCents||0);$('fPaidValue').value=x?fmtMoney(x.paidCents):'';
+ $('fCommissionReceived').dataset.cents=String(x?.commissionReceivedCents||0);$('fCommissionReceived').value=x?fmtMoney(x.commissionReceivedCents):'';
+ $('fPaymentMethod').value=x?.paymentMethod||'';$('fPaymentDate').value=x?.paymentDate||'';$('fCommissionDate').value=x?.commissionDate||'';
+ $('fStatus').value=x?.status||'Aguardando pagamento';$('fNotes').value=x?.notes||'';
+ (x?.tours?.length?x.tours:[{}]).forEach(addTourRow);$('saleModal').classList.add('open')
+}
+function closeSale(){$('saleModal').classList.remove('open');editingId=null}
+$('saleModal').addEventListener('click',e=>{if(e.target===$('saleModal'))closeSale()})
+function saveSale(){
+ let tours=[...document.querySelectorAll('.tourrow')].map(r=>({name:r.querySelector('.tr-name').value,date:r.querySelector('.tr-date').value,priceCents:+(r.querySelector('.tr-price')?.dataset.cents||0),commissionCents:+(r.querySelector('.tr-commission')?.dataset.cents||0),cancelChecked:r.querySelector('.tr-cancel').value==='yes'?true:r.querySelector('.tr-cancel').value==='no'?false:null,hour:r.querySelector('.tr-hour').value,location:r.querySelector('.tr-location').value,messageSent:r.querySelector('.tr-sent').value==='1'})).filter(t=>t.name&&t.date);
+ if(!$('fName').value.trim()||!$('fPhone').value.trim()||!tours.length)return alert('Preencha nome, WhatsApp e ao menos um passeio com data.');
+ let old=editingId?db.sales.find(s=>s.id===editingId):null;
+ let tourValue=tours.reduce((a,t)=>a+(+t.priceCents||0),0),tourCommission=tours.reduce((a,t)=>a+(+t.commissionCents||0),0);
+ let sale={id:editingId||Date.now(),name:$('fName').value.trim(),phone:$('fPhone').value.trim(),hotel:$('fHotel').value.trim(),type:$('fType').value,adults:+$('fAdults').value||0,children:+$('fChildren').value||0,babies:+$('fBabies').value||0,valueCents:tourValue||+($('fValue').dataset.cents||0),paidCents:+($('fPaidValue').dataset.cents||0),paymentMethod:$('fPaymentMethod').value,paymentDate:$('fPaymentDate').value,commissionCents:tourCommission||old?.commissionCents||0,commissionReceivedCents:+($('fCommissionReceived').dataset.cents||0),commissionDate:$('fCommissionDate').value,status:$('fStatus').value,notes:$('fNotes').value.trim(),tours,history:old?.history||[]};
+ addHistory(sale,editingId?'Venda atualizada':'Venda criada');
+ if(editingId)db.sales=db.sales.map(s=>s.id===editingId?sale:s);else db.sales.unshift(sale);save();closeSale()
+}
+function totalPax(s){return (+s.adults||0)+(+s.children||0)+(+s.babies||0)}
+function badge(status){let c=status==='Horário enviado'?'b-ok':status==='Reserva feita'?'b-purple':status==='Pago'?'b-blue':'b-warn';return `<span class="badge ${c}">${esc(status)}</span>`}
+function smartSeal(icon,text,cls='neutral',onclick=''){return `<span class="smart-seal seal-${cls}${onclick?' seal-clickable':''}" ${onclick?`onclick="${onclick}"`:''}><i data-lucide="${icon}"></i>${esc(text)}</span>`}
+function paymentPercent(s){const total=Number(s.valueCents||0),paid=Number(s.paidCents||0);return total>0?Math.max(0,Math.min(100,Math.round(paid/total*100))):(paid>0?100:0)}
+function voucherAttached(s){return !!(s.voucherFile||(s.attachments||[]).some(a=>a.kind==='voucher'))}
+function smartSeals(s){
+ const total=Number(s.valueCents||0),paid=Number(s.paidCents||0),pct=paymentPercent(s),balance=Math.max(0,total-paid),hasVoucher=voucherAttached(s),reserved=!!s.reservationDone||hasVoucher,contract=!!s.contractSent,notified=(s.tours||[]).some(t=>t.messageSent),cancelled=s.status==='Cancelado'||(s.tours||[]).every(t=>t.cancelled);
+ const seals=[smartSeal('handshake','Negócio fechado','info')];
+ if(cancelled)seals.push(smartSeal('circle-x','Cancelado','danger'));
+ else if(paid<=0)seals.push(smartSeal('wallet-cards','Pagamento pendente','danger'));
+ else if(balance>0)seals.push(smartSeal('circle-percent',`Pago ${pct}%`,'warn'));
+ else seals.push(smartSeal('badge-check','Pago 100%','ok'));
+ seals.push(smartSeal(reserved?'circle-check':'circle-dashed',reserved?'Reserva realizada':'Reserva pendente',reserved?'ok':'neutral'));
+ seals.push(smartSeal(hasVoucher?'ticket-check':'ticket-x',hasVoucher?'Voucher anexado':'Sem voucher',hasVoucher?'ok':'neutral'));
+ seals.push(smartSeal(contract?'file-check-2':'file-clock',contract?'Contrato enviado':'Contrato pendente',contract?'ok':'warn',contract?'':`openContractForSaleId(${s.id})`));
+ seals.push(smartSeal(notified?'message-circle-check':'clock-3',notified?'Cliente avisado':'Horário pendente',notified?'ok':'neutral'));
+ return seals.join('');
+}
+function renderSales(){
+ let q=$('saleSearch').value.toLowerCase(),f=$('saleFilter').value,rows=db.sales.filter(s=>(!f||s.status===f)&&(`${s.name} ${s.phone} ${s.tours.map(t=>t.name).join(' ')}`.toLowerCase().includes(q)));
+ $('salesList').innerHTML=rows.length?rows.map(s=>{const balance=Math.max(0,Number(s.valueCents||0)-Number(s.paidCents||0)),pct=paymentPercent(s),accent=Number(s.paidCents||0)<=0?'pending':balance>0?'partial':'';return `<div class="sale smart-card"><div class="sale-accent ${accent}"></div><div class="saletop"><div><div class="title">${esc(s.name)}</div><div class="meta">${esc(s.phone)} • ${totalPax(s)} passageiro(s) • ${esc(s.type)} • Venda ${fmtMoney(s.valueCents)}</div></div><div class="badges">${badge
