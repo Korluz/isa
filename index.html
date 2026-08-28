@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>ISA by Korluz — Cloud V10.6.0</title>
+<title>ISA by Korluz — Cloud V10.6.1</title>
 <style>
 :root{
  --navy:#0b2136;--navy2:#153752;--gold:#dfa82f;--bg:#f4f7fb;--card:#fff;
@@ -408,8 +408,8 @@ body{font-family:Arial;padding:28px;color:#172033}h1{margin-bottom:3px}p{color:#
 <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
 </head>
 <body>
-<div id="appVersionBadge" style="position:fixed;bottom:4px;right:6px;z-index:9999;font-size:10px;color:#999;background:rgba(255,255,255,.85);padding:2px 6px;border-radius:6px;pointer-events:none;font-family:monospace">v10.6.0</div>
-<script>window.addEventListener('error',function(e){const b=document.getElementById('appVersionBadge');if(b)b.textContent='v10.6.0 ⚠ erro: '+(e.message||'').slice(0,60);b&&(b.style.color='red')})</script>
+<div id="appVersionBadge" style="position:fixed;bottom:4px;right:6px;z-index:9999;font-size:10px;color:#999;background:rgba(255,255,255,.85);padding:2px 6px;border-radius:6px;pointer-events:none;font-family:monospace">v10.6.1</div>
+<script>window.addEventListener('error',function(e){const b=document.getElementById('appVersionBadge');if(b)b.textContent='v10.6.1 ⚠ erro: '+(e.message||'').slice(0,60);b&&(b.style.color='red')})</script>
 <!-- ISA V10.2.1 Recovery: base estável V10.1.1 -->
 
 <div id="cloudConfig" class="cloud-config">
@@ -2367,7 +2367,8 @@ window.exportAuditCSV=function(){
 }
 window.printAuditPDF=function(){
  const rows=auditRows(),total=rows.reduce((a,r)=>a+r.commission,0),sellerName=db.sellerProfile?.name||user?.user_metadata?.full_name||db.seller||'Vendedor';
- const w=window.open('','_blank');w.document.write(`<html><head><title>Relatório de Comissões</title></head><body><h1>Relatório de Comissões</h1><p>Vendedor: ${esc(sellerName)} • Emitido em: ${new Date().toLocaleString('pt-BR')}</p><table><thead><tr><th>Data</th><th>Voucher</th><th>Cliente</th><th>Passeio</th><th>ADT</th><th>CHD</th><th>Valor venda</th><th>Comissão</th><th>Regra</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${fmtDate(r.date)}</td><td>${r.voucher}</td><td>${r.client}</td><td>${r.tour}</td><td>${r.adt}</td><td>${r.chd}</td><td>${r.saleValue.toLocaleStringg('pt-BR',{style:'currency',currency:'BRL'})}</td><td>${r.commission.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td><td>${r.rule}</td></tr>`).join('')}<tr class="total"><td colspan="7">TOTAL</td><td>${total.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td><td></td></tr></tbody></table><script>window.onload=()=>window.print()<\/script></body></html>`);w.document.close();
+ const w=window.open('','_blank');w.document.write(`<html><head><title>Relatório de Comissões</title></head><body><h1>Relatório de Comissões</h1><p>Vendedor: ${esc(sellerName)} • Emitido em: ${new Date().toLocaleString('pt-BR')}</p><table><thead><tr><th>Data</th><th>Voucher</th><th>Cliente</th><th>Passeio</th><th>ADT</th><th>CHD</th><th>Valor venda</th><th>Comissão</th><th>Regra</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${fmtDate(r.date)}</td><td>${r.voucher}</td><td>${r.client}</td><td>${r.tour}</td><td>${r.adt}</td><td>${r.chd}</td><td>${r.saleValue.toLocaleStringg('pt-BR',{style:'currency',currency:'BRL'})}</td><td>${r.commission.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td><td>${r.rule}</td></tr>`).join('')}<tr class="total"><td colspan="7">TOTAL</td><td>${total.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td><td></td></tr></tbody></table><script>window.onload=()=>window.print()<\/script><script src="isa-v1061.js?v=1061"></script>
+</body></html>`);w.document.close();
 }
 
 const oldRenderAllV4=window.renderAll;
@@ -2455,5 +2456,6 @@ renderAll();
 })();
 </script>
 
+<script src="isa-v1061.js?v=1061"></script>
 </body>
 </html>
