@@ -1,0 +1,180 @@
+á ser feito através da plataforma de vendas (Whatsapp número: +56 9 8706 4691) com o fornecimento dos dados bancários para pagamento e o ‘de acordo’ com o valor a ser reembolsado.',y,{});
+  y = addPara(pdf,'6.4. Alguns dos serviços contratados podem envolver ingressos, tickets, reservas ou serviços de terceiros adquiridos antecipadamente pela CONTRATADA. Quando tais itens forem efetivamente adquiridos em condição não reembolsável pelo respectivo fornecedor, o valor correspondente ao item poderá ser retido em caso de cancelamento solicitado pela CONTRATANTE, limitado ao montante efetivamente não recuperável. Esta regra não afasta direitos de reembolso assegurados pela legislação aplicável nem se aplica a valores que possam ser recuperados junto ao respectivo fornecedor.',y,{size:10.7,lh:12.7});
+  y = addPara(pdf,'6.4.1. Os passeios sujeitos a essa condição estarão expressamente identificados no Quadro de Serviços Contratados deste instrumento com a indicação “TICKET/RESERVA NÃO REEMBOLSÁVEL APÓS EMISSÃO”.',y,{size:10.7,lh:12.7});
+  y = addArticle(pdf,'7. COMUNICAÇÕES E NOTIFICAÇÕES',y);
+  y = addPara(pdf,'7.1. Todos os avisos e comunicações entre as Partes, bem como aqueles que tenham efeito em relação ao Contrato, ainda que não expressamente previstos, serão enviados de forma digital através da plataforma de vendas.',y,{});
+}
+function addContractPage4(pdf,d) {
+  addPage(pdf); pageNo(pdf,4,5); let y=92;
+  y = addArticle(pdf,'8. CONDIÇÕES GERAIS',y);
+  y = addPara(pdf,'8.1. Eventuais inclusões de outras cláusulas, exclusões ou alterações das já existentes, serão consignadas em “Termo Aditivo”, por escrito, a ser devidamente assinado pelas Partes, que passará a fazer parte integrante deste Contrato.',y);
+  y = addPara(pdf,'8.2. As Partes declaram-se agindo de boa-fé, com lealdade e probidade, plenamente capazes civilmente, para levar a bom termo este contrato e para tê-lo como válido e eficaz.',y,{after:18});
+  y = addArticle(pdf,'9. DO FORO',y);
+  y = addPara(pdf,'9.1. As Partes elegem o foro da Comarca de Bauru/SP, com renúncia expressa a qualquer outro, por mais especial ou privilegiado que seja, para dirimir quaisquer controvérsias decorrentes do presente Contrato e sua execução.',y);
+  y = addPara(pdf,'E, por estarem assim justas e contratadas, as Partes assinam o presente Contrato, que será encaminhado de forma digital.',y);
+  y = addPara(pdf,'O presente contrato passa a vigorar entre as partes a partir da assinatura do mesmo.',y,{after:16});
+  const dataTexto = hojeExtenso();
+  const dateX = A4W/2 - 72;
+  setTimes(pdf,'normal',11.8);
+  pdf.text('Bauru/SP, ', dateX, y);
+  pdf.setTextColor(220,0,0);
+  pdf.text(dataTexto + '.', dateX + 56, y);
+  pdf.setTextColor(0,0,0);
+}
+
+function addContractPage5(pdf,d) {
+  addPage(pdf); pageNo(pdf,5,5); let y=78;
+  y = addArticle(pdf,'QUADRO DE SERVIÇOS CONTRATADOS E CIÊNCIA ESPECÍFICA',y);
+
+  const tours=Array.isArray(d.tours)?d.tours:[];
+  if(tours.length){
+    tours.forEach((t,idx)=>{
+      const date=t.date?(' • '+formatDateBR(t.date)):'';
+      const condition=t.ticketNonRefundable
+        ?'TICKET/RESERVA NÃO REEMBOLSÁVEL APÓS EMISSÃO'
+        :'Regra geral de cancelamento e reembolso do contrato';
+      y = addPara(pdf,`${idx+1}. ${t.name}${date}`,y,{bold:true,size:10.8,lh:12.8,after:2});
+      y = addPara(pdf,condition,y,{x:M.left+18,maxW:CONTENT_W-18,size:10.2,lh:12.0,after:8});
+      if(y>A4H-315){
+        addPage(pdf); y=78;
+        headerTitle(pdf,'QUADRO DE SERVIÇOS — CONTINUAÇÃO',y,12.5); y+=28;
+      }
+    });
+  } else {
+    y = addPara(pdf,'Os serviços contratados constam no comprovante de reserva (voucher) anexado ao presente contrato.',y,{size:10.6,lh:12.6,after:16});
+  }
+
+  const ticketTours=tours.filter(t=>t.ticketNonRefundable);
+  if(ticketTours.length){
+    y = addPara(pdf,'DECLARAÇÃO DE CIÊNCIA: A CONTRATANTE declara estar ciente de que os passeios acima identificados como “TICKET/RESERVA NÃO REEMBOLSÁVEL APÓS EMISSÃO” possuem componente adquirido antecipadamente de terceiro e sujeito às condições específicas de cancelamento descritas neste contrato.',y,{bold:true,size:10.2,lh:12.2,after:14});
+  }
+
+  if(d.acceptedAt){
+    y = addPara(pdf,`Aceite eletrônico registrado em ${d.acceptedAt}. Protocolo: ${d.signatureProtocol||'—'}.`,y,{size:10.2,lh:12.2,after:14});
+    if(d.payloadHash)y = addPara(pdf,`Hash do conteúdo contratual: ${d.payloadHash}.`,y,{size:8.8,lh:10.5,after:10});
+  }
+
+  setTimes(pdf,'bold',11.8); pdf.text('CONTRATADA:',M.left,y); y += 8;
+  const sigW = 190, sigH = 74;
+  const sigX = (A4W - sigW)/2;
+  pdf.addImage(ASSINATURA,'PNG',sigX,y,sigW,sigH); y += sigH + 2;
+  const lineW = 285, lineX = (A4W - lineW)/2;
+  pdf.setLineWidth(0.5); pdf.line(lineX,y,lineX+lineW,y); y += 12;
+  setTimes(pdf,'bold',11.2); pdf.text('TURISMO E TRANSPORTE INDOMITO LTDA',A4W/2,y,{align:'center'}); y += 14;
+  setTimes(pdf,'normal',11.2); pdf.text('Por: Felipe Sebastian Vidal Burgos',A4W/2,y,{align:'center'}); y += 14;
+  pdf.text('Diretor',A4W/2,y,{align:'center'}); y += 42;
+
+  setTimes(pdf,'bold',11.8); pdf.text('CONTRATANTE:',M.left,y); y += 8;
+  if(d.signatureData){
+    try{
+      pdf.addImage(d.signatureData,'PNG',(A4W-220)/2,y,220,75);
+      y += 78;
+    }catch(e){
+      y += 62;
+    }
+  } else {
+    y += 62;
+  }
+  const clineW = 305, clineX = (A4W - clineW)/2;
+  pdf.line(clineX,y,clineX+clineW,y); y += 15;
+  setTimes(pdf,'normal',11.2); pdf.text(d.nome,A4W/2,y,{align:'center'}); y+=14;
+  if(!d.signatureData){setTimes(pdf,'normal',9.5);pdf.setTextColor(100);pdf.text('Assinatura eletrônica pendente',A4W/2,y,{align:'center'});pdf.setTextColor(0)}
+}
+
+function formatDateBR(v){
+  if(!v)return '';
+  const m=String(v).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return m?`${m[3]}/${m[2]}/${m[1]}`:String(v);
+}
+
+
+async function fileToDataURL(file) { return await new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); }); }
+function cropWhiteCanvas(canvas, padding=28) {
+  const ctx = canvas.getContext('2d');
+  const {width:w,height:h}=canvas;
+  const img = ctx.getImageData(0,0,w,h).data;
+  let minX=w,minY=h,maxX=0,maxY=0,found=false;
+  for(let y=0;y<h;y+=3){
+    for(let x=0;x<w;x+=3){
+      const i=(y*w+x)*4, r=img[i], g=img[i+1], b=img[i+2], a=img[i+3];
+      if(a>20 && !(r>245 && g>245 && b>245)) { found=true; if(x<minX)minX=x; if(y<minY)minY=y; if(x>maxX)maxX=x; if(y>maxY)maxY=y; }
+    }
+  }
+  if(!found) return canvas;
+  minX=Math.max(0,minX-padding); minY=Math.max(0,minY-padding);
+  maxX=Math.min(w,maxX+padding); maxY=Math.min(h,maxY+padding);
+  const cw=maxX-minX, ch=maxY-minY;
+  const out=document.createElement('canvas'); out.width=cw; out.height=ch;
+  out.getContext('2d').drawImage(canvas,minX,minY,cw,ch,0,0,cw,ch);
+  return out;
+}
+async function renderPdfFile(file, maxPages=99, crop=false) {
+  if(!file) return [];
+  if(file.type.startsWith('image/')) return [await fileToDataURL(file)];
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({data: buf}).promise;
+  const imgs=[];
+  for(let i=1;i<=Math.min(pdf.numPages,maxPages);i++) {
+    const page = await pdf.getPage(i);
+    const viewport = page.getViewport({scale: 2.4});
+    const canvas = document.createElement('canvas'); canvas.width=viewport.width; canvas.height=viewport.height;
+    const ctx = canvas.getContext('2d'); await page.render({canvasContext:ctx, viewport}).promise;
+    const finalCanvas = crop ? cropWhiteCanvas(canvas, 34) : canvas;
+    imgs.push(finalCanvas.toDataURL('image/jpeg',0.95));
+  }
+  return imgs;
+}
+function fitImage(pdf, dataUrl, x, y, maxW, maxH) {
+  const props = pdf.getImageProperties(dataUrl);
+  let w = maxW, h = w * props.height / props.width;
+  if(h > maxH) { h = maxH; w = h * props.width / props.height; }
+  pdf.addImage(dataUrl, dataUrl.includes('image/png')?'PNG':'JPEG', x, y, w, h);
+  return {w,h};
+}
+function addAttachments(pdf, compImgs, voucherImgs) {
+  const totalAnexos = 5 + 1 + Math.max(voucherImgs.length, 1) + Math.max(compImgs.length - 1, 0);
+  let page = 6;
+  addPage(pdf); pageNo(pdf,page,totalAnexos); let y=82;
+  setTimes(pdf,'bold',13.5); pdf.text('Dados para Ativação da Reserva',M.left,y); y += 42;
+  setTimes(pdf,'bold',12.3); pdf.text('Comprovante de pagamento:',M.left,y); y += 18;
+  if(compImgs[0]) {
+    const r=fitImage(pdf,compImgs[0],M.left-18,y,CONTENT_W+36,470);
+    y += r.h + 34;
+  } else {
+    setTimes(pdf,'normal',11.5); pdf.text('Nenhum comprovante anexado.',M.left,y); y += 34;
+  }
+  for(const img of compImgs.slice(1)) {
+    page++; addPage(pdf); pageNo(pdf,page,totalAnexos);
+    setTimes(pdf,'bold',13.2); pdf.text('Comprovante de pagamento - continuação',M.left,82);
+    fitImage(pdf,img,M.left,114,CONTENT_W,665);
+  }
+  // Voucher começa em nova página para permitir escala legível.
+  page++; addPage(pdf); pageNo(pdf,page,totalAnexos);
+  y=82;
+  setTimes(pdf,'bold',13.2); pdf.text('Voucher:',M.left,y); y += 22;
+  if(voucherImgs[0]) {
+    fitImage(pdf,voucherImgs[0],M.left,y,CONTENT_W,695);
+  } else {
+    setTimes(pdf,'normal',11.5); pdf.text('Nenhum voucher anexado.',M.left,y);
+  }
+  for(const img of voucherImgs.slice(1)) {
+    page++; addPage(pdf); pageNo(pdf,page,totalAnexos);
+    setTimes(pdf,'bold',13.2); pdf.text('Voucher - continuação',M.left,82);
+    fitImage(pdf,img,M.left,114,CONTENT_W,665);
+  }
+}
+
+function collectData() {
+ return {
+  nome:val('nome'), nacionalidade:val('nacionalidade'), estadoCivil:val('estadoCivil'),
+  cpf:val('cpf'), nascimento:val('nascimento'), telefone:val('telefone'), email:val('email'),
+  endereco:val('endereco'), cep:val('cep'), valor:val('valor'), pagamento:val('pagamento'),
+  tours:Array.isArray(window.contractTours)?window.contractTours:[],
+  signatureData:window.remoteSignatureData||null,
+  acceptedAt:window.remoteAcceptedAt||'',
+  signatureProtocol:window.remoteSignatureProtocol||'',
+  payloadHash:window.remotePayloadHash||''
+ };
+}
+async function gerarPDF() {
+  const d = collectData(); if(!d.nome) { alert('Informe o nome completo.'); re
