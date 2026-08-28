@@ -1,0 +1,166 @@
+dedor</th></tr></thead><tbody id="latestPriceCommissionBody"></tbody></table></div>
+ </div>
+
+</section>
+
+
+<section class="view" id="contratos">
+ <div class="card">
+  <div class="cardhead"><div><h2>Gerador de contratos</h2><div class="meta">Selecione uma venda para preencher automaticamente os dados disponíveis.</div></div></div>
+  <div class="toolbar">
+   <select id="contractSaleSelect"></select>
+   <button class="btn gold" onclick="openContractFromSale()">Abrir contrato preenchido</button>
+   <button class="btn light" onclick="openBlankContract()">Abrir contrato vazio</button>
+  </div>
+  <div class="alertbox ok">
+   <strong>Modo leve ativado</strong><br>
+   O gerador abre em uma aba separada e reduz fotos grandes antes de criar o PDF. Isso diminui bastante o consumo de memória no celular e no iPad.
+  </div>
+ </div>
+</section>
+
+<section class="view" id="auditoria">
+ <div class="financegrid">
+  <div class="moneycard clickable" onclick="renderAuditReport()"><small>Comissão do período</small><strong id="auditCommissionTotal">R$ 0,00</strong></div>
+  <div class="moneycard"><small>Vendas consideradas</small><strong id="auditSalesCount">0</strong></div>
+  <div class="moneycard"><small>Passeios considerados</small><strong id="auditToursCount">0</strong></div>
+  <div class="moneycard"><small>Sem regra automática</small><strong id="auditUnmappedCount">0</strong></div>
+ </div>
+ <div class="card">
+  <div class="cardhead"><div><h2>Relatório detalhado de comissões</h2><div class="meta">Cada linha mostra a regra aplicada e o valor calculado.</div></div>
+   <div class="actions"><button class="btn light" onclick="exportAuditCSV()">Exportar Excel/CSV</button><button class="btn gold" onclick="printAuditPDF()">Gerar PDF</button></div>
+  </div>
+  <div class="toolbar">
+   <input id="auditStart" type="date" onchange="renderAuditReport()">
+   <input id="auditEnd" type="date" onchange="renderAuditReport()">
+   <input id="auditSearch" placeholder="Cliente, passeio ou voucher..." oninput="renderAuditReport()">
+   <select id="auditStatus" onchange="renderAuditReport()"><option value="active">Somente ativos</option><option value="all">Ativos e cancelados</option><option value="cancelled">Somente cancelados</option></select>
+  </div>
+  <div id="auditTableWrap"></div>
+ </div>
+</section>
+
+
+<section class="view" id="admin">
+ <div class="admin-hero">
+  <h2>👑 Painel Administrativo</h2>
+  <p>Visão gerencial das contas do ISA. Os dados comerciais continuam separados por vendedor; esta tela faz apenas a leitura administrativa autorizada pelo Supabase.</p>
+ </div>
+ <div class="admin-kpis">
+  <div class="admin-kpi"><small>Contas cadastradas</small><strong id="admUsers">—</strong></div>
+  <div class="admin-kpi"><small>Vendedores ativos</small><strong id="admActiveSellers">—</strong></div>
+  <div class="admin-kpi"><small>Vendas registradas</small><strong id="admSales">—</strong></div>
+  <div class="admin-kpi"><small>Carteira registrada</small><strong id="admSold">—</strong></div>
+  <div class="admin-kpi"><small>Comissão prevista</small><strong id="admCommission">—</strong></div>
+  <div class="admin-kpi"><small>Passeios amanhã</small><strong id="admTomorrow">—</strong></div>
+  <div class="admin-kpi"><small>Contratos pendentes</small><strong id="admContracts">—</strong></div>
+  <div class="admin-kpi"><small>Horários pendentes amanhã</small><strong id="admSchedules">—</strong></div>
+ </div>
+ <div class="admin-grid">
+  <div class="card">
+   <div class="cardhead"><div><h2>Equipe</h2><div class="meta">Selecione uma pessoa para ver a operação dela.</div></div><button class="btn light sm" type="button" onclick="loadAdminPanel(true)">Atualizar</button></div>
+   <div class="admin-toolbar">
+    <input id="adminUserSearch" placeholder="Buscar nome ou e-mail..." oninput="renderAdminUsers()">
+    <select id="adminUserFilter" onchange="renderAdminUsers()"><option value="">Todas as contas</option><option value="seller">Vendedores</option><option value="admin">Administradores</option><option value="blocked">Bloqueados</option></select>
+   </div>
+   <div id="adminUsersList" class="admin-user-list"><div class="admin-empty">Carregando equipe...</div></div>
+  </div>
+  <div class="card"><div id="adminSellerDetail"><div class="admin-empty">Selecione uma conta para visualizar vendas, valores, comissões e pendências.</div></div></div>
+ </div>
+ <div class="card" style="margin-top:16px">
+  <div class="cardhead"><div><h2>Como funciona a administração</h2><div class="meta">Separação de dados preservada.</div></div></div>
+  <div class="admin-note">O administrador consulta os estados individuais no Supabase sem trocar de login e sem substituir o próprio banco local. Pode visualizar a operação, promover/rebaixar outras contas entre Vendedor e Administrador e bloquear/desbloquear acesso. Esta versão não exclui contas de autenticação nem edita diretamente vendas de outra pessoa.</div>
+ </div>
+</section>
+
+<section class="view" id="config">
+ <div class="settingsgrid">
+  <div class="card"><div class="cardhead"><div><h2>Perfil do vendedor</h2><div class="meta">Cada vendedor pode personalizar o próprio perfil.</div></div></div>
+<div class="formgrid">
+ <div class="field"><label>Nome</label><input id="sellerNameInput" placeholder="Digite o nome"></div>
+ <div class="field"><label>WhatsApp</label><input id="sellerPhoneInput" placeholder="+55 (00) 00000-0000"></div>
+ <div class="field"><label>E-mail</label><input id="sellerEmailInput" type="email" placeholder="vendedor@email.com"></div>
+ <div class="field"><label>Equipe / unidade</label><input id="sellerTeamInput" placeholder="Ex.: Chile Premier"></div>
+ <div class="field full"><label>Observações do perfil</label><textarea id="sellerNotesInput" rows="3" placeholder="Informações úteis sobre o vendedor"></textarea></div>
+</div>
+<button class="btn gold" style="margin-top:12px" onclick="saveSellerProfile()">Salvar perfil</button>
+<div class="avatar-upload">
+ <div id="profileAvatarPreview" class="avatar-preview">V</div>
+ <div><strong>Foto do vendedor</strong><div class="meta">Opcional. Sem foto, aparece a inicial do nome.</div>
+ <div class="actions"><button class="btn light sm" onclick="document.getElementById('profilePhotoInput').click()">Escolher foto</button><button class="btn light sm" onclick="removeProfilePhoto()">Remover foto</button>
+ <input id="profilePhotoInput" type="file" accept="image/*" hidden onchange="uploadProfilePhoto(event)"></div></div>
+</div>
+</div>
+  <div class="card"><div class="cardhead"><h2>Cadastrar novo passeio</h2></div><div class="formgrid"><div class="field"><label>Nome do passeio</label><input id="newTourName"></div><div class="field"><label>Ticket obrigatório?</label><select id="newTourTicket"><option value="false">Não</option><option value="true">Sim</option></select></div></div><button class="btn gold" style="margin-top:12px" onclick="addCatalogTour()">Adicionar passeio</button></div>
+ </div>
+ <div class="card" style="margin-top:18px"><div class="cardhead"><h2>Catálogo de passeios</h2></div><div class="tourcatalog" id="catalogList"></div></div>
+
+ <div class="card" style="margin-top:18px">
+  <div class="cardhead"><div><h2>Backup e restauração</h2><div class="meta" id="lastBackupLabel">Nenhum backup registrado.</div></div></div>
+  <div class="backupbox">
+   <p style="margin-top:0">Faça um backup periódico para não depender apenas dos dados armazenados no navegador.</p>
+   <div class="actions">
+    <button class="btn gold" onclick="exportBackup()">Baixar backup completo</button>
+    <button class="btn light" onclick="document.getElementById('backupFile').click()">Restaurar backup</button>
+    <input id="backupFile" type="file" accept=".json,application/json" hidden onchange="importBackup(event)">
+   </div>
+  </div>
+ </div>
+
+</section>
+</div>
+</main>
+</div>
+
+<div class="modalback" id="saleModal">
+ <div class="modal large">
+  <div class="modalhead"><h2 style="margin:0" id="saleModalTitle">Nova venda</h2><button class="close" onclick="closeSale()">✕</button></div>
+  <div class="modalbody">
+   <div class="formgrid">
+    <div class="field"><label>Nome do cliente *</label><input id="fName"></div>
+    <div class="field"><label>WhatsApp *</label><input id="fPhone" inputmode="numeric" placeholder="+55 (81) 99999-9999"></div>
+    <div class="field"><label>Hotel / hospedagem</label><input id="fHotel"></div>
+    <div class="field"><label>Tipo de serviço</label><select id="fType"><option>Regular</option><option>Particular</option></select></div>
+    <div class="field"><label>Adultos</label><input id="fAdults" type="number" min="0" value="1"></div>
+    <div class="field"><label>Crianças</label><input id="fChildren" type="number" min="0" value="0"></div>
+    <div class="field"><label>Bebês</label><input id="fBabies" type="number" min="0" value="0"></div>
+    <div class="field"><label>Valor total da venda</label><input id="fValue" inputmode="numeric" placeholder="R$ 0,00"></div>
+    <div class="field"><label>Valor já recebido</label><input id="fPaidValue" inputmode="numeric" placeholder="R$ 0,00"></div>
+    <div class="field"><label>Forma de pagamento</label><select id="fPaymentMethod"><option value="">Não informado</option><option>PIX</option><option>Cartão</option><option>Dinheiro</option><option>Transferência</option><option>Outro</option></select></div>
+    <div class="field"><label>Data do pagamento</label><input id="fPaymentDate" type="date"></div>
+    <div class="field"><label>Comissão recebida</label><input id="fCommissionReceived" inputmode="numeric" placeholder="R$ 0,00"></div>
+    <div class="field"><label>Previsão da comissão</label><input id="fCommissionDate" type="date"></div>
+    <div class="field"><label>Status técnico (compatibilidade)</label><select id="fStatus"><option>Aguardando pagamento</option><option>Pago</option><option>Reserva feita</option><option>Horário enviado</option></select></div>
+    <div class="field full"><label>Observações</label><textarea id="fNotes" rows="3"></textarea></div>
+   </div>
+   <div style="margin-top:18px" class="tourbuilder">
+    <div class="cardhead"><h2>Passeios do pacote</h2><button class="btn light sm" onclick="addTourRow()">+ Adicionar passeio</button></div>
+    <div id="tourRows"></div>
+   </div>
+  </div>
+  <div class="modalfoot"><button class="btn light" onclick="closeSale()">Cancelar</button><button class="btn gold" onclick="saveSale()">Salvar venda</button></div>
+ </div>
+</div>
+
+<div class="modalback" id="detailModal">
+ <div class="modal large">
+  <div class="modalhead"><h2 style="margin:0">Ficha da venda</h2><button class="close" onclick="closeDetail()">✕</button></div>
+  <div class="modalbody" id="detailBody"></div>
+ </div>
+</div>
+
+<script>
+const CURRENT_USER=(sessionStorage.getItem('isa_current_user')||'visitante').toLowerCase();
+const KEY='isa_indomito_v4_'+btoa(unescape(encodeURIComponent(CURRENT_USER))).replace(/=+$/,'');
+const DEFAULT_TOURS=[
+ {name:'Andes Panorâmico',ticket:false},{name:'Farellones Full Day',ticket:false},{name:'Valle Nevado Full Day',ticket:false},
+ {name:'El Colorado Full Day',ticket:false},{name:'Portillo e Laguna del Inca',ticket:false},{name:'Infinitum Sunset',ticket:true},
+ {name:'City Tour Santiago',ticket:false},{name:'City Tour + Sky Costanera',ticket:false},{name:'Viña del Mar e Valparaíso',ticket:false},
+ {name:'Cajón del Maipo',ticket:false},{name:'Embalse El Yeso',ticket:false},{name:'Termas de Colina',ticket:false},
+ {name:'Sunset Cordilheira',ticket:false},{name:'Santa Rita',ticket:false},{name:'Undurraga',ticket:false},
+ {name:'Santa Carolina',ticket:false},{name:'Concha y Toro',ticket:false},{name:'Alyan Sunset',ticket:true},
+ {name:'Parque Safari',ticket:false},{name:'Hop On Hop Off',ticket:true},{name:'Monteluz',ticket:true},
+ {name:'Transfer Aeroporto',ticket:false}
+];
+let db=JSON.parse(localStorage.getItem(KEY)||'null')||{seller:'',catalog:DEFAULT_TOURS,sales:[],lastBackup:''};
+(db.sales||[]).forEach(s=>(s.tours||[]).forEach(t=>{if(t.priceCents==null)t.priceCents=0;if(t.commissionCents==nu
