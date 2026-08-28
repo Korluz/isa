@@ -1,0 +1,11 @@
+{
+  "product": "ISA by Korluz",
+  "version": "10.5.0",
+  "release": "Painel Administrativo",
+  "basedOn": "10.4.0",
+  "databaseMigrationRequired": false,
+  "validatedInlineJavaScript": {
+    "index": 3,
+    "contract": 2
+  }
+}
