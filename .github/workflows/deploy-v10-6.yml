@@ -1,4 +1,4 @@
-name: Deploy ISA V10.6.3
+name: Deploy ISA V10.7.0
 
 on:
   push:
@@ -19,85 +19,69 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Patch live V10.6.3
+      - name: Patch live V10.7.0
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
-
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
-          s=s.replace('Cloud V10.6.2','Cloud V10.6.3').replace('v10.6.2','v10.6.3')
-          s=s.replace("let db=JSON.parse(localStorage.getItem(KEY)||'null')||", "var db=JSON.parse(localStorage.getItem(KEY)||'null')||", 1)
-          needle="var db=JSON.parse(localStorage.getItem(KEY)||'null')||{seller:'',catalog:DEFAULT_TOURS,sales:[],lastBackup:''};"
-          if needle in s and 'window.db=db;' not in s[s.find(needle):s.find(needle)+len(needle)+40]:
-              s=s.replace(needle, needle+'\nwindow.db=db;', 1)
+          s=s.replace('Cloud V10.6.3','Cloud V10.7.0').replace('v10.6.3','v10.7.0')
 
-          auth='<script src="auth-v1062.js?v=1062"></script>'
-          # Mantém somente a tag real do HEAD. Versões anteriores inseriram cópias dentro de strings JS.
-          parts=s.split(auth)
-          if len(parts)>2:
-              s=parts[0]+auth+''.join(parts[1:])
-          elif len(parts)==1:
-              s=s.replace('</head>',auth+'\n</head>',1)
-          s=s.replace('auth-v1062.js?v=1062','auth-v1062.js?v=1063',1)
+          css='<link rel="stylesheet" href="mobile-v1070.css?v=1070">'
+          if css not in s:
+              pos=s.find('</head>')
+              if pos<0: raise SystemExit('HEAD real não encontrado')
+              s=s[:pos]+css+'\n'+s[pos:]
 
-          isa='<script src="isa-v1061.js?v=1061"></script>'
-          # Mantém somente a tag real no final do BODY; remove cópias que caíram dentro do template de impressão.
-          parts=s.split(isa)
-          if len(parts)>2:
-              s=''.join(parts[:-1])+isa+parts[-1]
-          elif len(parts)==1:
-              s=s.replace('</body>',isa+'\n</body>',1)
-          s=s.replace('isa-v1061.js?v=1061','isa-v1061.js?v=1063')
+          scripts=['<script src="admin-v1070.js?v=1070"></script>','<script src="update-v1070.js?v=1070"></script>']
+          for tag in scripts:
+              if tag not in s:
+                  pos=s.rfind('</body>')
+                  if pos<0: raise SystemExit('BODY real não encontrado')
+                  s=s[:pos]+tag+'\n'+s[pos:]
 
           p.write_text(s,encoding='utf-8')
-
-          for name in ('contrato.html','assinatura.html'):
-              p=Path(name); s=p.read_text(encoding='utf-8')
-              s=s.replace('V10.6.2','V10.6.3').replace("'10.6.2'","'10.6.3'")
-              p.write_text(s,encoding='utf-8')
           PY
 
-      - name: Validate browser-visible JavaScript
+      - name: Validate V10.7.0 browser JavaScript
         shell: bash
         run: |
           set -e
           node --check auth-v1062.js
           node --check isa-v1061.js
+          node --check admin-v1070.js
+          node --check update-v1070.js
           node --check contrato-v1061.js
           node --check assinatura-v1061.js
           python3 - <<'PY'
           from pathlib import Path
           import re, subprocess
           html=Path('index.html').read_text(encoding='utf-8')
-          # O navegador encerra um bloco script no primeiro </script>, inclusive se aparecer dentro de string JS.
           blocks=re.findall(r'<script(?![^>]*\bsrc=)[^>]*>(.*?)</script\s*>',html,re.I|re.S)
           if not blocks: raise SystemExit('Nenhum script inline encontrado')
           for i,code in enumerate(blocks):
-              f=Path(f'/tmp/isa-inline-{i}.js'); f.write_text(code,encoding='utf-8')
+              f=Path(f'/tmp/isa-inline-{i}.js');f.write_text(code,encoding='utf-8')
               r=subprocess.run(['node','--check',str(f)],capture_output=True,text=True)
               if r.returncode:
-                  print(f'Falha no script inline #{i}:')
-                  print(r.stderr)
-                  raise SystemExit(1)
+                  print(f'Falha no script inline #{i}:');print(r.stderr);raise SystemExit(1)
           print(f'{len(blocks)} scripts inline validados.')
           PY
-          grep -q 'Cloud V10.6.3' index.html
-          grep -q 'var db=JSON.parse' index.html
-          grep -q 'window.db=db' index.html
-          test "$(grep -o 'auth-v1062.js?v=1063' index.html | wc -l)" -eq 1
-          test "$(grep -o 'isa-v1061.js?v=1063' index.html | wc -l)" -eq 1
+          grep -q 'Cloud V10.7.0' index.html
+          test "$(grep -o 'mobile-v1070.css?v=1070' index.html | wc -l)" -eq 1
+          test "$(grep -o 'admin-v1070.js?v=1070' index.html | wc -l)" -eq 1
+          test "$(grep -o 'update-v1070.js?v=1070' index.html | wc -l)" -eq 1
+          grep -q '"version": "10.7.0"' VERSION.json
 
       - name: Commit release
         shell: bash
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add index.html contrato.html assinatura.html
+          git add index.html
           if git diff --cached --quiet; then
-            echo 'V10.6.3 already deployed.'
+            echo 'V10.7.0 already deployed.'
             exit 0
           fi
-          git commit -m 'ISA V10.6.3 — corrigir inicialização do núcleo e login'
+          git commit -m 'ISA V10.7.0 — contas, atualização automática e menu mobile'
           git push
