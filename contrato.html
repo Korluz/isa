@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Indômito Contract Manager — V10.6.2</title>
+<title>Indômito Contract Manager — V10.6.3</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;color:#111}
@@ -480,7 +480,7 @@ function getContractLegalPackage(d){
  const closing=['E, por estarem assim justas e contratadas, as Partes assinam o presente Contrato, que será encaminhado de forma digital.','O presente contrato passa a vigorar entre as partes a partir da assinatura do mesmo.'];
  return {intro,sections,closing};
 }
-function contractPayload(){const d=collectData(),legal=getContractLegalPackage(d);return{contractVersion:'10.6.2',legalVersion:'INDOMITO-2026-08-V1',saleId:String(window.contractSaleId||''),nome:d.nome,nacionalidade:d.nacionalidade,estadoCivil:d.estadoCivil,cpf:d.cpf,nascimento:d.nascimento,telefone:d.telefone,email:d.email,endereco:d.endereco,cep:d.cep,valor:d.valor,pagamento:d.pagamento,tours:d.tours,legalIntro:legal.intro,legalSections:legal.sections,legalClosing:legal.closing,createdAt:new Date().toISOString()}}
+function contractPayload(){const d=collectData(),legal=getContractLegalPackage(d);return{contractVersion:'10.6.3',legalVersion:'INDOMITO-2026-08-V1',saleId:String(window.contractSaleId||''),nome:d.nome,nacionalidade:d.nacionalidade,estadoCivil:d.estadoCivil,cpf:d.cpf,nascimento:d.nascimento,telefone:d.telefone,email:d.email,endereco:d.endereco,cep:d.cep,valor:d.valor,pagamento:d.pagamento,tours:d.tours,legalIntro:legal.intro,legalSections:legal.sections,legalClosing:legal.closing,createdAt:new Date().toISOString()}}
 function setRemoteState(text,ok=false){const e=document.getElementById('remoteSignState');if(e){e.textContent=text;e.style.color=ok?'#15803d':'#374151'}}
 function signaturePageUrl(token){return location.origin+location.pathname.replace(/contrato\.html$/,'assinatura.html')+'?t='+encodeURIComponent(token)}
 window.createRemoteSignatureRequest=async function(){
