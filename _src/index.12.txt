@@ -1,0 +1,127 @@
+dPrice:null,adultCommission:43,childCommission:null,ticket:true,nonRefundableTicket:true,region:"Santiago"},
+  {catalogName:"Alyan Sunset",adultPrice:599,childPrice:null,adultCommission:40,childCommission:null,ticket:true,nonRefundableTicket:true,region:"Santiago"},
+  {name:"Alyan Sunset Transporte",adultPrice:199,childPrice:null,adultCommission:16,childCommission:null,ticket:true,nonRefundableTicket:true,region:"Santiago"},
+  {catalogName:"Santa Rita",adultPrice:389,childPrice:349,adultCommission:26,childCommission:26,ticket:true,nonRefundableTicket:true,region:"Santiago"},
+  {catalogName:"Andes Panorâmico",adultPrice:229,childPrice:199,adultCommission:22,childCommission:22,ticket:false,nonRefundableTicket:false,region:"Santiago"},
+  {catalogName:"Farellones Full Day",adultPrice:229,childPrice:199,adultCommission:22,childCommission:22,sourceName:"Farellones s/ ticket",ticket:false,nonRefundableTicket:false,region:"Santiago"},
+  {catalogName:"Valle Nevado Full Day",adultPrice:229,childPrice:199,adultCommission:22,childCommission:22,sourceName:"Valle Nevado s/ ticket",ticket:false,nonRefundableTicket:false,region:"Santiago"},
+  {catalogName:"El Colorado Full Day",adultPrice:229,childPrice:199,adultCommission:22,childCommission:22,sourceName:"El Colorado s/ ticket",ticket:false,nonRefundableTicket:false,region:"Santiago"},
+  {name:"Termas + Cajón del Maipo",adultPrice:399,childPrice:349,adultCommission:37,childCommission:37,sourceName:"Termas + cajon",ticket:true,nonRefundableTicket:true,region:"Santiago"},
+  {catalogName:"Infinitum Sunset",adultPrice:519,childPrice:null,adultCommission:31,childCommission:null,sourceName:"Infinitum (Valle Nevado Sunset)",ticket:true,nonRefundableTicket:true,region:"Santiago"},
+  {catalogName:"Monteluz",adultPrice:499,childPrice:null,adultCommission:31,childCommission:null,ticket:true,nonRefundableTicket:true,region:"Santiago"},
+  {catalogName:"Hop On Hop Off",adultPrice:269,childPrice:269,adultCommission:18,childCommission:18,ticket:true,nonRefundableTicket:true,region:"Santiago"},
+  {name:"Lagunillas",adultPrice:299,childPrice:259,adultCommission:36,childCommission:36,ticket:false,nonRefundableTicket:false,region:"Santiago"},
+  {name:"Portillo Alterno",adultPrice:299,childPrice:259,adultCommission:30,childCommission:30,ticket:false,nonRefundableTicket:false,region:"Santiago"},
+  {name:"Chillan",adultPrice:829,childPrice:759,adultCommission:59,childCommission:59,ticket:false,nonRefundableTicket:false,region:"Santiago"},
+  {name:"Oasis Sunset",adultPrice:599,childPrice:null,adultCommission:40,childCommission:null,ticket:true,nonRefundableTicket:true,region:"Santiago"},
+  {name:"Tour Astronômico",adultPrice:261.75,childPrice:261.75,adultCommission:12,childCommission:12,ticket:false,nonRefundableTicket:false,region:"Atacama",discountPercent:25,baseAdultPrice:349},
+  {name:"Laguna Cejar, Tebenquiche e Ojos del Salar",adultPrice:396.75,childPrice:396.75,adultCommission:23,childCommission:23,sourceName:"Cejar + Ojos + Tebenquinche",ticket:true,nonRefundableTicket:true,region:"Atacama",discountPercent:25,baseAdultPrice:529},
+  {name:"Valle del Arcoiris e Yerbas Buenas",adultPrice:321.75,childPrice:321.75,adultCommission:15,childCommission:15,sourceName:"Valle del Arcoiris",ticket:false,nonRefundableTicket:false,region:"Atacama",discountPercent:25,baseAdultPrice:429},
+  {name:"Lagunas Escondidas de Baltinache",adultPrice:396.75,childPrice:396.75,adultCommission:21,childCommission:21,ticket:false,nonRefundableTicket:false,region:"Atacama",discountPercent:25,baseAdultPrice:529},
+  {name:"Vallecito Magic Bus",adultPrice:261.75,childPrice:261.75,adultCommission:15,childCommission:15,ticket:false,nonRefundableTicket:false,region:"Atacama",discountPercent:25,baseAdultPrice:349},
+  {name:"Trekking Guatín",adultPrice:254.25,childPrice:254.25,adultCommission:15,childCommission:15,ticket:false,nonRefundableTicket:false,region:"Atacama",discountPercent:25,baseAdultPrice:339},
+  {name:"Geyser del Tatio",adultPrice:419.25,childPrice:419.25,adultCommission:22,childCommission:22,sourceName:"Geysers del Tatio",ticket:false,nonRefundableTicket:false,region:"Atacama",discountPercent:25,baseAdultPrice:559},
+  {name:"Valle de la Luna",adultPrice:374.25,childPrice:374.25,adultCommission:19,childCommission:19,ticket:true,nonRefundableTicket:true,region:"Atacama",discountPercent:25,baseAdultPrice:499},
+  {name:"Ruta de los Salares",adultPrice:396.75,childPrice:396.75,adultCommission:21,childCommission:21,ticket:false,nonRefundableTicket:false,region:"Atacama",discountPercent:25,baseAdultPrice:529},
+  {name:"Lagunas Altiplânicas, Piedras Rojas e Laguna Chaxa",adultPrice:614.25,childPrice:614.25,adultCommission:34,childCommission:34,sourceName:"Piedras Rojas + Altiplanicas + Chaxa",ticket:true,nonRefundableTicket:true,region:"Atacama",discountPercent:25,baseAdultPrice:819},
+  {name:"Termas Purilibre",adultPrice:254.25,childPrice:254.25,adultCommission:15,childCommission:15,sourceName:"Trekking Puripobre",ticket:false,nonRefundableTicket:false,region:"Atacama",discountPercent:25,baseAdultPrice:339},
+  {name:"Termas Puritama",adultPrice:471.75,childPrice:471.75,adultCommission:28,childCommission:28,ticket:true,nonRefundableTicket:true,region:"Atacama",discountPercent:25,baseAdultPrice:629},
+  {name:"Trekking Cascadas Perdidas",adultPrice:261.75,childPrice:261.75,adultCommission:15,childCommission:15,ticket:false,nonRefundableTicket:false,region:"Atacama",discountPercent:25,baseAdultPrice:349},
+  {name:"Tour Sunset Bike",adultPrice:299.25,childPrice:299.25,adultCommission:16,childCommission:16,sourceName:"Tour Bike",ticket:false,nonRefundableTicket:false,region:"Atacama",discountPercent:25,baseAdultPrice:399},
+  {name:"Sandboard",adultPrice:411.75,childPrice:411.75,adultCommission:21,childCommission:21,ticket:false,nonRefundableTicket:false,region:"Atacama",discountPercent:25,baseAdultPrice:549},
+  {name:"Cavalgada",adultPrice:321.75,childPrice:321.75,adultCommission:15,childCommission:15,sourceName:"Cabalgatas",ticket:false,nonRefundableTicket:false,region:"Atacama",discountPercent:25,baseAdultPrice:429},
+  {name:"Tour Balão",adultPrice:1499.25,childPrice:1499.25,adultCommission:118,childCommission:118,sourceName:"Globo Aerostatico",ticket:false,nonRefundableTicket:false,region:"Atacama",discountPercent:25,baseAdultPrice:1999},
+  {name:"Volcán Lascar",adultPrice:1049.25,childPrice:1049.25,adultCommission:55,childCommission:55,ticket:false,nonRefundableTicket:false,region:"Atacama",discountPercent:25,baseAdultPrice:1399},
+  {name:"Transfer Compartido",adultPrice:null,childPrice:null,adultCommission:9,childCommission:9,ticket:false,nonRefundableTicket:false,region:"Atacama",pricePendingSource:true},
+  {name:"Trekking Jacuzzi Rustico",adultPrice:null,childPrice:null,adultCommission:15,childCommission:15,ticket:false,nonRefundableTicket:false,region:"Atacama",pricePendingSource:true},
+  {name:"Tour Arqueologico",adultPrice:null,childPrice:null,adultCommission:16,childCommission:16,ticket:false,nonRefundableTicket:false,region:"Atacama",pricePendingSource:true},
+  {name:"Cerro Toco",adultPrice:null,childPrice:null,adultCommission:33,childCommission:33,ticket:false,nonRefundableTicket:false,region:"Atacama",pricePendingSource:true},
+  {name:"Atacama Ancestral",adultPrice:null,childPrice:null,adultCommission:41,childCommission:41,ticket:false,nonRefundableTicket:false,region:"Atacama",pricePendingSource:true},
+  {name:"Sairecabur",adultPrice:null,childPrice:null,adultCommission:69,childCommission:69,ticket:false,nonRefundableTicket:false,region:"Atacama",pricePendingSource:true},
+  {name:"Uyuni 3 Dias",adultPrice:null,childPrice:null,adultCommission:90,childCommission:90,ticket:false,nonRefundableTicket:false,region:"Atacama",pricePendingSource:true},
+  {name:"Uyuni 4 Dias",adultPrice:null,childPrice:null,adultCommission:111,childCommission:111,ticket:false,nonRefundableTicket:false,region:"Atacama",pricePendingSource:true}
+ ];
+ function applyPriceList2026_08(){
+  if(db.priceListVersion==='2026-08-27-v104')return; // já aplicada, não roda de novo (não sobrescreve edições manuais futuras)
+  PRICE_LIST_2026_08.forEach(row=>{
+    let item=row.catalogName?db.catalog.find(c=>c.name===row.catalogName):findCatalogItem(row.name);
+    if(!item){
+      item={name:row.name||row.catalogName,ticket:row.ticket||false};
+      db.catalog.push(item);
+    }
+    item.adultPrice=row.adultPrice;
+    item.childPrice=row.childPrice;
+    if(row.adultCommission!=null){item.adultCommission=row.adultCommission;item.childCommission=row.childCommission}
+    if(row.ticket!=null)item.ticket=!!row.ticket;
+    if(row.nonRefundableTicket!=null)item.nonRefundableTicket=!!row.nonRefundableTicket;
+    if(row.region)item.region=row.region;
+    if(row.discountPercent!=null)item.discountPercent=row.discountPercent;
+    if(row.baseAdultPrice!=null)item.baseAdultPrice=row.baseAdultPrice;
+    if(row.pricePendingSource!=null)item.pricePendingSource=!!row.pricePendingSource;
+  });
+
+  const ticketConditionNames=[
+   'Embalse El Yeso','Termas de Colina','Cajón del Maipo e Embalse El Yeso',
+   'Termas, Cajón e Embalse','City Tour + Sky Costanera'
+  ].map(cNorm);
+  (db.catalog||[]).forEach(c=>{
+    if(ticketConditionNames.includes(cNorm(c.name))){
+      c.ticket=true;c.nonRefundableTicket=true;
+    }
+  });
+
+  db.priceListVersion='2026-08-27-v104';
+  localStorage.setItem(KEY,JSON.stringify(db));
+ }
+ function tourPax(t,s){
+   return {
+     adults:Number(t.adults??s.adults??0),
+     children:Number(t.children??s.children??0),
+     babies:Number(t.babies??s.babies??0)
+   };
+ }
+ function calcTourCommission(t,s){
+   if(t.cancelled||t.cancelChecked===true)return {total:0,rule:findCommissionRule(t.name),unmapped:false};
+   const rule=findCommissionRule(t.name),p=tourPax(t,s);
+   if(!rule)return {total:0,rule:null,unmapped:true,p};
+   const adult=Number(rule.adult||0)*p.adults;
+   const child=rule.child==null?0:Number(rule.child||0)*p.children;
+   return {total:adult+child,adult,child,rule,p,unmapped:false,childUnavailable:rule.child==null&&p.children>0};
+ }
+ function calcSaleCommission(s){
+   let total=0,details=[],unmapped=[];
+   (s.tours||[]).forEach(t=>{
+     const c=calcTourCommission(t,s);total+=c.total;details.push({tour:t,...c});
+     if(c.unmapped)unmapped.push(t.name);
+   });
+   return {total,details,unmapped};
+ }
+ window.calcSaleCommission=calcSaleCommission;
+ window.updateCommissions=updateCommissions;
+ function centsBRL(v){return Math.round(Number(v||0)*100)}
+ function updateCommissions(){
+   db.sales.forEach(s=>{
+     // V10.2.6: chama window.calcSaleCommission explicitamente (não o
+     // identificador local calcSaleCommission) — patches mais tardios no
+     // arquivo substituem window.calcSaleCommission por uma versão com
+     // regras especiais (ex: Hop On Hop Off). Chamando o identificador
+     // local, updateCommissions ficava presa pra sempre na versão
+     // original, mesmo sendo chamada de novo depois desses patches.
+     const calc=window.calcSaleCommission(s);
+     s.commissionCents=centsBRL(calc.total);
+     // V10.2.4: antes só o total da venda era gravado. A comissão de cada
+     // passeio (t.commissionCents) nunca era atualizada pelo motor de
+     // cálculo, então "Minhas vendas", a ficha da venda, o Financeiro e o
+     // CSV sempre mostravam R$0,00 ali, mesmo quando a Auditoria (que lê
+     // calcSaleCommission diretamente) já calculava o valor certo.
+     calc.details.forEach(d=>{d.tour.commissionCents=centsBRL(d.total)});
+   });
+   localStorage.setItem(KEY,JSON.stringify(db));
+ }
+ function backfillTourPrices(){
+   // V10.2.6: a sugestão automática de preço (V10.2.5) só agia na tela de
+   // criar/editar venda — vendas que já existiam antes continuavam com
+   // R$0,00 até alguém abrir "Editar dados" e salvar de novo. Isso espelha
+   // exatamente o que updateCommissions já faz para comissão: roda em
+   // toda venda salva, só preenche onde ainda está zerado, nunca sobrescreve
+   // um preço que o 
