@@ -1,0 +1,66 @@
+name: Build ISA monolith
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '_src/**'
+      - '.github/workflows/build-isa-monolith.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build monolithic files
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t INDEX_PARTS < <(find _src -maxdepth 1 -type f -name 'index.*.txt' | sort -V)
+          mapfile -t CONTRACT_PARTS < <(find _src -maxdepth 1 -type f -name 'contrato.*.txt' | sort -V)
+          test ${#INDEX_PARTS[@]} -gt 0
+          test ${#CONTRACT_PARTS[@]} -gt 0
+          cat "${INDEX_PARTS[@]}" > index.html
+          cat "${CONTRACT_PARTS[@]}" > contrato.html
+          echo "index.html: $(wc -c < index.html) bytes"
+          echo "contrato.html: $(wc -c < contrato.html) bytes"
+
+      - name: Validate inline JavaScript
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import re, pathlib, subprocess, tempfile
+          for filename in ('index.html','contrato.html'):
+              html = pathlib.Path(filename).read_text(encoding='utf-8')
+              blocks = re.findall(r'<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)</script>', html, flags=re.I)
+              checked = 0
+              for i, block in enumerate(blocks):
+                  if not block.strip():
+                      continue
+                  p = pathlib.Path(f'/tmp/{filename}.{i}.js')
+                  p.write_text(block, encoding='utf-8')
+                  subprocess.run(['node','--check',str(p)], check=True)
+                  checked += 1
+              print(filename, 'inline JS blocks checked:', checked)
+          PY
+
+      - name: Commit built files
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html contrato.html
+          if git diff --cached --quiet; then
+            echo 'Monolithic files already up to date.'
+            exit 0
+          fi
+          git commit -m 'Build ISA monolithic files'
+          git push
