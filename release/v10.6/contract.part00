@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Indômito Contract Manager — V10.6.0</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;color:#111}
+.app{max-width:1120px;margin:22px auto;padding:0 14px}
+.card{background:#fff;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.08);padding:22px;margin-bottom:22px}
+h1{margin:0 0 6px;font-size:26px} .sub{margin:0 0 18px;color:#555;line-height:1.35}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}
+.field{display:flex;flex-direction:column;gap:5px} label{font-weight:700;font-size:13px}
+input,textarea,select{border:1px solid #d1d5db;border-radius:9px;padding:10px 11px;font-size:15px} textarea{min-height:72px;resize:vertical}
+.full{grid-column:1/-1} .section-title{margin:20px 0 12px;font-size:17px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}
+.actions{display:flex;gap:12px;align-items:center;margin-top:18px;flex-wrap:wrap} button{border:0;border-radius:12px;padding:13px 18px;font-weight:800;cursor:pointer;font-size:15px}
+.primary{background:#111827;color:#fff} .secondary{background:#e5e7eb;color:#111} .status{color:#374151;font-size:14px}
+.note{font-size:13px;color:#555;background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:12px;line-height:1.4}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+
+
+.signature-panel{margin-top:10px;border:1px solid #d1d5db;border-radius:12px;padding:12px;background:#fafafa}
+.signature-tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;align-items:center}
+.ticket-preview{display:grid;gap:8px;margin-top:8px}
+.ticket-row{padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px;background:#fff}
+.ticket-row.alert{border-color:#f3c96a;background:#fff8e8}
+.ticket-chip{display:inline-block;border-radius:999px;padding:4px 8px;font-size:11px;font-weight:800;background:#fff1c2;color:#7a5200;margin-top:5px}
+.accept-box{display:flex;gap:9px;align-items:flex-start;margin-top:10px;padding:11px;border-radius:10px;background:#fff8e8;border:1px solid #f3c96a;font-size:13px;line-height:1.4}
+.accept-box input{margin-top:2px;transform:scale(1.15)}
+
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="app">
+ <div class="card">
+  <h1>Indômito Contract Manager</h1>
+  <p class="sub">Contrato integrado ao ISA, com ciência específica de tickets e assinatura eletrônica remota.</p>
+  <form id="form" onsubmit="return false;">
+   <div class="section-title">Dados do contratante</div>
+   <div class="grid">
+    <div class="field"><label>Nome completo</label><input id="nome" required></div>
+    <div class="field"><label>Nacionalidade</label><input id="nacionalidade"></div>
+    <div class="field"><label>Estado civil</label><input id="estadoCivil"></div>
+    <div class="field"><label>Data de nascimento</label><input id="nascimento" placeholder="dd/mm/aaaa"></div>
+    <div class="field"><label>CPF</label><input id="cpf" placeholder="000.000.000-00"></div>
+    <div class="field"><label>Telefone/WhatsApp</label><input id="telefone" placeholder="(00) 00000-0000"></div>
+    <div class="field full"><label>E-mail</label><input id="email" type="email"></div>
+    <div class="field full"><label>Endereço completo</label><input id="endereco" placeholder="Rua, número, bairro, cidade/UF"></div>
+    <div class="field"><label>CEP</label><input id="cep" placeholder="00000-000"></div>
+   </div>
+   <div class="section-title">Financeiro</div>
+   <div class="grid">
+    <div class="field"><label>Valor total</label><input id="valor" placeholder="R$ 0,00"></div>
+    <div class="field full"><label>Forma de pagamento / observação</label><textarea id="pagamento" placeholder="Ex.: Pagamento via PIX à vista em 06/07/2026"></textarea></div>
+   </div>
+
+   <div class="section-title">Passeios e condição de ticket</div>
+   <div class="note">Quando este contrato é aberto a partir de uma venda do ISA, os passeios são carregados automaticamente. Os itens identificados com ticket/reserva de terceiro serão destacados no PDF.</div>
+   <div id="servicesPreview" class="ticket-preview"><div class="ticket-row">Nenhuma venda vinculada. Os serviços continuarão constando no voucher anexado.</div></div>
+
+   <div class="section-title">Assinatura eletrônica remota</div>
+   <div class="note">Para vendas à distância, gere primeiro o PDF para conferência. Depois, com os dados do contrato completos, crie um link exclusivo e envie ao cliente pelo WhatsApp. O cliente lê e assina no próprio celular.</div>
+   <div class="signature-panel" id="remoteSignPanel">
+    <div id="remoteSignState" class="status">Nenhum link criado.</div>
+    <div class="signature-tools">
+     <button type="button" class="primary" id="createSignatureLink">Criar link de assinatura</button>
+     <button type="button" class="secondary" id="copySignatureLink" style="display:none">Copiar link</button>
+     <button type="button" class="secondary" id="whatsappSignatureLink" style="display:none">Abrir WhatsApp</button>
+    </div>
+    <input id="signatureLinkOutput" readonly style="display:none;width:100%;margin-top:10px" aria-label="Link de assinatura">
+   </div>
+
+   <div class="section-title">Anexos</div>
+   <div class="grid">
+    <div class="field"><label>Comprovante de pagamento</label><input id="comprovante" type="file" accept="application/pdf,image/png,image/jpeg,image/webp"></div>
+    <div class="field"><label>Voucher</label><input id="voucher" type="file" accept="application/pdf,image/png,image/jpeg,image/webp"></div>
+   </div>
+   <div class="actions">
+    <button type="button" class="primary" id="gerar">Gerar contrato PDF</button>
+    <button type="button" class="secondary" id="limpar">Limpar formulário</button>
+    <span class="status" id="status"></span>
+   </div>
+  </form>
+ </div>
+</div>
+
+
+
+
+
+
+<script>
+if (window.pdfjsLib) { pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; }
+const ASSINATURA = 'data:image/png;base64,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
