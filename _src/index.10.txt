@@ -1,0 +1,183 @@
+phone:'',email:'',team:'',notes:''};
+ db.catalog=db.catalog||[];
+ function normalizeName(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()}
+ function ensureTicket(name){
+   const key=normalizeName(name);
+   return key.includes('hop on hop off') || key.includes('city tour hop on hop off') ||
+          key.includes('infinitum') || key.includes('alyan') || key.includes('monteluz') ||
+          !!db.catalog.find(t=>normalizeName(t.name)===key)?.ticket;
+ }
+ window.ticketRequired=ensureTicket;
+ ['City Tour Hop On Hop Off','Hop On Hop Off'].forEach(n=>{
+   let item=db.catalog.find(t=>normalizeName(t.name)===normalizeName(n));
+   if(item)item.ticket=true;else db.catalog.push({name:n,ticket:true});
+ });
+
+ function loadSellerProfile(){
+   const p=db.sellerProfile;
+   if(el('sellerNameInput'))el('sellerNameInput').value=p.name||'';
+   if(el('sellerPhoneInput'))el('sellerPhoneInput').value=p.phone||'';
+   if(el('sellerEmailInput'))el('sellerEmailInput').value=p.email||'';
+   if(el('sellerTeamInput'))el('sellerTeamInput').value=p.team||'';
+   if(el('sellerNotesInput'))el('sellerNotesInput').value=p.notes||'';
+   if(el('sellerNameTop'))el('sellerNameTop').textContent=p.name||'Vendedor';
+   if(el('avatar'))el('avatar').textContent=(p.name||'V').trim().charAt(0).toUpperCase();
+   const sellerBox=document.querySelector('.seller > div:first-child');
+   if(sellerBox){
+     let mini=sellerBox.querySelector('.profileMini');
+     if(!mini){mini=document.createElement('div');mini.className='profileMini';sellerBox.appendChild(mini)}
+     mini.textContent=[p.team,p.email].filter(Boolean).join(' • ');
+   }
+ }
+ window.saveSellerProfile=function(){
+   db.sellerProfile={
+     name:el('sellerNameInput').value.trim(),
+     phone:el('sellerPhoneInput').value.trim(),
+     email:el('sellerEmailInput').value.trim(),
+     team:el('sellerTeamInput').value.trim(),
+     notes:el('sellerNotesInput').value.trim()
+   };
+   db.seller=db.sellerProfile.name;
+   localStorage.setItem(KEY,JSON.stringify(db));loadSellerProfile();alert('Perfil salvo com sucesso.');
+ };
+ if(el('sellerPhoneInput'))el('sellerPhoneInput').addEventListener('input',e=>e.target.value=phoneMask(e.target.value));
+
+ // ---- mobile drawer with backdrop and back handling ----
+ const side=el('side'), overlay=el('mobileOverlay'), mobileBtn=el('mobileBtn');
+ function closeDrawer(){
+   side?.classList.remove('open');overlay?.classList.remove('open');
+   if(history.state&&history.state.isaMenu)history.back();
+ }
+ function openDrawer(){
+   if(side?.classList.contains('open'))return closeDrawer();
+   side?.classList.add('open');overlay?.classList.add('open');
+   history.pushState({isaMenu:true},'');
+ }
+ if(mobileBtn)mobileBtn.onclick=openDrawer;
+ if(overlay)overlay.onclick=closeDrawer;
+ window.addEventListener('popstate',()=>{side?.classList.remove('open');overlay?.classList.remove('open')});
+ document.querySelectorAll('.menu button').forEach(b=>b.addEventListener('click',()=>{side?.classList.remove('open');overlay?.classList.remove('open')}));
+
+ // ---- helpers ----
+ function activeTours(s){return (s.tours||[]).filter(t=>!t.cancelled&&t.cancelChecked!==true)}
+ function isSaleCancelled(s){return s.status==='Cancelado'||activeTours(s).length===0}
+ function paymentUrgentItems(){
+   const items=[];
+   db.sales.forEach(s=>{
+     if(isSaleCancelled(s)||paymentState(s)==='Quitado')return;
+     activeTours(s).forEach(t=>{const d=daysUntil(t.date);if(d>=0&&d<=1)items.push({sale:s,tour:t})})
+   });
+   return items;
+ }
+ function cancellationItems(){
+   const items=[];
+   db.sales.forEach(s=>{
+     if(isSaleCancelled(s))return;
+     activeTours(s).forEach(t=>{const d=daysUntil(t.date);if(d>=0&&d<=2&&t.cancelChecked===null)items.push({sale:s,tour:t})})
+   });
+   return items;
+ }
+ function tomorrowItems(){
+   const items=[];
+   db.sales.forEach(s=>{
+     if(isSaleCancelled(s))return;
+     activeTours(s).filter(t=>t.date===localISO(1)).forEach(t=>items.push({sale:s,tour:t}))
+   });
+   return items;
+ }
+ function openItem(id){openDetail(id)}
+
+ // ---- dashboard fully rebuilt with clickable cards and clean exclusions ----
+ window.renderDashboard=function(){
+   const cancels=cancellationItems(), pays=paymentUrgentItems(), tomorrow=tomorrowItems();
+   if(el('kCancel'))el('kCancel').textContent=cancels.length;
+   if(el('kPay'))el('kPay').textContent=pays.length;
+   if(el('kTomorrow'))el('kTomorrow').textContent=tomorrow.length;
+   document.querySelectorAll('.grid4 .stat').forEach((card,i)=>{
+     card.classList.add('clickable');
+     card.onclick=()=>{
+       const list=[cancels,pays,tomorrow][i]||[];
+       if(list.length===1)openItem(list[0].sale.id);
+       else if(i===2)go('amanha');
+       else{
+         const first=list[0];if(first)openItem(first.sale.id);
+       }
+     };
+   });
+   const alerts=[];
+   cancels.forEach(x=>alerts.push(`<div class="alertitem red clickable" onclick="openDetail(${x.sale.id})"><div><strong>Confirmar cancelamento</strong><small>${esc(x.sale.name)} • ${esc(x.tour.name)} • ${fmtDate(x.tour.date)}</small></div><span class="badge b-red">48h</span></div>`));
+   pays.forEach(x=>alerts.push(`<div class="alertitem orange clickable" onclick="openDetail(${x.sale.id})"><div><strong>Cliente pagou?</strong><small>${esc(x.sale.name)} • ${esc(x.tour.name)} • ${fmtDate(x.tour.date)}</small></div><span class="badge b-warn">Urgente</span></div>`));
+   tomorrow.filter(x=>!x.tour.messageSent).forEach(x=>alerts.push(`<div class="alertitem blue clickable" onclick="openDetail(${x.sale.id})"><div><strong>Enviar horário</strong><small>${esc(x.sale.name)} • ${esc(x.tour.name)} • amanhã</small></div><span class="badge b-blue">Amanhã</span></div>`));
+   el('alertsList').innerHTML=alerts.length?alerts.join(''):'<div class="empty">Nenhuma pendência inteligente.</div>';
+   const next=tomorrow.slice(0,5);
+   const box=document.querySelector('#inicio .dashboard > .card:last-child');
+   if(box){
+     let list=box.querySelector('.nextList');
+     if(!list){list=document.createElement('div');list.className='nextList';box.appendChild(list)}
+     list.innerHTML=next.length?next.map(x=>`<div class="sale clickable" onclick="openDetail(${x.sale.id})"><strong>${esc(x.sale.name)}</strong><div class="meta">${esc(x.tour.name)} • ${x.tour.messageSent?'Horário enviado':'Horário pendente'}</div></div>`).join(''):'<div class="empty">Nenhum passeio amanhã.</div>';
+   }
+ }
+
+ // ---- tomorrow list clickable ----
+ const oldTomorrow=window.renderTomorrow;
+ window.renderTomorrow=function(){
+   const rows=tomorrowItems();
+   if(el('tomorrowDateLabel'))el('tomorrowDateLabel').textContent=fmtDate(localISO(1));
+   el('tomorrowList').innerHTML=rows.length?rows.map(x=>`<div class="sale clickable" onclick="openDetail(${x.sale.id})"><div class="saletop"><div><div class="title">${esc(x.sale.name)}</div><div class="meta">${esc(x.tour.name)} • ${totalPax(x.sale)} passageiro(s) • ${esc(x.tour.location||x.sale.hotel||'local não informado')}</div></div><span class="badge ${x.tour.messageSent?'b-ok':'b-warn'}">${x.tour.messageSent?'Horário enviado':'Pendente'}</span></div></div>`).join(''):'<div class="empty">Nenhum passeio ativo para amanhã.</div>';
+ }
+
+ // ---- detail page: per-tour cancellation, payment and sent status at any time ----
+ window.openDetail=function(id){
+   const s=db.sales.find(x=>x.id===id);if(!s)return;
+   const balance=Math.max(0,(s.valueCents||0)-(s.paidCents||0));
+   el('detailBody').innerHTML=`<div class="detailgrid"><div>
+    <div class="infobox"><h3>Cliente</h3><strong>${esc(s.name)}</strong><div class="meta">${esc(s.phone||'Telefone não informado')}<br>${esc(s.email||'')}<br>${esc(s.hotel||'Hotel não informado')}<br>${esc(s.type)} • ${totalPax(s)} pessoa(s)<br>ADT: ${s.adults||0} • CHD: ${s.children||0} • INF: ${s.babies||0}</div></div>
+    <div class="infobox"><h3>Pagamento</h3><div class="meta">Venda: <strong>${fmtMoney(s.valueCents)}</strong><br>Recebido: <strong>${fmtMoney(s.paidCents)}</strong><br>Saldo: <strong>${fmtMoney(balance)}</strong></div>
+     <div class="actions"><button class="btn gold sm" onclick="confirmPaid(${s.id})">Cliente pagou</button><button class="btn red sm" onclick="cancelWholeSale(${s.id})">Cancelar venda</button></div>
+    </div>
+    <div class="infobox"><h3>Etapa atual</h3>${badge(s.status)}</div>
+   </div><div>
+    <div class="infobox"><h3>Passeios do pacote</h3>${(s.tours||[]).map((t,i)=>`<div class="sale ${t.cancelled||t.cancelChecked===true?'cancelled-tour':''}">
+      <div class="saletop"><div><strong>${esc(t.name)}</strong><div class="meta">${fmtDate(t.date)} ${ticketRequired(t.name)?'• 🎟 Ticket obrigatório':''}</div></div>${t.cancelled||t.cancelChecked===true?'<span class="badge b-red">Cancelado</span>':''}</div>
+      <div class="tour-control-row">
+       <div class="field"><label>Horário</label><input type="time" id="dh_${i}" value="${esc(t.hour||'')}"></div>
+       <div class="field"><label>Hotel / ponto de coleta</label><input id="dl_${i}" value="${esc(t.location||s.hotel||'')}"></div>
+       <div class="field"><label>Horário enviado ao cliente?</label><select id="ds_${i}"><option value="false" ${!t.messageSent?'selected':''}>Não</option><option value="true" ${t.messageSent?'selected':''}>Sim</option></select></div>
+       <div class="field"><label>Situação do passeio</label><select id="dc_${i}"><option value="active" ${!(t.cancelled||t.cancelChecked===true)?'selected':''}>Ativo</option><option value="cancelled" ${t.cancelled||t.cancelChecked===true?'selected':''}>Cancelado</option></select></div>
+      </div>
+    </div>`).join('')}</div>
+    <button class="btn gold" onclick="saveDetailV24(${s.id})">Salvar informações</button>
+    <div class="infobox" style="margin-top:14px"><h3>Histórico</h3><div class="history">${(s.history||[]).length?(s.history||[]).map(h=>`<div class="historyitem"><strong>${fmtDateTime(h.at)}</strong><span>${esc(h.text)}</span></div>`).join(''):'<div class="meta">Nenhuma atividade registrada.</div>'}</div></div>
+   </div></div>`;
+   el('detailModal').classList.add('open');
+ }
+ window.saveDetailV24=function(id){
+   const s=db.sales.find(x=>x.id===id);if(!s)return;
+   (s.tours||[]).forEach((t,i)=>{
+     const wasCancelled=!!(t.cancelled||t.cancelChecked===true);
+     t.hour=el('dh_'+i).value;t.location=el('dl_'+i).value;t.messageSent=el('ds_'+i).value==='true';
+     const nowCancelled=el('dc_'+i).value==='cancelled';t.cancelled=nowCancelled;t.cancelChecked=nowCancelled?true:false;
+     if(nowCancelled&&!wasCancelled)addHistory(s,'Passeio cancelado: '+t.name);
+     if(!nowCancelled&&wasCancelled)addHistory(s,'Passeio reativado: '+t.name);
+   });
+   if(activeTours(s).length===0)s.status='Cancelado';
+   else if(activeTours(s).some(t=>t.messageSent))s.status='Horário enviado';
+   else if(s.status==='Cancelado')s.status='Reserva feita';
+   addHistory(s,'Informações dos passeios atualizadas');
+   save();closeDetail();
+ }
+ window.confirmPaid=function(id){
+   const s=db.sales.find(x=>x.id===id);if(!s)return;
+   s.paidCents=s.valueCents||s.paidCents||0;s.paymentDate=s.paymentDate||localISO();s.status=s.status==='Aguardando pagamento'?'Pago':s.status;
+   addHistory(s,'Cliente confirmou o pagamento');save();openDetail(id);
+ }
+ window.cancelWholeSale=function(id){
+   const s=db.sales.find(x=>x.id===id);if(!s||!confirm('Cancelar todos os passeios desta venda?'))return;
+   s.status='Cancelado';(s.tours||[]).forEach(t=>{t.cancelled=true;t.cancelChecked=true});addHistory(s,'Venda inteira cancelada');save();closeDetail();
+ }
+
+ // ---- validator: vertical cards and cancelled tours ignored ----
+ const oldUpdateValidatorContext=window.updateValidatorContext;
+ window.updateValidatorContext=function(){
+   const s=selectedValidatorSale(),expected=s?activeTours(s).filter(t=>t.date===localISO(1)):[];
+   el('validatorExpected').innerHTML=!s?'Selecione uma venda.':expected.length?expected.map(t=>`<div style="margin-bottom:10px"><strong>${esc(t.name)}</strong><br><span class="meta">
