@@ -1,11 +1,14 @@
 {
   "product": "ISA by Korluz",
-  "version": "10.5.0",
-  "release": "Painel Administrativo",
-  "basedOn": "10.4.0",
-  "databaseMigrationRequired": false,
-  "validatedInlineJavaScript": {
-    "index": 3,
-    "contract": 2
-  }
+  "version": "10.7.0",
+  "release": "Administração de contas + atualização automática + menu mobile",
+  "basedOn": "10.6.3",
+  "databaseMigrationRequired": true,
+  "databaseMigration": "isa_v10_7_admin_account_lifecycle",
+  "features": [
+    "Resetar dados de uma conta pelo Admin",
+    "Excluir conta de autenticação pelo Admin",
+    "Aviso automático de nova versão disponível",
+    "Correção do acesso a Configurações no menu mobile"
+  ]
 }
