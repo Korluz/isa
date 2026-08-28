@@ -1,0 +1,230 @@
+DataURL(file) { return await new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); }); }
+function cropWhiteCanvas(canvas, padding=28) {
+  const ctx = canvas.getContext('2d');
+  const {width:w,height:h}=canvas;
+  const img = ctx.getImageData(0,0,w,h).data;
+  let minX=w,minY=h,maxX=0,maxY=0,found=false;
+  for(let y=0;y<h;y+=3){
+    for(let x=0;x<w;x+=3){
+      const i=(y*w+x)*4, r=img[i], g=img[i+1], b=img[i+2], a=img[i+3];
+      if(a>20 && !(r>245 && g>245 && b>245)) { found=true; if(x<minX)minX=x; if(y<minY)minY=y; if(x>maxX)maxX=x; if(y>maxY)maxY=y; }
+    }
+  }
+  if(!found) return canvas;
+  minX=Math.max(0,minX-padding); minY=Math.max(0,minY-padding);
+  maxX=Math.min(w,maxX+padding); maxY=Math.min(h,maxY+padding);
+  const cw=maxX-minX, ch=maxY-minY;
+  const out=document.createElement('canvas'); out.width=cw; out.height=ch;
+  out.getContext('2d').drawImage(canvas,minX,minY,cw,ch,0,0,cw,ch);
+  return out;
+}
+async function renderPdfFile(file, maxPages=99, crop=false) {
+  if(!file) return [];
+  if(file.type.startsWith('image/')) return [await fileToDataURL(file)];
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({data: buf}).promise;
+  const imgs=[];
+  for(let i=1;i<=Math.min(pdf.numPages,maxPages);i++) {
+    const page = await pdf.getPage(i);
+    const viewport = page.getViewport({scale: 2.4});
+    const canvas = document.createElement('canvas'); canvas.width=viewport.width; canvas.height=viewport.height;
+    const ctx = canvas.getContext('2d'); await page.render({canvasContext:ctx, viewport}).promise;
+    const finalCanvas = crop ? cropWhiteCanvas(canvas, 34) : canvas;
+    imgs.push(finalCanvas.toDataURL('image/jpeg',0.95));
+  }
+  return imgs;
+}
+function fitImage(pdf, dataUrl, x, y, maxW, maxH) {
+  const props = pdf.getImageProperties(dataUrl);
+  let w = maxW, h = w * props.height / props.width;
+  if(h > maxH) { h = maxH; w = h * props.width / props.height; }
+  pdf.addImage(dataUrl, dataUrl.includes('image/png')?'PNG':'JPEG', x, y, w, h);
+  return {w,h};
+}
+function addAttachments(pdf, compImgs, voucherImgs) {
+  const totalAnexos = 5 + 1 + Math.max(voucherImgs.length, 1) + Math.max(compImgs.length - 1, 0);
+  let page = 6;
+  addPage(pdf); pageNo(pdf,page,totalAnexos); let y=82;
+  setTimes(pdf,'bold',13.5); pdf.text('Dados para Ativação da Reserva',M.left,y); y += 42;
+  setTimes(pdf,'bold',12.3); pdf.text('Comprovante de pagamento:',M.left,y); y += 18;
+  if(compImgs[0]) {
+    const r=fitImage(pdf,compImgs[0],M.left-18,y,CONTENT_W+36,470);
+    y += r.h + 34;
+  } else {
+    setTimes(pdf,'normal',11.5); pdf.text('Nenhum comprovante anexado.',M.left,y); y += 34;
+  }
+  for(const img of compImgs.slice(1)) {
+    page++; addPage(pdf); pageNo(pdf,page,totalAnexos);
+    setTimes(pdf,'bold',13.2); pdf.text('Comprovante de pagamento - continuação',M.left,82);
+    fitImage(pdf,img,M.left,114,CONTENT_W,665);
+  }
+  // Voucher começa em nova página para permitir escala legível.
+  page++; addPage(pdf); pageNo(pdf,page,totalAnexos);
+  y=82;
+  setTimes(pdf,'bold',13.2); pdf.text('Voucher:',M.left,y); y += 22;
+  if(voucherImgs[0]) {
+    fitImage(pdf,voucherImgs[0],M.left,y,CONTENT_W,695);
+  } else {
+    setTimes(pdf,'normal',11.5); pdf.text('Nenhum voucher anexado.',M.left,y);
+  }
+  for(const img of voucherImgs.slice(1)) {
+    page++; addPage(pdf); pageNo(pdf,page,totalAnexos);
+    setTimes(pdf,'bold',13.2); pdf.text('Voucher - continuação',M.left,82);
+    fitImage(pdf,img,M.left,114,CONTENT_W,665);
+  }
+}
+
+function collectData() {
+ const signed=window.signaturePadHasInk===true;
+ const accepted=document.getElementById('aceiteContrato')?.checked===true;
+ return {
+  nome:val('nome'), nacionalidade:val('nacionalidade'), estadoCivil:val('estadoCivil'),
+  cpf:val('cpf'), nascimento:val('nascimento'), telefone:val('telefone'), email:val('email'),
+  endereco:val('endereco'), cep:val('cep'), valor:val('valor'), pagamento:val('pagamento'),
+  tours:Array.isArray(window.contractTours)?window.contractTours:[],
+  signatureData:signed?document.getElementById('signaturePad')?.toDataURL('image/png'):null,
+  acceptedAt:(signed&&accepted)?new Date().toLocaleString('pt-BR'):'',
+  accepted
+ };
+}
+async function gerarPDF() {
+  const d = collectData(); if(!d.nome) { alert('Informe o nome completo.'); return; }
+  if(d.signatureData && !d.accepted){ alert('Para inserir a assinatura do cliente no PDF, marque primeiro a declaração de ciência e aceite.'); return; }
+  $('status').textContent = 'Lendo anexos...';
+  const compImgs = await renderPdfFile($('comprovante').files[0], 99, true);
+  const voucherImgs = await renderPdfFile($('voucher').files[0], 99, false);
+  $('status').textContent = 'Gerando PDF...';
+  const {jsPDF} = window.jspdf;
+  const pdf = new jsPDF({orientation:'portrait',unit:'pt',format:'a4',compress:true});
+  pdf.setProperties({title:`Contrato - ${d.nome}`, subject:'Contrato de prestação de serviços', author:'Indômito Tours'});
+  addContractPage1(pdf,d); addContractPage2(pdf,d); addContractPage3(pdf,d); addContractPage4(pdf,d); addContractPage5(pdf,d); addAttachments(pdf,compImgs,voucherImgs);
+  pdf.save(`Contrato - ${safeName(d.nome)}.pdf`);
+  $('status').textContent = 'Contrato gerado.';
+}
+
+
+
+
+function setStatus(msg){ const el=document.getElementById('status'); if(el) el.textContent=msg; }
+window.addEventListener('error', (e)=>{ setStatus('Erro: ' + (e.message || 'falha desconhecida')); });
+window.addEventListener('unhandledrejection', (e)=>{ setStatus('Erro: ' + (e.reason && e.reason.message ? e.reason.message : e.reason)); });
+async function gerarPDFSeguro(){
+  try {
+    if(!window.jspdf || !window.jspdf.jsPDF){
+      setStatus('Erro: biblioteca jsPDF não carregou. Verifique a internet ou use Chrome/Edge.');
+      alert('A biblioteca jsPDF não carregou. Esta versão usa bibliotecas online. Verifique a internet e abra no Chrome/Edge.');
+      return;
+    }
+    if(!window.pdfjsLib){
+      setStatus('Erro: biblioteca PDF.js não carregou. Verifique a internet ou use Chrome/Edge.');
+      alert('A biblioteca PDF.js não carregou. Esta versão usa bibliotecas online. Verifique a internet e abra no Chrome/Edge.');
+      return;
+    }
+    if(window.pdfjsLib && pdfjsLib.GlobalWorkerOptions){
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+    await gerarPDF();
+  } catch (err) {
+    console.error(err);
+    setStatus('Erro ao gerar: ' + (err && err.message ? err.message : err));
+    alert('Erro ao gerar PDF: ' + (err && err.message ? err.message : err));
+  }
+}
+window.addEventListener('DOMContentLoaded',()=>{
+  const btn=document.getElementById('gerar');
+  const limpar=document.getElementById('limpar');
+  if(btn) btn.addEventListener('click', gerarPDFSeguro);
+  if(limpar) limpar.addEventListener('click',()=>{ document.querySelectorAll('input,textarea').forEach(e=>{ if(e.type==='file') e.value=''; else e.value=''; }); setStatus('Formulário limpo.'); });
+});
+
+
+window.contractTours=window.contractTours||[];
+window.signaturePadHasInk=false;
+
+function renderContractServices(){
+ const box=document.getElementById('servicesPreview');if(!box)return;
+ const tours=Array.isArray(window.contractTours)?window.contractTours:[];
+ if(!tours.length){
+  box.innerHTML='<div class="ticket-row">Nenhuma venda vinculada. Os serviços continuarão constando no voucher anexado.</div>';
+  return;
+ }
+ box.innerHTML=tours.map(t=>`<div class="ticket-row ${t.ticketNonRefundable?'alert':''}">
+   <strong>${String(t.name||'Passeio')}</strong>${t.date?` • ${formatDateBR(t.date)}`:''}
+   ${t.price?`<div style="margin-top:4px">Valor registrado: ${Number(t.price).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</div>`:''}
+   <div class="${t.ticketNonRefundable?'ticket-chip':''}" style="${t.ticketNonRefundable?'':'margin-top:5px;color:#555'}">${t.ticketNonRefundable?'TICKET/RESERVA NÃO REEMBOLSÁVEL APÓS EMISSÃO':'Regra geral de cancelamento/reembolso'}</div>
+  </div>`).join('');
+}
+
+function setupSignaturePad(){
+ const canvas=document.getElementById('signaturePad');if(!canvas)return;
+ const ctx=canvas.getContext('2d');
+ let drawing=false,last=null;
+ function resize(){
+  const ratio=Math.max(window.devicePixelRatio||1,1);
+  const rect=canvas.getBoundingClientRect();
+  const oldInk=window.signaturePadHasInk;
+  const snapshot=oldInk?canvas.toDataURL('image/png'):null;
+  canvas.width=Math.max(1,Math.floor(rect.width*ratio));
+  canvas.height=Math.max(1,Math.floor(rect.height*ratio));
+  ctx.setTransform(ratio,0,0,ratio,0,0);
+  ctx.lineWidth=2.2;ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='#111827';
+  if(snapshot){
+    const img=new Image();img.onload=()=>ctx.drawImage(img,0,0,rect.width,rect.height);img.src=snapshot;
+  }
+ }
+ function point(ev){
+  const rect=canvas.getBoundingClientRect(),p=ev.touches?.[0]||ev.changedTouches?.[0]||ev;
+  return {x:p.clientX-rect.left,y:p.clientY-rect.top};
+ }
+ function start(ev){ev.preventDefault();drawing=true;last=point(ev)}
+ function move(ev){if(!drawing)return;ev.preventDefault();const p=point(ev);ctx.beginPath();ctx.moveTo(last.x,last.y);ctx.lineTo(p.x,p.y);ctx.stroke();last=p;window.signaturePadHasInk=true;const st=document.getElementById('signatureStatus');if(st)st.textContent='Assinatura capturada.'}
+ function end(ev){if(drawing){ev.preventDefault();drawing=false;last=null}}
+ resize();window.addEventListener('resize',resize);
+ canvas.addEventListener('pointerdown',start);canvas.addEventListener('pointermove',move);window.addEventListener('pointerup',end);
+ canvas.addEventListener('touchstart',start,{passive:false});canvas.addEventListener('touchmove',move,{passive:false});canvas.addEventListener('touchend',end,{passive:false});
+ document.getElementById('clearSignature')?.addEventListener('click',()=>{
+  const rect=canvas.getBoundingClientRect();ctx.clearRect(0,0,rect.width,rect.height);window.signaturePadHasInk=false;
+  const st=document.getElementById('signatureStatus');if(st)st.textContent='Sem assinatura.';
+ });
+}
+
+window.addEventListener('DOMContentLoaded',()=>{
+ setupSignaturePad();
+ renderContractServices();
+});
+
+</script>
+
+<script>
+window.addEventListener('DOMContentLoaded',()=>{
+  try{
+    const raw=localStorage.getItem('isa_contract_handoff');
+    if(!raw) return;
+    const d=JSON.parse(raw);
+    const put=(id,v)=>{
+      const el=document.getElementById(id);
+      if(el && v!==undefined && v!==null){
+        el.value=String(v);
+        el.dispatchEvent(new Event('input',{bubbles:true}));
+        el.dispatchEvent(new Event('change',{bubbles:true}));
+      }
+    };
+    put('nome',d.nome);
+    put('telefone',d.telefone);
+    put('email',d.email);
+    put('endereco',d.endereco);
+    put('valor',d.valor);
+    put('pagamento',d.pagamento);
+    window.contractTours=Array.isArray(d.tours)?d.tours:[];
+    if(typeof renderContractServices==='function')renderContractServices();
+
+    // Preserve the handoff only long enough to fill this contract.
+    localStorage.removeItem('isa_contract_handoff');
+  }catch(e){
+    console.warn('Não foi possível preencher o contrato automaticamente.',e);
+  }
+});
+</script>
+
+</body>
+</html>
