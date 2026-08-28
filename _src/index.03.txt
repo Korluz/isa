@@ -1,0 +1,95 @@
+nt-main div{min-width:0}.attachment-main strong,.attachment-main small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.attachment-main small{color:var(--muted);font-size:10px}.attachment-actions{display:flex;gap:5px}
+.catalog-modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.catalog-modal-grid .full{grid-column:1/-1}
+.icon-btn{display:inline-flex!important;align-items:center;gap:6px}.icon-btn svg{width:16px;height:16px}
+@media(max-width:760px){.process-grid{grid-template-columns:1fr 1fr}.attachment-uploader{grid-template-columns:1fr}.attachment-item{align-items:flex-start}.attachment-actions{flex-direction:column}.catalog-modal-grid{grid-template-columns:1fr}}
+
+/* ===== BLOCO CSS CONSOLIDADO ===== */
+
+.importdrop{border:2px dashed #9eb0bf;border-radius:18px;padding:30px 20px;text-align:center;background:#f8fafc;cursor:pointer}.importdrop.drag{border-color:var(--gold);background:#fffaf0}.importdrop input{display:none}.importicon{font-size:42px}.reviewgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:15px 0}.reviewitem{background:#f7f9fb;border:1px solid var(--line);border-radius:12px;padding:12px}.reviewitem small{display:block;color:var(--muted);margin-bottom:5px}.passengerbox{max-height:230px;overflow:auto;border:1px solid var(--line);border-radius:12px}.passengerrow{display:grid;grid-template-columns:1.5fr 1fr .5fr;gap:10px;padding:9px 12px;border-bottom:1px solid var(--line);font-size:12px}.cancelcard{border-left:5px solid var(--danger)}.importstatus{margin-top:12px;padding:12px;border-radius:12px;background:#eef4f8}.hidden-v23{display:none!important}@media(max-width:760px){.reviewgrid{grid-template-columns:1fr}.passengerrow{grid-template-columns:1fr}}
+
+/* ===== BLOCO CSS CONSOLIDADO ===== */
+
+\n*{box-sizing:border-box}\nbody{margin:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;color:#111}\n.header{display:flex;align-items:center;gap:16px;margin-bottom:18px}\n.logo{width:78px;height:auto;object-fit:contain;background:#fff;border-radius:10px;padding:6px;box-shadow:0 4px 16px rgba(0,0,0,.08)}\n.header-text h1{margin:0 0 6px;font-size:26px}.header-text .sub{margin:0;color:#555;line-height:1.35}\n.app{max-width:1120px;margin:22px auto;padding:0 14px}\n.card{background:#fff;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.08);padding:22px;margin-bottom:22px}\nh1{margin:0 0 6px;font-size:26px} .sub{margin:0 0 18px;color:#555;line-height:1.35}\n.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}\n.field{display:flex;flex-direction:column;gap:5px} label{font-weight:700;font-size:13px}\ninput,textarea,select{border:1px solid #d1d5db;border-radius:9px;padding:10px 11px;font-size:15px} textarea{min-height:72px;resize:vertical}\n.full{grid-column:1/-1} .section-title{margin:20px 0 12px;font-size:17px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}\n.actions{display:flex;gap:12px;align-items:center;margin-top:18px;flex-wrap:wrap} button{border:0;border-radius:12px;padding:13px 18px;font-weight:800;cursor:pointer;font-size:15px}\n.primary{background:#111827;color:#fff} .secondary{background:#e5e7eb;color:#111} .status{color:#374151;font-size:14px}\n.note{font-size:13px;color:#555;background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:12px;line-height:1.4}\n.file-list{margin-top:7px;display:flex;flex-direction:column;gap:6px}\n.file-item{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:8px 10px;font-size:13px}\n.file-item-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}\n.file-remove{padding:5px 9px;border-radius:7px;background:#fee2e2;color:#991b1b;font-size:12px}\n.file-empty{font-size:12px;color:#6b7280}\n@media(max-width:900px){.grid{grid-template-columns:1fr}}\n\n
+
+/* ===== BLOCO CSS CONSOLIDADO ===== */
+
+body{font-family:Arial;padding:28px;color:#172033}h1{margin-bottom:3px}p{color:#667}table{width:100%;border-collapse:collapse;font-size:11px}th,td{padding:7px;border:1px solid #ddd;text-align:left}th{background:#f1f4f7}.total{font-weight:bold;background:#fff7df}
+
+
+/* ISA V10.3 — Central de Horários */
+.schedule-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.schedule-kpi{background:#fff;border:1px solid var(--line);border-radius:15px;padding:15px;box-shadow:var(--shadow)}
+.schedule-kpi small{display:block;color:var(--muted);font-size:11px}.schedule-kpi strong{display:block;font-size:26px;margin-top:7px}
+.schedule-import{background:linear-gradient(135deg,#0b2136,#153752);color:#fff;border-radius:18px;padding:18px;margin-bottom:16px}
+.schedule-import .meta{color:#d5e2ec}.schedule-import textarea{width:100%;min-height:190px;margin-top:12px;border:1px solid rgba(255,255,255,.22);border-radius:12px;padding:13px;background:rgba(255,255,255,.98);color:#172033}
+.schedule-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:10px}.schedule-review{display:grid;gap:10px;margin-top:14px}
+.schedule-match{background:#fff;border:1px solid var(--line);border-left:5px solid #94a3b8;border-radius:13px;padding:13px}
+.schedule-match.ok{border-left-color:var(--ok);background:#f7fff9}.schedule-match.warn{border-left-color:#f59e0b;background:#fffbeb}.schedule-match.bad{border-left-color:var(--danger);background:#fff7f7}
+.schedule-match-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.schedule-match pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f4f7fa;border-radius:9px;padding:9px;font:11px/1.45 ui-monospace,SFMono-Regular,Consolas,monospace;max-height:135px;overflow:auto}
+.schedule-list{display:grid;gap:11px}.schedule-client{border:1px solid var(--line);border-radius:15px;padding:14px;background:#fff}
+.schedule-client.received{border-left:5px solid var(--blue)}.schedule-client.sent{border-left:5px solid var(--ok)}.schedule-client.pending{border-left:5px solid #f59e0b}
+.schedule-client .hour{font-size:24px;font-weight:900;color:var(--navy);margin:5px 0}.schedule-client .message-preview{margin-top:9px;padding:9px;border-radius:9px;background:#f6f8fa;font-size:11px;white-space:pre-wrap;max-height:100px;overflow:auto}
+.schedule-status{display:inline-flex;border-radius:999px;padding:5px 9px;font-size:10px;font-weight:900}.schedule-status.ok{background:#dcfce7;color:#166534}.schedule-status.blue{background:#dbeafe;color:#1d4ed8}.schedule-status.warn{background:#fff3cd;color:#915206}
+.price-commission-card{margin-top:18px}.price-commission-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.price-commission-table{width:100%;border-collapse:collapse;min-width:680px;font-size:12px}.price-commission-table th,.price-commission-table td{padding:10px;border-bottom:1px solid var(--line);text-align:left}.price-commission-table th{background:#f7f9fb;color:#536171}
+@media(max-width:760px){.schedule-kpis{grid-template-columns:1fr 1fr}.schedule-match-head{flex-direction:column}.schedule-import{padding:14px}}
+
+
+/* ISA V10.5 — Painel Administrativo */
+.admin-hero{background:linear-gradient(135deg,#0a1f33,#173d5d);color:#fff;border-radius:20px;padding:20px;margin-bottom:16px;box-shadow:var(--shadow)}
+.admin-hero h2{margin:0 0 5px;font-size:22px}.admin-hero p{margin:0;color:#d7e4ee;line-height:1.5}
+.admin-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:15px 0 18px}
+.admin-kpi{background:#fff;border:1px solid var(--line);border-radius:15px;padding:15px;box-shadow:var(--shadow)}
+.admin-kpi small{display:block;color:var(--muted);font-size:11px}.admin-kpi strong{display:block;font-size:24px;margin-top:6px;color:var(--navy)}
+.admin-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1.4fr);gap:16px;align-items:start}
+.admin-user-list{display:grid;gap:10px}.admin-user{border:1px solid var(--line);border-radius:14px;padding:13px;background:#fff}
+.admin-user.selected{border-color:#d8a922;box-shadow:0 0 0 2px rgba(216,169,34,.12)}
+.admin-user-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.admin-user-name{font-weight:900;font-size:15px;color:var(--navy)}.admin-user-email{font-size:11px;color:var(--muted);overflow-wrap:anywhere;margin-top:2px}
+.admin-user-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:11px}
+.admin-mini{background:#f6f8fa;border-radius:9px;padding:8px}.admin-mini small{display:block;color:var(--muted);font-size:9px}.admin-mini strong{display:block;margin-top:3px;font-size:12px}
+.admin-badges{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.admin-role{display:inline-flex;border-radius:999px;padding:5px 8px;font-size:10px;font-weight:900;background:#fff3cd;color:#7a5200}
+.admin-role.seller{background:#e8f1fb;color:#285d8d}.admin-status{display:inline-flex;border-radius:999px;padding:5px 8px;font-size:10px;font-weight:900}
+.admin-status.active{background:#dcfce7;color:#166534}.admin-status.blocked{background:#fee2e2;color:#991b1b}
+.admin-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.admin-toolbar input,.admin-toolbar select{min-width:0}
+.admin-sales{display:grid;gap:9px}.admin-sale{border:1px solid var(--line);border-radius:12px;padding:11px;background:#fff}
+.admin-sale-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.admin-sale-title{font-weight:900;color:var(--navy)}
+.admin-sale-tours{margin-top:7px;font-size:11px;color:#596675;line-height:1.5}
+.admin-empty{padding:24px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:12px}
+.admin-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.admin-note{font-size:11px;line-height:1.45;color:var(--muted)}
+.admin-detail-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:12px}
+.admin-refreshing{opacity:.6;pointer-events:none}
+@media(max-width:950px){.admin-grid{grid-template-columns:1fr}.admin-kpis{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.admin-user-metrics{grid-template-columns:1fr 1fr}.admin-detail-head{flex-direction:column}.admin-user-head{flex-direction:column}.admin-badges{justify-content:flex-start}}
+
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+</head>
+<body>
+<div id="appVersionBadge" style="position:fixed;bottom:4px;right:6px;z-index:9999;font-size:10px;color:#999;background:rgba(255,255,255,.85);padding:2px 6px;border-radius:6px;pointer-events:none;font-family:monospace">v10.5.0</div>
+<script>window.addEventListener('error',function(e){const b=document.getElementById('appVersionBadge');if(b)b.textContent='v10.5.0 ⚠ erro: '+(e.message||'').slice(0,60);b&&(b.style.color='red')})</script>
+<!-- ISA V10.2.1 Recovery: base estável V10.1.1 -->
+
+<div id="cloudConfig" class="cloud-config">
+ <div class="cloud-config-card">
+  <h2>Conectar ao Supabase</h2>
+  <p>Cole a chave <strong>Publishable/anon</strong>. Nunca use secret ou service_role.</p>
+  <label>Project URL</label><input id="cloudUrl" value="https://cajrgongdxhzfudbheiv.supabase.co">
+  <label>Publishable key / anon key</label><input id="cloudKey" type="password" placeholder="sb_publishable_... ou eyJ...">
+  <div class="actions"><button class="btn gold" onclick="saveCloudConfig()">Salvar e conectar</button></div>
+ </div>
+</div>
+<div id="syncBanner" class="sync-banner">Sincronizando...</div>
+
+
+
+<div id="recoveryScreen" class="recovery-screen" aria-hidden="true">
+  <div class="recovery-card">
+    <div class="auth-brand"><div class="auth-logo">ISA</div><div><h2>Definir nova senha</h2><p>Escolha uma nova senha para sua conta.</p></div></div>
+    <label>Nova senha</label><input id="newPassword" type="password" minlength="6" autocomplete="new-password">
+    <label>Confirmar nova senha</label><input id="newPasswordConfirm" type="passwor
