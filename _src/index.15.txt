@@ -1,0 +1,110 @@
+idx+1)%HEROES.length),6500);
+ }
+ const oldRender=window.renderAll; if(typeof oldRender==='function')window.renderAll=function(){oldRender();installHero();const m=document.querySelector('#homeHero .home-hero-metrics');if(m)m.innerHTML=heroMetrics()};
+ document.addEventListener('DOMContentLoaded',installHero);setTimeout(installHero,0);
+})();
+
+(function(){
+const DEFAULT_URL='https://cajrgongdxhzfudbheiv.supabase.co';
+let sb=null,user=null,ready=false,loading=false,timer=null,suppress=false;
+const E=id=>document.getElementById(id);
+function cfg(){return{url:'https://cajrgongdxhzfudbheiv.supabase.co',key:'sb_publishable_6ydTiQ192A9XfGzIAUtIrw_R7zBbq7h'}}
+function status(t,c=''){if(E('cloudStatusText'))E('cloudStatusText').textContent=t;if(E('cloudDot'))E('cloudDot').className='cloud-dot '+c}
+function msg(t,ok=false){if(E('authMessage')){E('authMessage').textContent=t;E('authMessage').style.color=ok?'#15803d':'var(--danger)'}}
+function appUrl(extra=''){const base=location.origin+location.pathname;return base+(extra?(extra.startsWith('?')?extra:'?'+extra):'')}
+function recoveryMsg(t,ok=false){const x=E('recoveryMessage');if(x){x.textContent=t;x.style.color=ok?'#15803d':'var(--danger)'}}
+function showCfg(){const c=cfg();E('cloudUrl').value=c.url;E('cloudKey').value=c.key;E('cloudConfig').classList.add('open')}
+window.saveCloudConfig=()=>{const u=E('cloudUrl').value.trim().replace(/\/+$/,''),k=E('cloudKey').value.trim();if(!/^https:\/\/.+\.supabase\.co$/.test(u))return alert('Project URL inválida.');if(k.length<20)return alert('Cole a chave Publishable/anon.');localStorage.setItem('isa_supabase_url',u);localStorage.setItem('isa_supabase_publishable_key',k);location.reload()};
+let recoveryLanding=false;
+function init(){
+ const c=cfg();if(!c.key){showCfg();return false}
+ const rawUrl=location.href;
+ recoveryLanding=/(?:[?#&])type=recovery(?:&|$)/i.test(rawUrl)||/[?&]recovery=1(?:&|$)/i.test(rawUrl);
+ sb=window.supabase.createClient(c.url,c.key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+ return true
+}
+async function ensureProfile(){
+ if(!user)return null;
+ try{
+  await sb.from('profiles').upsert({id:user.id,full_name:user.user_metadata?.full_name||db.sellerProfile?.name||db.seller||'',email:user.email},{onConflict:'id',ignoreDuplicates:true});
+  const{data,error}=await sb.from('profiles').select('id,email,full_name,role,status,active,created_at,updated_at').eq('id',user.id).maybeSingle();
+  if(error)throw error;
+  window.ISA_ROLE=data?.role||'seller';window.ISA_STATUS=data?.status||'active';window.ISA_ACTIVE=data?.active!==false;
+  const box=document.querySelector('.seller > div:first-child');
+  if(box){let r=box.querySelector('.role-badge');if(!r){r=document.createElement('div');r.className='role-badge';box.appendChild(r)}r.textContent=window.ISA_ROLE==='admin'?'👑 Administrador':'● Vendedor';}
+  applyAdminAccess();return data||null;
+ }catch(e){window.ISA_ROLE='seller';window.ISA_STATUS='active';window.ISA_ACTIVE=true;applyAdminAccess();return null}
+}
+async function loadState(){if(!user||loading)return;loading=true;suppress=true;status('Carregando...','warn');try{const{data,error}=await sb.from('app_state').select('state').eq('user_id',user.id).maybeSingle();if(error)throw error;if(data?.state){db=data.state;if(!Array.isArray(db.catalog))db.catalog=[];if(!Array.isArray(db.sales))db.sales=[];normalizeSalesV8();
+ // V10.2.7: os dados vindos da nuvem podem ser de antes dessas migrações
+ // existirem — reaplica aqui, depois que db já é a versão da nuvem, e
+ // salva de volta (local + nuvem) se algo mudou, pra não depender de
+ // coincidência (alguém salvar outra coisa) pra corrigir de vez.
+ let migrated=false;
+ if(typeof window.applyPriceList2026_08==='function'){const before=JSON.stringify(db.catalog);window.applyPriceList2026_08();if(JSON.stringify(db.catalog)!==before)migrated=true}
+ if(typeof window.seedCatalogCommissionsFromLegacyRules==='function'&&window.seedCatalogCommissionsFromLegacyRules())migrated=true;
+ if(typeof window.backfillTourPrices==='function'&&window.backfillTourPrices())migrated=true;
+ if(typeof window.updateCommissions==='function')window.updateCommissions();
+ localStorage.setItem(KEY,JSON.stringify(db));
+ if(migrated)push(true)
+}else await push(true);ready=true;status('Sincronizado','ok');renderAll();await loadAvatar()}catch(e){status('Erro na nuvem','bad');alert('Erro ao carregar: '+e.message)}finally{suppress=false;loading=false}}
+async function push(force=false){if(!sb||!user||(!ready&&!force)||suppress)return;const b=E('syncBanner');if(b){b.style.display='block';b.textContent='Sincronizando...'}status('Sincronizando...','warn');try{const{error}=await sb.from('app_state').upsert({user_id:user.id,state:JSON.parse(JSON.stringify(db)),updated_at:new Date().toISOString()},{onConflict:'user_id'});if(error)throw error;status('Sincronizado','ok');if(b){b.textContent='Salvo na nuvem';setTimeout(()=>b.style.display='none',1000)}}catch(e){status('Falha ao salvar','bad');if(b){b.textContent='Falha ao salvar';setTimeout(()=>b.style.display='none',1800)}}}
+function schedule(){clearTimeout(timer);timer=setTimeout(()=>push(),500)}
+window.save=function(){localStorage.setItem(KEY,JSON.stringify(db));renderAll();schedule()};
+window.registerLocal=async()=>{if(!sb)return showCfg();const n=E('registerName').value.trim(),e=E('registerEmail').value.trim().toLowerCase(),p=E('registerPassword').value,c=E('registerConfirm').value;if(!n||!e||p.length<6)return msg('Preencha nome, e-mail e senha com ao menos 6 caracteres.');if(p!==c)return msg('As senhas não conferem.');const{data,error}=await sb.auth.signUp({email:e,password:p,options:{data:{full_name:n},emailRedirectTo:appUrl('confirmed=1')}});if(error)return msg(error.message);msg(data.session?'Conta criada e conectada.':'Conta criada. Confirme o e-mail recebido.',true)};
+window.loginLocal=async()=>{if(!sb)return showCfg();const{error}=await sb.auth.signInWithPassword({email:E('loginEmail').value.trim().toLowerCase(),password:E('loginPassword').value});if(error)msg(error.message)};
+window.resetCloudPassword=async()=>{
+ const e=E('loginEmail').value.trim().toLowerCase();
+ if(!sb)return showCfg();
+ if(!e)return msg('Digite seu e-mail primeiro.');
+ msg('Enviando link de recuperação...',true);
+ try{
+  const redirectTo='https://korluz.github.io/isa/';
+  const{error}=await sb.auth.resetPasswordForEmail(e,{redirectTo});
+  if(error){
+   const raw=String(error.message||error);
+   let friendly=raw;
+   if(/rate limit|too many/i.test(raw))friendly='Muitas tentativas em pouco tempo. Aguarde alguns minutos e tente novamente.';
+   else if(/redirect/i.test(raw))friendly='A URL de recuperação foi recusada pelo Supabase. Confira Authentication → URL Configuration.';
+   else if(/email/i.test(raw)&&/invalid/i.test(raw))friendly='Confira se o e-mail informado está correto.';
+   return msg(friendly);
+  }
+  msg('Link enviado. Confira a caixa de entrada e também o spam.',true);
+ }catch(err){
+  msg('Não foi possível solicitar a recuperação: '+String(err?.message||err));
+ }
+};
+window.saveNewPassword=async()=>{
+ const p=E('newPassword').value,c=E('newPasswordConfirm').value;
+ if(p.length<6)return recoveryMsg('Use ao menos 6 caracteres.');
+ if(p!==c)return recoveryMsg('As senhas não conferem.');
+ try{
+  const{error}=await sb.auth.updateUser({password:p});
+  if(error)return recoveryMsg(error.message);
+  recoveryMsg('Senha atualizada com sucesso. Você já pode continuar no ISA.',true);
+  setTimeout(()=>{
+   E('recoveryScreen').classList.remove('open');
+   E('recoveryScreen').setAttribute('aria-hidden','true');
+   history.replaceState({},'',location.pathname);
+  },1100);
+ }catch(err){
+  recoveryMsg('Não foi possível salvar a nova senha: '+String(err?.message||err));
+ }
+};
+window.cancelPasswordRecovery=()=>{E('recoveryScreen').classList.remove('open');history.replaceState({},'',location.pathname)};
+window.logoutLocal=async()=>{if(sb)await sb.auth.signOut()};
+async function session(s){
+ user=s?.user||null;
+ if(!user){ready=false;E('authScreen').style.display='flex';status('Nuvem desconectada');window.ISA_ROLE='seller';window.ISA_STATUS='active';window.ISA_ACTIVE=true;applyAdminAccess();return}
+ E('authScreen').style.display='none';
+ if(E('loggedUserMini'))E('loggedUserMini').textContent=(user.user_metadata?.full_name||user.email)+' • '+user.email;
+ const profile=await ensureProfile();
+ if(profile&&(profile.active===false||profile.status==='blocked')){msg('Esta conta foi bloqueada pelo administrador.');await sb.auth.signOut();return}
+ await loadState();
+}
+window.renderCatalog=function(){const box=E('catalogList');if(!box)return;box.innerHTML=db.catalog.length?db.catalog.map((t,i)=>`<div class="catalog-edit-card"><div><strong>${esc(t.name)}</strong><small>${t.ticket?'🎟 Ticket obrigatório':'Sem ticket'} • Preço ADT ${t.adultPrice!=null?'R$ '+Number(t.adultPrice).toFixed(2).replace('.',','):'não definido'} • CHD ${t.childPrice!=null?'R$ '+Number(t.childPrice).toFixed(2).replace('.',','):'não definido'} • Comissão ADT ${t.adultCommission!=null?'R$ '+Number(t.adultCommission).toFixed(2).replace('.',','):'não definido'} • CHD ${t.childCommission!=null?'R$ '+Number(t.childCommission).toFixed(2).replace('.',','):'não definido'}</small></div><div class="catalog-actions"><button class="btn light sm" onclick="editCatalogTour(${i})">Editar</button><button class="btn red sm" onclick="deleteCatalogTour(${i})">Excluir</button></div></div>`).join(''):'<div class="empty">Nenhum passeio cadastrado.</div>'};
+window.editCatalogTour=i=>{const t=db.catalog[i];if(!t)return;let modal=document.getElementById('catalogEditModal');if(!modal){modal=document.createElement('div');modal.id='catalogEditModal';modal.className='modalback';modal.innerHTML=`<div class="modal"><div class="modalhead"><h2 style="margin:0">Editar passeio</h2><button class="close" onclick="closeCatalogEditor()">✕</button></div><div class="modalbody"><div class="catalog-modal-grid"><div class="field full"><label>Nome do passeio</label><input id="ceName"></div><div class="field"><label>Preço ADT</label><input id="cePriceAdult" inputmode="decimal"></div><div class="field"><label>Preço CHD</label><input id="cePriceChild" inputmode="decimal"></div><div class="field"><label>Comissão ADT</label><input id="ceAdult" inputmode="decimal"></div><div class="field"><label>Comissão CHD</label><input id="ceChild" inputmode="decimal"></div><div class="field full"><label>Ticket obrigatório?</label><select id="ceTicket"><option value="false">Não</option><option value="true">Sim</option></select></div></div></div><div class="modalfoot"><button class="btn light" onclick="closeCatalogEditor()">Cancelar</button><button class="btn gold icon-btn" onclick="saveCatalogEditor()"><i data-lucide="save"></i>Salvar alterações</button></div></div>`;document.body.appendChild(modal)}window.catalogEditingIndex=i;E('ceName').value=t.name;E('cePriceAdult').value=t.adultPrice??'';E('cePriceChild').value=t.childPrice??'';E('ceAdult').value=t.adultCommission??'';E('ceChild').value=t.childCommission??'';E('ceTicket').value=String(!!t.ticket);modal.classList.add('open');refreshIcons()};
+window.closeCatalogEditor=()=>document.getElementById('catalogEditModal')?.classList.remove('open');
+window.saveCatalogEditor=()=>{const i=window.catalogEditingIndex,t=db.catalog[i],name=E('ceName').value.trim();if(!name)return alert('Informe o nome.');if(db.catalog.some((x,j)=>j!==i&&norm(x.name)===norm(name)))return alert('Já existe um passeio com esse nome.');const parse=v=>v.trim()===''?null:Number(v.replace(',','.'));Object.assign(t,{name,ticket:E('ceTicket').value==='true',adultPrice:parse(E('cePriceAdult').value),childPrice:parse(E('cePriceChild').value),adultCommission:parse(E('ceAdult').value),childCommission:parse(E('ceChild').value)});save();closeCatalogEditor()};
+window.deleteCatalogTour=i=>{const t=db.catalog[i];if(t&&confirm('Excluir "'+t.name+'"?')){db.catalog.splice(i,1);save()}};
+window.saveSellerProfile=async()=>{db.sellerProfile={nam
