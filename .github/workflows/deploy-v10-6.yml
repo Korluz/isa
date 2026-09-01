@@ -30,11 +30,8 @@ jobs:
           s=p.read_text(encoding='utf-8')
           s=s.replace('Cloud V11.0.1','Cloud V11.0.2').replace('v11.0.1','v11.0.2')
 
-          # Ponte para módulos legados/externos que ainda leem sb/user como globais.
           needle="let sb=null,user=null,ready=false,loading=false,timer=null,suppress=false;"
-          bridge="""let sb=null,user=null,ready=false,loading=false,timer=null,suppress=false;
-if(!Object.getOwnPropertyDescriptor(window,'sb'))Object.defineProperty(window,'sb',{configurable:true,get:()=>sb});
-if(!Object.getOwnPropertyDescriptor(window,'user'))Object.defineProperty(window,'user',{configurable:true,get:()=>user});"""
+          bridge=needle+"\nif(!Object.getOwnPropertyDescriptor(window,'sb'))Object.defineProperty(window,'sb',{configurable:true,get:()=>sb});\nif(!Object.getOwnPropertyDescriptor(window,'user'))Object.defineProperty(window,'user',{configurable:true,get:()=>user});"
           if "Object.getOwnPropertyDescriptor(window,'user')" not in s:
               if needle not in s: raise SystemExit('Núcleo de autenticação não encontrado')
               s=s.replace(needle,bridge,1)
@@ -59,7 +56,7 @@ if(!Object.getOwnPropertyDescriptor(window,'user'))Object.defineProperty(window,
               'Larguras de colunas adequadas e datas formatadas',
               'Valores de venda e comissão como moeda no Excel',
               'Filtro automático no cabeçalho da planilha',
-              'Correção do erro Can\'t find variable: user',
+              "Correção do erro Can't find variable: user",
               'Ponte segura dos objetos de sessão para módulos do ISA'
             ]
           })
