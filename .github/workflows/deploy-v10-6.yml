@@ -1,4 +1,4 @@
-name: Deploy ISA V11.0.6
+name: Deploy ISA V11.0.7
 
 on:
   push:
@@ -19,7 +19,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Patch live V11.0.6
+      - name: Patch live V11.0.7
         shell: bash
         run: |
           python3 - <<'PY'
@@ -28,29 +28,29 @@ jobs:
 
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
-          s=s.replace('Cloud V11.0.5','Cloud V11.0.6').replace('v11.0.5','v11.0.6')
+          s=s.replace('Cloud V11.0.6','Cloud V11.0.7').replace('v11.0.6','v11.0.7')
 
-          tag='<script src="audit-cancel-v1106.js?v=1106"></script>'
-          if tag not in s:
-              pos=s.rfind('</body>')
-              if pos < 0: raise SystemExit('BODY real do ISA não encontrado')
-              s=s[:pos]+tag+'\n'+s[pos:]
-
+          start=s.find('function parseVoucherNovo(raw){')
+          end=s.find('function parseVoucher(raw){',start)
+          if start < 0 or end < 0:
+              raise SystemExit('Parser de voucher novo não encontrado no index.html')
+          parser=Path('_patches/voucher-v1107.js').read_text(encoding='utf-8').strip()
+          s=s[:start]+parser+'\n '+s[end:]
           p.write_text(s,encoding='utf-8')
 
           vp=Path('VERSION.json')
           data=json.loads(vp.read_text(encoding='utf-8'))
           data.update({
-            'version':'11.0.6',
-            'release':'Comissões canceladas com histórico transparente',
-            'basedOn':'11.0.5',
+            'version':'11.0.7',
+            'release':'Leitor robusto para vouchers com serviços em múltiplas linhas',
+            'basedOn':'11.0.6',
             'databaseMigrationRequired':False,
             'features':[
-              'Auditoria passa a mostrar ativos e cancelados por padrão',
-              'Passeios cancelados continuam visíveis com status Cancelado',
-              'Comissão cancelada aparece riscada e não entra no total',
-              'PDF mantém o histórico cancelado riscado e soma apenas comissões ativas',
-              'Excel identifica comissões canceladas e exclui esses valores do total'
+              'Leitor de voucher passa a montar os serviços pelos blocos individuais do PDF',
+              'Reconhece nomes de passeios quebrados em múltiplas linhas',
+              'TRANSFER IN e TRANSFER OUT passam a ser reconhecidos mesmo com dados de aeroporto e voo na mesma linha',
+              'Ponto de encontro passa a aproveitar hotel e endereço completos dos vouchers individuais',
+              'Compatibilidade com o parser anterior é mantida como fallback'
             ]
           })
           data.pop('databaseMigration',None)
@@ -58,7 +58,7 @@ jobs:
           vp.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
           PY
 
-      - name: Validate V11.0.6 browser JavaScript
+      - name: Validate V11.0.7 browser JavaScript
         shell: bash
         run: |
           set -e
@@ -79,6 +79,7 @@ jobs:
           node --check contrato-v1061.js
           node --check assinatura-v1061.js
           node --check _patches/voucher-v1071.js
+          node --check _patches/voucher-v1107.js
           python3 - <<'PY'
           from pathlib import Path
           import re, subprocess
@@ -95,10 +96,12 @@ jobs:
                       raise SystemExit(1)
               print(f'{html_name}: {len(blocks)} script(s) inline validado(s).')
           PY
-          grep -q 'Cloud V11.0.6' index.html
-          test "$(grep -o 'audit-cancel-v1106.js?v=1106' index.html | wc -l)" -eq 1
-          grep -q 'não contabilizada' audit-cancel-v1106.js
-          grep -q '"version": "11.0.6"' VERSION.json
+          grep -q 'Cloud V11.0.7' index.html
+          grep -q 'canonicalServiceName' index.html
+          grep -q 'detailStarts' index.html
+          grep -q 'TRANSFER IN' _patches/voucher-v1107.js
+          grep -q 'TRANSFER OUT' _patches/voucher-v1107.js
+          grep -q '"version": "11.0.7"' VERSION.json
 
       - name: Commit release
         shell: bash
@@ -107,8 +110,8 @@ jobs:
           git config user.email '4189822+github-actions[bot]@users.noreply.github.com'
           git add index.html VERSION.json
           if git diff --cached --quiet; then
-            echo 'V11.0.6 already deployed.'
+            echo 'V11.0.7 already deployed.'
             exit 0
           fi
-          git commit -m 'ISA V11.0.6 — comissões canceladas no histórico'
+          git commit -m 'ISA V11.0.7 — leitor robusto de voucher'
           git push
