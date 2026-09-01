@@ -1,4 +1,4 @@
-name: Deploy ISA V11.0.8
+name: Deploy ISA V11.0.9
 
 on:
   push:
@@ -19,7 +19,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Patch live V11.0.8
+      - name: Patch live V11.0.9
         shell: bash
         run: |
           python3 - <<'PY'
@@ -28,27 +28,50 @@ jobs:
 
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
-          s=s.replace('Cloud V11.0.7','Cloud V11.0.8').replace('v11.0.7','v11.0.8')
-          tag='<script src="transfer-commission-v1108.js?v=1108"></script>'
-          if tag not in s:
-              pos=s.rfind('</body>')
-              if pos < 0: raise SystemExit('BODY real do ISA não encontrado')
-              s=s[:pos]+tag+'\n'+s[pos:]
+          s=s.replace('Cloud V11.0.8','Cloud V11.0.9').replace('v11.0.8','v11.0.9')
+
+          hero_start=s.find('const HEROES=[')
+          hero_end=s.find(' function heroMetrics()',hero_start)
+          if hero_start < 0 or hero_end < 0:
+              raise SystemExit('Bloco HEROES não encontrado')
+          heroes="""const HEROES=[
+  {title:'Cordilheira dos Andes',subtitle:'Organize suas vendas com a mesma clareza de uma manhã na montanha.',img:'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1800&q=84'},
+  {title:'Experiências inesquecíveis',subtitle:'Clientes, passeios, valores e comissões reunidos em um só lugar.',img:'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1800&q=84'},
+  {title:'Sua operação sob controle',subtitle:'Menos retrabalho à noite. Mais segurança para vender e acompanhar.',img:'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1800&q=84'},
+  {title:'Deserto do Atacama',subtitle:'Paisagens que lembram por que cada atendimento pode virar uma memória única.',img:'https://images.unsplash.com/photo-1494783404829-a93883e74b68?auto=format&fit=crop&w=1800&q=84'},
+  {title:'Valle de la Luna',subtitle:'Do primeiro contato ao pós-venda, cada detalhe ajuda a construir a experiência.',img:'https://images.unsplash.com/photo-1738272789014-4b17a4e66d4c?auto=format&fit=crop&w=1800&q=84'},
+  {title:'Atacama sob as estrelas',subtitle:'Grandes experiências começam muito antes do embarque.',img:'https://images.unsplash.com/photo-1666066837409-edab9811e72c?auto=format&fit=crop&w=1800&q=84'},
+  {title:'Cores de Valparaíso',subtitle:'Cada cliente tem um jeito diferente de imaginar a viagem perfeita.',img:'https://images.unsplash.com/photo-1485882625162-1c18673eba1a?auto=format&fit=crop&w=1800&q=84'},
+  {title:'Vinhedos do Chile',subtitle:'Conhecer o perfil do viajante transforma indicação em atendimento consultivo.',img:'https://images.unsplash.com/photo-1715100421650-e34f094d75b6?auto=format&fit=crop&w=1800&q=84'},
+  {title:'Chile entre montanhas',subtitle:'Organização nos bastidores para o cliente aproveitar a paisagem lá fora.',img:'https://images.unsplash.com/photo-1642257425728-10972f926a93?auto=format&fit=crop&w=1800&q=84'},
+  {title:'Caminhos do Atacama',subtitle:'Toda jornada começa com um próximo passo claro.',img:'https://images.unsplash.com/photo-1691898480582-547bf2600785?auto=format&fit=crop&w=1800&q=84'}
+ ];
+"""
+          s=s[:hero_start]+heroes+s[hero_end:]
+
+          for tag in (
+              '<script src="impact-v1109.js?v=1109"></script>',
+              '<script src="insights-v1109.js?v=1109"></script>'
+          ):
+              if tag not in s:
+                  pos=s.rfind('</body>')
+                  if pos < 0: raise SystemExit('BODY real do ISA não encontrado')
+                  s=s[:pos]+tag+'\n'+s[pos:]
           p.write_text(s,encoding='utf-8')
 
           vp=Path('VERSION.json')
           data=json.loads(vp.read_text(encoding='utf-8'))
           data.update({
-            'version':'11.0.8',
-            'release':'Comissão automática de 5% nos transfers',
-            'basedOn':'11.0.7',
+            'version':'11.0.9',
+            'release':'Experiência, impacto e desenvolvimento do vendedor',
+            'basedOn':'11.0.8',
             'databaseMigrationRequired':False,
             'features':[
-              'TRANSFER IN e TRANSFER OUT passam a calcular comissão automaticamente',
-              'Comissão dos transfers corresponde a 5% do valor do próprio serviço',
-              'Regra vale para transfers importados do voucher e lançados manualmente',
-              'Transfers cancelados permanecem no histórico mas não geram comissão',
-              'Auditoria, PDF e Excel passam a refletir a nova comissão automaticamente'
+              'Carrossel inicial passa de 3 para 10 imagens, incluindo Atacama, Valparaíso, vinhedos e Andes',
+              'Financeiro ganha painel Seu impacto até aqui com clientes e passageiros atendidos',
+              'Financeiro mostra experiências organizadas e comissão acumulada desde o início',
+              'Novo Insight do dia traz microdicas práticas de vendas, WhatsApp, objeções, NPS e pós-venda',
+              'Insight aparece uma vez por dia por vendedor e permite consultar Outra dica'
             ]
           })
           data.pop('databaseMigration',None)
@@ -56,7 +79,7 @@ jobs:
           vp.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
           PY
 
-      - name: Validate V11.0.8 browser JavaScript
+      - name: Validate V11.0.9 browser JavaScript
         shell: bash
         run: |
           set -e
@@ -75,6 +98,8 @@ jobs:
           node --check transfers-v1105.js
           node --check audit-cancel-v1106.js
           node --check transfer-commission-v1108.js
+          node --check impact-v1109.js
+          node --check insights-v1109.js
           node --check contrato-v1061.js
           node --check assinatura-v1061.js
           node --check _patches/voucher-v1071.js
@@ -82,23 +107,29 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           import re, subprocess
+          html=Path('index.html').read_text(encoding='utf-8')
+          start=html.find('const HEROES=[');end=html.find('function heroMetrics()',start)
+          block=html[start:end]
+          if block.count("{title:") != 10:
+              raise SystemExit('Carrossel não contém exatamente 10 imagens')
+          for required in ('Atacama','Valparaíso','Vinhedos do Chile','Caminhos do Atacama'):
+              if required not in block: raise SystemExit(f'Imagem/tema ausente: {required}')
           for html_name in ('index.html','viagem.html','contrato.html'):
-              html=Path(html_name).read_text(encoding='utf-8')
-              blocks=re.findall(r'<script(?![^>]*\bsrc=)[^>]*>(.*?)</script\s*>',html,re.I|re.S)
+              h=Path(html_name).read_text(encoding='utf-8')
+              blocks=re.findall(r'<script(?![^>]*\bsrc=)[^>]*>(.*?)</script\s*>',h,re.I|re.S)
               for i,code in enumerate(blocks):
-                  f=Path(f'/tmp/{html_name}-{i}.js')
-                  f.write_text(code,encoding='utf-8')
+                  f=Path(f'/tmp/{html_name}-{i}.js');f.write_text(code,encoding='utf-8')
                   r=subprocess.run(['node','--check',str(f)],capture_output=True,text=True)
                   if r.returncode:
-                      print(f'Falha em {html_name}, script inline #{i}:')
-                      print(r.stderr)
-                      raise SystemExit(1)
+                      print(f'Falha em {html_name}, script inline #{i}:');print(r.stderr);raise SystemExit(1)
               print(f'{html_name}: {len(blocks)} script(s) inline validado(s).')
           PY
-          grep -q 'Cloud V11.0.8' index.html
-          test "$(grep -o 'transfer-commission-v1108.js?v=1108' index.html | wc -l)" -eq 1
-          grep -q '5% do valor' transfer-commission-v1108.js
-          grep -q '"version": "11.0.8"' VERSION.json
+          grep -q 'Cloud V11.0.9' index.html
+          test "$(grep -o 'impact-v1109.js?v=1109' index.html | wc -l)" -eq 1
+          test "$(grep -o 'insights-v1109.js?v=1109' index.html | wc -l)" -eq 1
+          grep -q 'Seu impacto até aqui' impact-v1109.js
+          grep -q 'Insight do dia' insights-v1109.js
+          grep -q '"version": "11.0.9"' VERSION.json
 
       - name: Commit release
         shell: bash
@@ -107,8 +138,8 @@ jobs:
           git config user.email '4189822+github-actions[bot]@users.noreply.github.com'
           git add index.html VERSION.json
           if git diff --cached --quiet; then
-            echo 'V11.0.8 already deployed.'
+            echo 'V11.0.9 already deployed.'
             exit 0
           fi
-          git commit -m 'ISA V11.0.8 — comissão automática de transfers'
+          git commit -m 'ISA V11.0.9 — experiência e impacto do vendedor'
           git push
