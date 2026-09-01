@@ -1,14 +1,14 @@
 {
   "product": "ISA by Korluz",
-  "version": "11.0.5",
-  "release": "Transfer IN e OUT integrados à operação",
-  "basedOn": "11.0.4",
+  "version": "11.0.6",
+  "release": "Comissões canceladas com histórico transparente",
+  "basedOn": "11.0.5",
   "databaseMigrationRequired": false,
   "features": [
-    "TRANSFER IN e TRANSFER OUT adicionados ao catálogo padrão",
-    "Transfers usam a mesma lógica operacional dos passeios",
-    "Transfers entram em Amanhã, Central de Horários, Validador e cancelamentos",
-    "Portal Minha Viagem e contratos passam a transportar os transfers junto da venda",
-    "Leitor de voucher reconhece e classifica Transfer IN e OUT sem remover compatibilidade existente"
+    "Auditoria passa a mostrar ativos e cancelados por padrão",
+    "Passeios cancelados continuam visíveis com status Cancelado",
+    "Comissão cancelada aparece riscada e não entra no total",
+    "PDF mantém o histórico cancelado riscado e soma apenas comissões ativas",
+    "Excel identifica comissões canceladas e exclui esses valores do total"
   ]
 }
