@@ -1,14 +1,14 @@
 {
   "product": "ISA by Korluz",
-  "version": "11.0.6",
-  "release": "Comissões canceladas com histórico transparente",
-  "basedOn": "11.0.5",
+  "version": "11.0.7",
+  "release": "Leitor robusto para vouchers com serviços em múltiplas linhas",
+  "basedOn": "11.0.6",
   "databaseMigrationRequired": false,
   "features": [
-    "Auditoria passa a mostrar ativos e cancelados por padrão",
-    "Passeios cancelados continuam visíveis com status Cancelado",
-    "Comissão cancelada aparece riscada e não entra no total",
-    "PDF mantém o histórico cancelado riscado e soma apenas comissões ativas",
-    "Excel identifica comissões canceladas e exclui esses valores do total"
+    "Leitor de voucher passa a montar os serviços pelos blocos individuais do PDF",
+    "Reconhece nomes de passeios quebrados em múltiplas linhas",
+    "TRANSFER IN e TRANSFER OUT passam a ser reconhecidos mesmo com dados de aeroporto e voo na mesma linha",
+    "Ponto de encontro passa a aproveitar hotel e endereço completos dos vouchers individuais",
+    "Compatibilidade com o parser anterior é mantida como fallback"
   ]
 }
