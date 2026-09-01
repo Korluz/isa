@@ -1,14 +1,14 @@
 {
   "product": "ISA by Korluz",
-  "version": "11.0.4",
-  "release": "Relatórios profissionais e novidades após atualização",
-  "basedOn": "11.0.3",
+  "version": "11.0.5",
+  "release": "Transfer IN e OUT integrados à operação",
+  "basedOn": "11.0.4",
   "databaseMigrationRequired": false,
   "features": [
-    "Correção do relatório de comissões em PDF que podia sair vazio",
-    "PDF com identificação ISA, vendedor, período e data/hora de emissão",
-    "Excel com cabeçalho ISA, vendedor, período e data/hora de geração",
-    "PDF e Excel passam a usar exatamente a tabela filtrada exibida na Auditoria",
-    "Novo painel O que mudou aparece de forma integrada após cada versão"
+    "TRANSFER IN e TRANSFER OUT adicionados ao catálogo padrão",
+    "Transfers usam a mesma lógica operacional dos passeios",
+    "Transfers entram em Amanhã, Central de Horários, Validador e cancelamentos",
+    "Portal Minha Viagem e contratos passam a transportar os transfers junto da venda",
+    "Leitor de voucher reconhece e classifica Transfer IN e OUT sem remover compatibilidade existente"
   ]
 }
