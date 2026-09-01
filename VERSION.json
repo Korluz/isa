@@ -1,14 +1,14 @@
 {
   "product": "ISA by Korluz",
-  "version": "11.0.7",
-  "release": "Leitor robusto para vouchers com serviços em múltiplas linhas",
-  "basedOn": "11.0.6",
+  "version": "11.0.8",
+  "release": "Comissão automática de 5% nos transfers",
+  "basedOn": "11.0.7",
   "databaseMigrationRequired": false,
   "features": [
-    "Leitor de voucher passa a montar os serviços pelos blocos individuais do PDF",
-    "Reconhece nomes de passeios quebrados em múltiplas linhas",
-    "TRANSFER IN e TRANSFER OUT passam a ser reconhecidos mesmo com dados de aeroporto e voo na mesma linha",
-    "Ponto de encontro passa a aproveitar hotel e endereço completos dos vouchers individuais",
-    "Compatibilidade com o parser anterior é mantida como fallback"
+    "TRANSFER IN e TRANSFER OUT passam a calcular comissão automaticamente",
+    "Comissão dos transfers corresponde a 5% do valor do próprio serviço",
+    "Regra vale para transfers importados do voucher e lançados manualmente",
+    "Transfers cancelados permanecem no histórico mas não geram comissão",
+    "Auditoria, PDF e Excel passam a refletir a nova comissão automaticamente"
   ]
 }
