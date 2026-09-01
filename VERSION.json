@@ -1,21 +1,12 @@
 {
   "product": "ISA by Korluz",
-  "version": "11.0.0",
-  "release": "Indômito • Minha Viagem — Portal do Cliente",
-  "basedOn": "10.7.1",
-  "databaseMigrationRequired": true,
+  "version": "11.0.1",
+  "release": "Hotfix — PDF do relatório de comissões",
+  "basedOn": "11.0.0",
+  "databaseMigrationRequired": false,
   "features": [
-    "Link público e seguro por venda, sem login do cliente",
-    "Portal Minha Viagem com passeios, datas, horários e pontos de encontro",
-    "Atualização automática a partir da Central de Horários",
-    "Exibição da mensagem logística do passeio quando publicada",
-    "Confirmação de ciência do cliente por passeio",
-    "Status de visualização e quantidade de ciências na ficha da venda",
-    "Compartilhamento do acesso pelo celular/WhatsApp",
-    "Novo link revoga automaticamente o acesso anterior da mesma venda"
-  ],
-  "databaseMigrations": [
-    "isa_v11_customer_trip_portal",
-    "isa_v11_customer_trip_view_debounce"
+    "Correção da geração do PDF do relatório de comissões",
+    "Tratamento quando o navegador bloqueia a janela de impressão",
+    "PDF em A4 paisagem com tabela e total de comissões"
   ]
 }
