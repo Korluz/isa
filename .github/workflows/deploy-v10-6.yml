@@ -1,4 +1,4 @@
-name: Deploy ISA V11.0.1
+name: Deploy ISA V11.0.2
 
 on:
   push:
@@ -19,7 +19,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Patch live V11.0.1
+      - name: Patch live V11.0.2
         shell: bash
         run: |
           python3 - <<'PY'
@@ -28,9 +28,18 @@ jobs:
 
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
-          s=s.replace('Cloud V11.0.0','Cloud V11.0.1').replace('v11.0.0','v11.0.1')
+          s=s.replace('Cloud V11.0.1','Cloud V11.0.2').replace('v11.0.1','v11.0.2')
 
-          tag='<script src="pdf-hotfix-v1101.js?v=1101"></script>'
+          # Ponte para módulos legados/externos que ainda leem sb/user como globais.
+          needle="let sb=null,user=null,ready=false,loading=false,timer=null,suppress=false;"
+          bridge="""let sb=null,user=null,ready=false,loading=false,timer=null,suppress=false;
+if(!Object.getOwnPropertyDescriptor(window,'sb'))Object.defineProperty(window,'sb',{configurable:true,get:()=>sb});
+if(!Object.getOwnPropertyDescriptor(window,'user'))Object.defineProperty(window,'user',{configurable:true,get:()=>user});"""
+          if "Object.getOwnPropertyDescriptor(window,'user')" not in s:
+              if needle not in s: raise SystemExit('Núcleo de autenticação não encontrado')
+              s=s.replace(needle,bridge,1)
+
+          tag='<script src="excel-v1102.js?v=1102"></script>'
           if tag not in s:
               pos=s.rfind('</body>')
               if pos < 0: raise SystemExit('BODY real não encontrado')
@@ -41,14 +50,17 @@ jobs:
           vp=Path('VERSION.json')
           data=json.loads(vp.read_text(encoding='utf-8'))
           data.update({
-            'version':'11.0.1',
-            'release':'Hotfix — PDF do relatório de comissões',
-            'basedOn':'11.0.0',
+            'version':'11.0.2',
+            'release':'Excel formatado e correção de escopo da autenticação',
+            'basedOn':'11.0.1',
             'databaseMigrationRequired':False,
             'features':[
-              'Correção da geração do PDF do relatório de comissões',
-              'Tratamento quando o navegador bloqueia a janela de impressão',
-              'PDF em A4 paisagem com tabela e total de comissões'
+              'Exportação do relatório de comissões em Excel real (.xlsx)',
+              'Larguras de colunas adequadas e datas formatadas',
+              'Valores de venda e comissão como moeda no Excel',
+              'Filtro automático no cabeçalho da planilha',
+              'Correção do erro Can\'t find variable: user',
+              'Ponte segura dos objetos de sessão para módulos do ISA'
             ]
           })
           data.pop('databaseMigration',None)
@@ -56,7 +68,7 @@ jobs:
           vp.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
           PY
 
-      - name: Validate V11.0.1 browser JavaScript
+      - name: Validate V11.0.2 browser JavaScript
         shell: bash
         run: |
           set -e
@@ -67,6 +79,7 @@ jobs:
           node --check portal-v1100.js
           node --check viagem-v1100.js
           node --check pdf-hotfix-v1101.js
+          node --check excel-v1102.js
           node --check contrato-v1061.js
           node --check assinatura-v1061.js
           node --check _patches/voucher-v1071.js
@@ -86,12 +99,14 @@ jobs:
                       raise SystemExit(1)
               print(f'{html_name}: {len(blocks)} script(s) inline validado(s).')
           PY
-          grep -q 'Cloud V11.0.1' index.html
+          grep -q 'Cloud V11.0.2' index.html
           test "$(grep -o 'portal-v1100.js?v=1100' index.html | wc -l)" -eq 1
           test "$(grep -o 'pdf-hotfix-v1101.js?v=1101' index.html | wc -l)" -eq 1
+          test "$(grep -o 'excel-v1102.js?v=1102' index.html | wc -l)" -eq 1
+          grep -q "Object.getOwnPropertyDescriptor(window,'user')" index.html
           grep -q 'Indômito • Minha Viagem' viagem.html
           grep -q 'viagem-v1100.js?v=1100' viagem.html
-          grep -q '"version": "11.0.1"' VERSION.json
+          grep -q '"version": "11.0.2"' VERSION.json
 
       - name: Commit release
         shell: bash
@@ -100,8 +115,8 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html VERSION.json
           if git diff --cached --quiet; then
-            echo 'V11.0.1 already deployed.'
+            echo 'V11.0.2 already deployed.'
             exit 0
           fi
-          git commit -m 'ISA V11.0.1 — corrigir PDF do relatório de comissões'
+          git commit -m 'ISA V11.0.2 — Excel formatado e correção de escopo'
           git push
