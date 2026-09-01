@@ -1,14 +1,14 @@
 {
   "product": "ISA by Korluz",
-  "version": "10.7.0",
-  "release": "Administração de contas + atualização automática + menu mobile",
-  "basedOn": "10.6.3",
-  "databaseMigrationRequired": true,
-  "databaseMigration": "isa_v10_7_admin_account_lifecycle",
+  "version": "10.7.1",
+  "release": "Compatibilidade com novo modelo de voucher",
+  "basedOn": "10.7.0",
+  "databaseMigrationRequired": false,
   "features": [
-    "Resetar dados de uma conta pelo Admin",
-    "Excluir conta de autenticação pelo Admin",
-    "Aviso automático de nova versão disponível",
-    "Correção do acesso a Configurações no menu mobile"
+    "Leitura automática do novo voucher de Reserva/Serviços",
+    "Compatibilidade preservada com o voucher antigo",
+    "Importação de comprador, telefone, vendedor e passageiros/documentos",
+    "Importação de serviços, datas, valores e local de embarque",
+    "Importação de total pago e forma/data de pagamento quando disponíveis"
   ]
 }
