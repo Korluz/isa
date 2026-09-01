@@ -1,4 +1,4 @@
-name: Deploy ISA V10.7.1
+name: Deploy ISA V11.0.0
 
 on:
   push:
@@ -19,7 +19,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Patch live V10.7.1
+      - name: Patch live V11.0.0
         shell: bash
         run: |
           python3 - <<'PY'
@@ -28,52 +28,40 @@ jobs:
 
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
-          s=s.replace('Cloud V10.7.0','Cloud V10.7.1').replace('v10.7.0','v10.7.1')
+          s=s.replace('Cloud V10.7.1','Cloud V11.0.0').replace('v10.7.1','v11.0.0')
 
-          helper=Path('_patches/voucher-v1071.js').read_text(encoding='utf-8').strip()
-          marker=' function parseVoucher(raw){'
-          if 'function parseVoucherNovo(raw)' not in s:
-              pos=s.find(marker)
-              if pos < 0:
-                  raise SystemExit('Parser legado não encontrado')
-              s=s[:pos]+' '+helper+'\n'+s[pos:]
-
-          old=' function parseVoucher(raw){const lines='
-          new=" function parseVoucher(raw){if(/COMPRADOR\\s*:/i.test(raw)&&/LISTA\\s+DE\\s+SERVI[CÇ]OS/i.test(raw))return parseVoucherNovo(raw);const lines="
-          if old in s:
-              s=s.replace(old,new,1)
-          elif 'return parseVoucherNovo(raw);const lines=' not in s:
-              raise SystemExit('Detecção do voucher novo não foi aplicada')
-
-          oldfin="valueCents:0,paidCents:0,paymentMethod:'',paymentDate:''"
-          newfin="valueCents:Number(v.valueCents||0),paidCents:Number(v.paidCents||0),paymentMethod:v.paymentMethod||'',paymentDate:v.paymentDate||''"
-          if oldfin in s:
-              s=s.replace(oldfin,newfin,1)
-          elif newfin not in s:
-              raise SystemExit('Bloco financeiro do importador não encontrado')
+          tag='<script src="portal-v1100.js?v=1100"></script>'
+          if tag not in s:
+              pos=s.rfind('</body>')
+              if pos < 0: raise SystemExit('BODY real não encontrado')
+              s=s[:pos]+tag+'\n'+s[pos:]
 
           p.write_text(s,encoding='utf-8')
 
           vp=Path('VERSION.json')
           data=json.loads(vp.read_text(encoding='utf-8'))
           data.update({
-            'version':'10.7.1',
-            'release':'Compatibilidade com novo modelo de voucher',
-            'basedOn':'10.7.0',
-            'databaseMigrationRequired':False,
+            'version':'11.0.0',
+            'release':'Indômito • Minha Viagem — Portal do Cliente',
+            'basedOn':'10.7.1',
+            'databaseMigrationRequired':True,
+            'databaseMigrations':['isa_v11_customer_trip_portal','isa_v11_customer_trip_view_debounce'],
             'features':[
-              'Leitura automática do novo voucher de Reserva/Serviços',
-              'Compatibilidade preservada com o voucher antigo',
-              'Importação de comprador, telefone, vendedor e passageiros/documentos',
-              'Importação de serviços, datas, valores e local de embarque',
-              'Importação de total pago e forma/data de pagamento quando disponíveis'
+              'Link público e seguro por venda, sem login do cliente',
+              'Portal Minha Viagem com passeios, datas, horários e pontos de encontro',
+              'Atualização automática a partir da Central de Horários',
+              'Exibição da mensagem logística do passeio quando publicada',
+              'Confirmação de ciência do cliente por passeio',
+              'Status de visualização e quantidade de ciências na ficha da venda',
+              'Compartilhamento do acesso pelo celular/WhatsApp',
+              'Novo link revoga automaticamente o acesso anterior da mesma venda'
             ]
           })
           data.pop('databaseMigration',None)
           vp.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
           PY
 
-      - name: Validate V10.7.1 browser JavaScript
+      - name: Validate V11.0.0 browser JavaScript
         shell: bash
         run: |
           set -e
@@ -81,32 +69,32 @@ jobs:
           node --check isa-v1061.js
           node --check admin-v1070.js
           node --check update-v1070.js
+          node --check portal-v1100.js
+          node --check viagem-v1100.js
           node --check contrato-v1061.js
           node --check assinatura-v1061.js
           node --check _patches/voucher-v1071.js
           python3 - <<'PY'
           from pathlib import Path
           import re, subprocess
-          html=Path('index.html').read_text(encoding='utf-8')
-          blocks=re.findall(r'<script(?![^>]*\bsrc=)[^>]*>(.*?)</script\s*>',html,re.I|re.S)
-          if not blocks:
-              raise SystemExit('Nenhum script inline encontrado')
-          for i,code in enumerate(blocks):
-              f=Path(f'/tmp/isa-inline-{i}.js')
-              f.write_text(code,encoding='utf-8')
-              r=subprocess.run(['node','--check',str(f)],capture_output=True,text=True)
-              if r.returncode:
-                  print(f'Falha no script inline #{i}:')
-                  print(r.stderr)
-                  raise SystemExit(1)
-          print(f'{len(blocks)} scripts inline validados.')
+          for html_name in ('index.html','viagem.html'):
+              html=Path(html_name).read_text(encoding='utf-8')
+              blocks=re.findall(r'<script(?![^>]*\bsrc=)[^>]*>(.*?)</script\s*>',html,re.I|re.S)
+              for i,code in enumerate(blocks):
+                  f=Path(f'/tmp/{html_name}-{i}.js')
+                  f.write_text(code,encoding='utf-8')
+                  r=subprocess.run(['node','--check',str(f)],capture_output=True,text=True)
+                  if r.returncode:
+                      print(f'Falha em {html_name}, script inline #{i}:')
+                      print(r.stderr)
+                      raise SystemExit(1)
+              print(f'{html_name}: {len(blocks)} script(s) inline validado(s).')
           PY
-          grep -q 'Cloud V10.7.1' index.html
-          grep -q 'function parseVoucherNovo' index.html
-          grep -q 'return parseVoucherNovo(raw)' index.html
-          grep -q 'client=pick(/Cliente' index.html
-          grep -q 'valueCents:Number(v.valueCents' index.html
-          grep -q '"version": "10.7.1"' VERSION.json
+          grep -q 'Cloud V11.0.0' index.html
+          test "$(grep -o 'portal-v1100.js?v=1100' index.html | wc -l)" -eq 1
+          grep -q 'Indômito • Minha Viagem' viagem.html
+          grep -q 'viagem-v1100.js?v=1100' viagem.html
+          grep -q '"version": "11.0.0"' VERSION.json
 
       - name: Commit release
         shell: bash
@@ -115,8 +103,8 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html VERSION.json
           if git diff --cached --quiet; then
-            echo 'V10.7.1 already deployed.'
+            echo 'V11.0.0 already deployed.'
             exit 0
           fi
-          git commit -m 'ISA V10.7.1 — compatibilidade com novo voucher'
+          git commit -m 'ISA V11.0.0 — portal Minha Viagem para clientes'
           git push
