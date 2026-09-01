@@ -1,4 +1,4 @@
-name: Deploy ISA V11.0.3
+name: Deploy ISA V11.0.4
 
 on:
   push:
@@ -19,7 +19,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Patch live V11.0.3
+      - name: Patch live V11.0.4
         shell: bash
         run: |
           python3 - <<'PY'
@@ -28,46 +28,40 @@ jobs:
 
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
-          s=s.replace('Cloud V11.0.2','Cloud V11.0.3').replace('v11.0.2','v11.0.3')
-          tag='<script src="fixes-v1103.js?v=1103"></script>'
-          if tag not in s:
-              pos=s.rfind('</body>')
-              if pos < 0: raise SystemExit('BODY real do ISA não encontrado')
-              s=s[:pos]+tag+'\n'+s[pos:]
-          p.write_text(s,encoding='utf-8')
+          s=s.replace('Cloud V11.0.3','Cloud V11.0.4').replace('v11.0.3','v11.0.4')
 
-          cp=Path('contrato.html')
-          cs=cp.read_text(encoding='utf-8')
-          cs=cs.replace('<title>Indômito Contract Manager — V10.6.3</title>','<title>Indômito Contract Manager — V11.0.3</title>')
-          ctag='<script src="contrato-flow-v1103.js?v=1103"></script>'
-          if ctag not in cs:
-              pos=cs.rfind('</body>')
-              if pos < 0: raise SystemExit('BODY real do contrato não encontrado')
-              cs=cs[:pos]+ctag+'\n'+cs[pos:]
-          cp.write_text(cs,encoding='utf-8')
+          for tag in [
+              '<script src="report-v1104.js?v=1104"></script>',
+              '<script src="release-notes-v1104.js?v=1104"></script>'
+          ]:
+              if tag not in s:
+                  pos=s.rfind('</body>')
+                  if pos < 0: raise SystemExit('BODY real do ISA não encontrado')
+                  s=s[:pos]+tag+'\n'+s[pos:]
+
+          p.write_text(s,encoding='utf-8')
 
           vp=Path('VERSION.json')
           data=json.loads(vp.read_text(encoding='utf-8'))
           data.update({
-            'version':'11.0.3',
-            'release':'Fluxo de contrato e validador operacional',
-            'basedOn':'11.0.2',
-            'databaseMigrationRequired':True,
-            'databaseMigrations':['isa_v11_0_3_delete_signature_record'],
+            'version':'11.0.4',
+            'release':'Relatórios profissionais e novidades após atualização',
+            'basedOn':'11.0.3',
+            'databaseMigrationRequired':False,
             'features':[
-              'Exclusão protegida de registros de assinatura criados para teste ou por engano',
-              'Validador aceita CHD omitido quando a quantidade esperada é zero',
-              'Validador reconhece contagens no formato (ADT): 2 e equivalentes',
-              'Comparação de coleta considera tanto nome do hotel quanto endereço',
-              'Fluxo remoto não gera PDF antes da assinatura',
-              'PDF final é gerado somente ao abrir o contrato assinado'
+              'Correção do relatório de comissões em PDF que podia sair vazio',
+              'PDF com identificação ISA, vendedor, período e data/hora de emissão',
+              'Excel com cabeçalho ISA, vendedor, período e data/hora de geração',
+              'PDF e Excel passam a usar exatamente a tabela filtrada exibida na Auditoria',
+              'Novo painel O que mudou aparece de forma integrada após cada versão'
             ]
           })
           data.pop('databaseMigration',None)
+          data.pop('databaseMigrations',None)
           vp.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
           PY
 
-      - name: Validate V11.0.3 browser JavaScript
+      - name: Validate V11.0.4 browser JavaScript
         shell: bash
         run: |
           set -e
@@ -81,6 +75,8 @@ jobs:
           node --check excel-v1102.js
           node --check fixes-v1103.js
           node --check contrato-flow-v1103.js
+          node --check report-v1104.js
+          node --check release-notes-v1104.js
           node --check contrato-v1061.js
           node --check assinatura-v1061.js
           node --check _patches/voucher-v1071.js
@@ -100,21 +96,20 @@ jobs:
                       raise SystemExit(1)
               print(f'{html_name}: {len(blocks)} script(s) inline validado(s).')
           PY
-          grep -q 'Cloud V11.0.3' index.html
-          test "$(grep -o 'fixes-v1103.js?v=1103' index.html | wc -l)" -eq 1
-          test "$(grep -o 'contrato-flow-v1103.js?v=1103' contrato.html | wc -l)" -eq 1
-          grep -q 'Gerar contrato PDF' contrato.html
-          grep -q '"version": "11.0.3"' VERSION.json
+          grep -q 'Cloud V11.0.4' index.html
+          test "$(grep -o 'report-v1104.js?v=1104' index.html | wc -l)" -eq 1
+          test "$(grep -o 'release-notes-v1104.js?v=1104' index.html | wc -l)" -eq 1
+          grep -q '"version": "11.0.4"' VERSION.json
 
       - name: Commit release
         shell: bash
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add index.html contrato.html VERSION.json
+          git add index.html VERSION.json
           if git diff --cached --quiet; then
-            echo 'V11.0.3 already deployed.'
+            echo 'V11.0.4 already deployed.'
             exit 0
           fi
-          git commit -m 'ISA V11.0.3 — contrato remoto e validador operacional'
+          git commit -m 'ISA V11.0.4 — relatórios profissionais e release notes'
           git push
