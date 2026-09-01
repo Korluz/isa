@@ -1,4 +1,4 @@
-name: Deploy ISA V11.0.4
+name: Deploy ISA V11.0.5
 
 on:
   push:
@@ -19,7 +19,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Patch live V11.0.4
+      - name: Patch live V11.0.5
         shell: bash
         run: |
           python3 - <<'PY'
@@ -28,32 +28,29 @@ jobs:
 
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
-          s=s.replace('Cloud V11.0.3','Cloud V11.0.4').replace('v11.0.3','v11.0.4')
+          s=s.replace('Cloud V11.0.4','Cloud V11.0.5').replace('v11.0.4','v11.0.5')
 
-          for tag in [
-              '<script src="report-v1104.js?v=1104"></script>',
-              '<script src="release-notes-v1104.js?v=1104"></script>'
-          ]:
-              if tag not in s:
-                  pos=s.rfind('</body>')
-                  if pos < 0: raise SystemExit('BODY real do ISA não encontrado')
-                  s=s[:pos]+tag+'\n'+s[pos:]
+          tag='<script src="transfers-v1105.js?v=1105"></script>'
+          if tag not in s:
+              pos=s.rfind('</body>')
+              if pos < 0: raise SystemExit('BODY real do ISA não encontrado')
+              s=s[:pos]+tag+'\n'+s[pos:]
 
           p.write_text(s,encoding='utf-8')
 
           vp=Path('VERSION.json')
           data=json.loads(vp.read_text(encoding='utf-8'))
           data.update({
-            'version':'11.0.4',
-            'release':'Relatórios profissionais e novidades após atualização',
-            'basedOn':'11.0.3',
+            'version':'11.0.5',
+            'release':'Transfer IN e OUT integrados à operação',
+            'basedOn':'11.0.4',
             'databaseMigrationRequired':False,
             'features':[
-              'Correção do relatório de comissões em PDF que podia sair vazio',
-              'PDF com identificação ISA, vendedor, período e data/hora de emissão',
-              'Excel com cabeçalho ISA, vendedor, período e data/hora de geração',
-              'PDF e Excel passam a usar exatamente a tabela filtrada exibida na Auditoria',
-              'Novo painel O que mudou aparece de forma integrada após cada versão'
+              'TRANSFER IN e TRANSFER OUT adicionados ao catálogo padrão',
+              'Transfers usam a mesma lógica operacional dos passeios',
+              'Transfers entram em Amanhã, Central de Horários, Validador e cancelamentos',
+              'Portal Minha Viagem e contratos passam a transportar os transfers junto da venda',
+              'Leitor de voucher reconhece e classifica Transfer IN e OUT sem remover compatibilidade existente'
             ]
           })
           data.pop('databaseMigration',None)
@@ -61,7 +58,7 @@ jobs:
           vp.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
           PY
 
-      - name: Validate V11.0.4 browser JavaScript
+      - name: Validate V11.0.5 browser JavaScript
         shell: bash
         run: |
           set -e
@@ -77,6 +74,7 @@ jobs:
           node --check contrato-flow-v1103.js
           node --check report-v1104.js
           node --check release-notes-v1104.js
+          node --check transfers-v1105.js
           node --check contrato-v1061.js
           node --check assinatura-v1061.js
           node --check _patches/voucher-v1071.js
@@ -96,10 +94,11 @@ jobs:
                       raise SystemExit(1)
               print(f'{html_name}: {len(blocks)} script(s) inline validado(s).')
           PY
-          grep -q 'Cloud V11.0.4' index.html
-          test "$(grep -o 'report-v1104.js?v=1104' index.html | wc -l)" -eq 1
-          test "$(grep -o 'release-notes-v1104.js?v=1104' index.html | wc -l)" -eq 1
-          grep -q '"version": "11.0.4"' VERSION.json
+          grep -q 'Cloud V11.0.5' index.html
+          test "$(grep -o 'transfers-v1105.js?v=1105' index.html | wc -l)" -eq 1
+          grep -q 'TRANSFER IN' transfers-v1105.js
+          grep -q 'TRANSFER OUT' transfers-v1105.js
+          grep -q '"version": "11.0.5"' VERSION.json
 
       - name: Commit release
         shell: bash
@@ -108,8 +107,8 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html VERSION.json
           if git diff --cached --quiet; then
-            echo 'V11.0.4 already deployed.'
+            echo 'V11.0.5 already deployed.'
             exit 0
           fi
-          git commit -m 'ISA V11.0.4 — relatórios profissionais e release notes'
+          git commit -m 'ISA V11.0.5 — Transfer IN e OUT integrados'
           git push
