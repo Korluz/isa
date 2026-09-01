@@ -1,4 +1,4 @@
-name: Deploy ISA V11.0.5
+name: Deploy ISA V11.0.6
 
 on:
   push:
@@ -19,7 +19,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Patch live V11.0.5
+      - name: Patch live V11.0.6
         shell: bash
         run: |
           python3 - <<'PY'
@@ -28,9 +28,9 @@ jobs:
 
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
-          s=s.replace('Cloud V11.0.4','Cloud V11.0.5').replace('v11.0.4','v11.0.5')
+          s=s.replace('Cloud V11.0.5','Cloud V11.0.6').replace('v11.0.5','v11.0.6')
 
-          tag='<script src="transfers-v1105.js?v=1105"></script>'
+          tag='<script src="audit-cancel-v1106.js?v=1106"></script>'
           if tag not in s:
               pos=s.rfind('</body>')
               if pos < 0: raise SystemExit('BODY real do ISA não encontrado')
@@ -41,16 +41,16 @@ jobs:
           vp=Path('VERSION.json')
           data=json.loads(vp.read_text(encoding='utf-8'))
           data.update({
-            'version':'11.0.5',
-            'release':'Transfer IN e OUT integrados à operação',
-            'basedOn':'11.0.4',
+            'version':'11.0.6',
+            'release':'Comissões canceladas com histórico transparente',
+            'basedOn':'11.0.5',
             'databaseMigrationRequired':False,
             'features':[
-              'TRANSFER IN e TRANSFER OUT adicionados ao catálogo padrão',
-              'Transfers usam a mesma lógica operacional dos passeios',
-              'Transfers entram em Amanhã, Central de Horários, Validador e cancelamentos',
-              'Portal Minha Viagem e contratos passam a transportar os transfers junto da venda',
-              'Leitor de voucher reconhece e classifica Transfer IN e OUT sem remover compatibilidade existente'
+              'Auditoria passa a mostrar ativos e cancelados por padrão',
+              'Passeios cancelados continuam visíveis com status Cancelado',
+              'Comissão cancelada aparece riscada e não entra no total',
+              'PDF mantém o histórico cancelado riscado e soma apenas comissões ativas',
+              'Excel identifica comissões canceladas e exclui esses valores do total'
             ]
           })
           data.pop('databaseMigration',None)
@@ -58,7 +58,7 @@ jobs:
           vp.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
           PY
 
-      - name: Validate V11.0.5 browser JavaScript
+      - name: Validate V11.0.6 browser JavaScript
         shell: bash
         run: |
           set -e
@@ -75,6 +75,7 @@ jobs:
           node --check report-v1104.js
           node --check release-notes-v1104.js
           node --check transfers-v1105.js
+          node --check audit-cancel-v1106.js
           node --check contrato-v1061.js
           node --check assinatura-v1061.js
           node --check _patches/voucher-v1071.js
@@ -94,21 +95,20 @@ jobs:
                       raise SystemExit(1)
               print(f'{html_name}: {len(blocks)} script(s) inline validado(s).')
           PY
-          grep -q 'Cloud V11.0.5' index.html
-          test "$(grep -o 'transfers-v1105.js?v=1105' index.html | wc -l)" -eq 1
-          grep -q 'TRANSFER IN' transfers-v1105.js
-          grep -q 'TRANSFER OUT' transfers-v1105.js
-          grep -q '"version": "11.0.5"' VERSION.json
+          grep -q 'Cloud V11.0.6' index.html
+          test "$(grep -o 'audit-cancel-v1106.js?v=1106' index.html | wc -l)" -eq 1
+          grep -q 'não contabilizada' audit-cancel-v1106.js
+          grep -q '"version": "11.0.6"' VERSION.json
 
       - name: Commit release
         shell: bash
         run: |
           git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git config user.email '4189822+github-actions[bot]@users.noreply.github.com'
           git add index.html VERSION.json
           if git diff --cached --quiet; then
-            echo 'V11.0.5 already deployed.'
+            echo 'V11.0.6 already deployed.'
             exit 0
           fi
-          git commit -m 'ISA V11.0.5 — Transfer IN e OUT integrados'
+          git commit -m 'ISA V11.0.6 — comissões canceladas no histórico'
           git push
