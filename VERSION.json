@@ -1,14 +1,14 @@
 {
   "product": "ISA by Korluz",
-  "version": "11.0.8",
-  "release": "Comissão automática de 5% nos transfers",
-  "basedOn": "11.0.7",
+  "version": "11.0.9",
+  "release": "Experiência, impacto e desenvolvimento do vendedor",
+  "basedOn": "11.0.8",
   "databaseMigrationRequired": false,
   "features": [
-    "TRANSFER IN e TRANSFER OUT passam a calcular comissão automaticamente",
-    "Comissão dos transfers corresponde a 5% do valor do próprio serviço",
-    "Regra vale para transfers importados do voucher e lançados manualmente",
-    "Transfers cancelados permanecem no histórico mas não geram comissão",
-    "Auditoria, PDF e Excel passam a refletir a nova comissão automaticamente"
+    "Carrossel inicial passa de 3 para 10 imagens, incluindo Atacama, Valparaíso, vinhedos e Andes",
+    "Financeiro ganha painel Seu impacto até aqui com clientes e passageiros atendidos",
+    "Financeiro mostra experiências organizadas e comissão acumulada desde o início",
+    "Novo Insight do dia traz microdicas práticas de vendas, WhatsApp, objeções, NPS e pós-venda",
+    "Insight aparece uma vez por dia por vendedor e permite consultar Outra dica"
   ]
 }
