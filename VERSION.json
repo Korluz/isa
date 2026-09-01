@@ -1,12 +1,15 @@
 {
   "product": "ISA by Korluz",
-  "version": "11.0.1",
-  "release": "Hotfix — PDF do relatório de comissões",
-  "basedOn": "11.0.0",
+  "version": "11.0.2",
+  "release": "Excel formatado e correção de escopo da autenticação",
+  "basedOn": "11.0.1",
   "databaseMigrationRequired": false,
   "features": [
-    "Correção da geração do PDF do relatório de comissões",
-    "Tratamento quando o navegador bloqueia a janela de impressão",
-    "PDF em A4 paisagem com tabela e total de comissões"
+    "Exportação do relatório de comissões em Excel real (.xlsx)",
+    "Larguras de colunas adequadas e datas formatadas",
+    "Valores de venda e comissão como moeda no Excel",
+    "Filtro automático no cabeçalho da planilha",
+    "Correção do erro Can't find variable: user",
+    "Ponte segura dos objetos de sessão para módulos do ISA"
   ]
 }
