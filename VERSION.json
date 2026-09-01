@@ -1,15 +1,18 @@
 {
   "product": "ISA by Korluz",
-  "version": "11.0.2",
-  "release": "Excel formatado e correção de escopo da autenticação",
-  "basedOn": "11.0.1",
-  "databaseMigrationRequired": false,
+  "version": "11.0.3",
+  "release": "Fluxo de contrato e validador operacional",
+  "basedOn": "11.0.2",
+  "databaseMigrationRequired": true,
   "features": [
-    "Exportação do relatório de comissões em Excel real (.xlsx)",
-    "Larguras de colunas adequadas e datas formatadas",
-    "Valores de venda e comissão como moeda no Excel",
-    "Filtro automático no cabeçalho da planilha",
-    "Correção do erro Can't find variable: user",
-    "Ponte segura dos objetos de sessão para módulos do ISA"
+    "Exclusão protegida de registros de assinatura criados para teste ou por engano",
+    "Validador aceita CHD omitido quando a quantidade esperada é zero",
+    "Validador reconhece contagens no formato (ADT): 2 e equivalentes",
+    "Comparação de coleta considera tanto nome do hotel quanto endereço",
+    "Fluxo remoto não gera PDF antes da assinatura",
+    "PDF final é gerado somente ao abrir o contrato assinado"
+  ],
+  "databaseMigrations": [
+    "isa_v11_0_3_delete_signature_record"
   ]
 }
