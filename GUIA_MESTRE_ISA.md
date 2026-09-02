@@ -1,8 +1,8 @@
 # Guia Mestre do ISA
 
 > **Documento de continuidade e fonte de verdade do projeto**  
-> Atualizado em **01/09/2026**  
-> Versão em produção no momento desta edição: **ISA V11.0.8**
+> Atualizado em **02/09/2026**  
+> Versão em produção no momento desta edição: **ISA V11.0.10**
 
 ---
 
@@ -326,15 +326,18 @@ Quando há divergência essencial, o sistema pode sinalizar **NÃO ENVIAR**.
 
 1. Abrir contrato preenchido a partir da venda.
 2. Conferir os dados.
-3. Criar link de assinatura remota.
-4. Enviar o link ao cliente pelo WhatsApp.
-5. Voltar ao ISA.
-6. Cliente abre o link e assina no próprio celular.
-7. Em Contratos, acompanhar o status.
-8. Abrir contrato assinado.
-9. Gerar o **PDF assinado final** para arquivar/enviar.
+3. Se necessário, gerar o **PDF para conferência** antes da assinatura.
+4. Criar o link exclusivo de assinatura remota.
+5. Enviar o link ao cliente pelo WhatsApp.
+6. Voltar ao ISA.
+7. Cliente abre o link e assina no próprio celular.
+8. Em Contratos, acompanhar o status.
+9. Abrir o contrato assinado.
+10. Gerar o **PDF assinado final** para arquivar ou enviar.
 
-Não faz sentido exigir PDF pré-assinatura no fluxo remoto. O botão pré-assinatura foi orientado a voltar ao ISA; o documento principal é o PDF final assinado.
+O PDF pré-assinatura é opcional e recebe, em todas as páginas, a marca **“CÓPIA PARA CONFERÊNCIA — NÃO ASSINADA”**. Ele permite ao cliente revisar o conteúdo, mas não substitui o link de aceite e assinatura.
+
+O PDF final assinado só é liberado quando o ISA valida, em conjunto, a assinatura eletrônica, a data do aceite e o protocolo da solicitação. Os arquivos também usam nomes diferentes para reduzir o risco de envio da versão errada.
 
 ### Evidências
 
@@ -411,9 +414,9 @@ Deve permanecer separado da Auditoria quando os objetivos forem diferentes:
 - **Financeiro:** visão gerencial do vendedor.
 - **Auditoria:** detalhe por serviço e regra aplicada.
 
-### Ideias aprovadas para próxima versão — ainda não publicadas na V11.0.8
+### Indicadores de impacto — implementados na V11.0.9
 
-Adicionar indicadores motivacionais e históricos:
+A V11.0.9 adicionou indicadores motivacionais e históricos:
 
 - clientes atendidos;
 - passageiros atendidos;
@@ -509,9 +512,9 @@ Esse fluxo foi validado em uso real.
 
 A home possui carrossel/hero com imagens de turismo.
 
-### Próxima melhoria aprovada — ainda não publicada na V11.0.8
+### Carrossel expandido — implementado na V11.0.9
 
-Expandir de cerca de 3 imagens para **8–12 ou mais**, mantendo qualidade e coerência visual.
+O carrossel foi ampliado de 3 para **10 imagens**, mantendo qualidade e coerência visual.
 
 Misturar cenários como:
 
@@ -530,9 +533,9 @@ Objetivo: tornar o ambiente mais inspirador para quem vende turismo e aumentar r
 
 ## 17. Pílula instrutiva / Insight do dia
 
-### Recurso aprovado — ainda não publicado na V11.0.8
+### Recurso implementado na V11.0.9
 
-Criar um card/modal orgânico, visualmente compatível com “O que mudou”, exibido **uma vez por dia** no primeiro acesso relevante.
+A V11.0.9 adicionou um card/modal orgânico, visualmente compatível com “O que mudou”, exibido **uma vez por dia** no primeiro acesso relevante.
 
 Nome possível:
 
@@ -644,6 +647,8 @@ Exemplo da sequência recente:
 - 11.0.6 — comissão cancelada com histórico
 - 11.0.7 — leitor robusto de voucher multilinha
 - 11.0.8 — comissão de 5% nos transfers
+- 11.0.9 — experiência visual, impacto e Insight do dia
+- 11.0.10 — PDF para conferência e PDF final assinado
 
 ---
 
@@ -707,10 +712,11 @@ Após mudança relevante, testar pelo menos:
 
 ### Contrato
 - abrir preenchido;
+- gerar PDF para conferência com marca de documento não assinado;
 - criar link;
 - assinar remotamente;
 - abrir assinado;
-- gerar PDF final;
+- gerar PDF final somente após validar assinatura, aceite e protocolo;
 - excluir registro de teste.
 
 ### Minha Viagem
@@ -727,25 +733,19 @@ Após mudança relevante, testar pelo menos:
 
 ---
 
-## 22. Próxima versão planejada/aprovada
+## 22. Próximo marco estratégico
 
-No momento deste guia, **V11.0.8 está publicada**. Os itens abaixo foram aprovados conceitualmente, mas ainda devem ser tratados como **roadmap**, não como recursos já existentes:
+Com a **V11.0.10 publicada**, o próximo marco é consolidar a transição do ISA para o **Business Assistant**, preservando a operação de vendas já validada.
 
-1. **Carrossel expandido da home** com muitas imagens, incluindo Atacama.
-2. **Financeiro motivacional**:
-   - clientes atendidos;
-   - passageiros atendidos;
-   - serviços vendidos;
-   - comissão acumulada histórica;
-   - mensagem de impacto positiva.
-3. **Insight/Pílula do dia**:
-   - uma vez ao dia;
-   - conteúdo curto e útil;
-   - foco em técnica de vendas, atendimento, NPS e turismo;
-   - modal orgânico;
-   - possibilidade futura de conteúdo contextual.
+Prioridades iniciais:
 
-Sugestão de versão para esse pacote: **V11.1.0** em vez de acumular muitos hotfixes 11.0.x, pois representa uma evolução visível de experiência do vendedor.
+1. mapear as capacidades do ISA que serão mantidas como domínio de vendas;
+2. definir a arquitetura modular do Business Assistant;
+3. iniciar o módulo **BA Logistics**, sem duplicar cadastros nem criar fontes de verdade concorrentes;
+4. manter compatibilidade com os fluxos em produção enquanto a nova camada evolui;
+5. registrar cada decisão relevante no Guia Mestre e no `VERSION.json`.
+
+O ISA continua sendo a implementação operacional de vendas; o Business Assistant é a plataforma-mãe em evolução.
 
 ---
 
@@ -775,7 +775,7 @@ Depois disso, a conversa pode seguir diretamente para a próxima demanda.
 
 ## 25. Estado final desta edição
 
-**Produção confirmada:** V11.0.8  
-**Última regra adicionada:** TRANSFER IN/OUT com comissão automática de 5% sobre o valor do próprio serviço.  
-**Próximo pacote aprovado:** experiência visual + métricas motivacionais + Insight do dia.  
+**Produção confirmada:** V11.0.10  
+**Última melhoria publicada:** PDF para conferência antes da assinatura e PDF final liberado após validação das evidências da assinatura eletrônica.  
+**Próximo marco:** handoff do ISA para o Business Assistant e definição do primeiro recorte do BA Logistics.  
 **Estratégia:** evolução incremental, validação antes de deploy e manutenção orientada por uso real.

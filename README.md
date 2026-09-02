@@ -15,12 +15,12 @@ O sistema está em uso real. Mudanças devem ser incrementais, compatíveis e va
 
 ## Estado na atualização deste README
 
-- Produção: **V11.0.8**
+- Produção: **V11.0.10**
 - GitHub Pages + Supabase
 - Importação de vouchers antigos e novos
 - Operação de passeios e transfers
 - Central de horários e Validador
-- Contratos com assinatura eletrônica remota
+- Contratos com PDF para conferência e PDF final com assinatura eletrônica remota
 - Portal do cliente **Indômito • Minha Viagem**
 - Financeiro e Auditoria de comissões
 - PDF e Excel formatados

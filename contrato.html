@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Indômito Contract Manager — V11.0.3</title>
+<title>Indômito Contract Manager — V11.0.10</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;color:#111}
@@ -110,7 +110,19 @@ function hojeExtenso() {
 }
 function safeName(s) { return (s||'Cliente').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9 ]/gi,'').trim().replace(/\s+/g,' '); }
 function setTimes(pdf, style='normal', size=11.8) { pdf.setFont('times', style); pdf.setFontSize(size); }
-function pageNo(pdf, n, total=4) { setTimes(pdf,'normal',11.5); pdf.text(`Pág. ${n} de ${total}`, A4W - M.right, 55, {align:'right'}); }
+function hasVerifiedRemoteSignature() {
+  return Boolean(window.remoteSignatureData && window.remoteAcceptedAt && window.remoteSignatureProtocol);
+}
+function pageNo(pdf, n, total=4) {
+  setTimes(pdf,'normal',11.5);
+  pdf.text(`Pág. ${n} de ${total}`, A4W - M.right, 55, {align:'right'});
+  if(!hasVerifiedRemoteSignature()){
+    setTimes(pdf,'bold',8.6);
+    pdf.setTextColor(176,93,9);
+    pdf.text('CÓPIA PARA CONFERÊNCIA - NÃO ASSINADA', M.left, 55);
+    pdf.setTextColor(0,0,0);
+  }
+}
 function headerTitle(pdf, txt, y, size=13.8) { setTimes(pdf,'bold',size); pdf.text(txt, A4W/2, y, {align:'center'}); }
 
 function addWrapped(pdf, text, x, y, maxW=CONTENT_W, opts={}) {
@@ -227,7 +239,7 @@ function addContractPage5(pdf,d) {
     y = addPara(pdf,'DECLARAÇÃO DE CIÊNCIA: A CONTRATANTE declara estar ciente de que os passeios acima identificados como “TICKET/RESERVA NÃO REEMBOLSÁVEL APÓS EMISSÃO” possuem componente adquirido antecipadamente de terceiro e sujeito às condições específicas de cancelamento descritas neste contrato.',y,{bold:true,size:10.2,lh:12.2,after:14});
   }
 
-  if(d.acceptedAt){
+  if(d.isSigned && d.acceptedAt){
     y = addPara(pdf,`Aceite eletrônico registrado em ${d.acceptedAt}. Protocolo: ${d.signatureProtocol||'—'}.`,y,{size:10.2,lh:12.2,after:14});
     if(d.payloadHash)y = addPara(pdf,`Hash do conteúdo contratual: ${d.payloadHash}.`,y,{size:8.8,lh:10.5,after:10});
   }
@@ -243,7 +255,7 @@ function addContractPage5(pdf,d) {
   pdf.text('Diretor',A4W/2,y,{align:'center'}); y += 42;
 
   setTimes(pdf,'bold',11.8); pdf.text('CONTRATANTE:',M.left,y); y += 8;
-  if(d.signatureData){
+  if(d.isSigned && d.signatureData){
     try{
       pdf.addImage(d.signatureData,'PNG',(A4W-220)/2,y,220,75);
       y += 78;
@@ -256,7 +268,7 @@ function addContractPage5(pdf,d) {
   const clineW = 305, clineX = (A4W - clineW)/2;
   pdf.line(clineX,y,clineX+clineW,y); y += 15;
   setTimes(pdf,'normal',11.2); pdf.text(d.nome,A4W/2,y,{align:'center'}); y+=14;
-  if(!d.signatureData){setTimes(pdf,'normal',9.5);pdf.setTextColor(100);pdf.text('Assinatura eletrônica pendente',A4W/2,y,{align:'center'});pdf.setTextColor(0)}
+  if(!d.isSigned){setTimes(pdf,'normal',9.5);pdf.setTextColor(100);pdf.text('Assinatura eletrônica pendente',A4W/2,y,{align:'center'});pdf.setTextColor(0)}
 }
 
 function formatDateBR(v){
@@ -348,6 +360,7 @@ function collectData() {
   cpf:val('cpf'), nascimento:val('nascimento'), telefone:val('telefone'), email:val('email'),
   endereco:val('endereco'), cep:val('cep'), valor:val('valor'), pagamento:val('pagamento'),
   tours:Array.isArray(window.contractTours)?window.contractTours:[],
+  isSigned:hasVerifiedRemoteSignature(),
   signatureData:window.remoteSignatureData||null,
   acceptedAt:window.remoteAcceptedAt||'',
   signatureProtocol:window.remoteSignatureProtocol||'',
@@ -356,23 +369,32 @@ function collectData() {
 }
 async function gerarPDF() {
   const d = collectData(); if(!d.nome) { alert('Informe o nome completo.'); return; }
+  const requestId = new URLSearchParams(location.search).get('request');
+  if(requestId && !d.isSigned){
+    setStatus('PDF final bloqueado: assinatura ainda não validada.');
+    alert('O PDF assinado só será liberado depois que o aceite, a assinatura e o protocolo forem validados.');
+    return;
+  }
   $('status').textContent = 'Lendo anexos...';
   const compImgs = await renderPdfFile($('comprovante').files[0], 99, true);
   const voucherImgs = await renderPdfFile($('voucher').files[0], 99, false);
-  $('status').textContent = 'Gerando PDF...';
+  $('status').textContent = d.isSigned ? 'Gerando PDF assinado...' : 'Gerando PDF para conferência...';
   const {jsPDF} = window.jspdf;
   const pdf = new jsPDF({orientation:'portrait',unit:'pt',format:'a4',compress:true});
-  pdf.setProperties({title:`Contrato - ${d.nome}`, subject:'Contrato de prestação de serviços', author:'Indômito Tours'});
+  const documentLabel = d.isSigned ? 'Contrato assinado' : 'Contrato para conferência';
+  pdf.setProperties({title:`${documentLabel} - ${d.nome}`, subject:'Contrato de prestação de serviços', author:'Indômito Tours'});
   addContractPage1(pdf,d); addContractPage2(pdf,d); addContractPage3(pdf,d); addContractPage4(pdf,d); addContractPage5(pdf,d); addAttachments(pdf,compImgs,voucherImgs);
-  pdf.save(`Contrato - ${safeName(d.nome)}.pdf`);
-  $('status').textContent = 'Contrato gerado.';
+  const fileLabel = d.isSigned ? 'Contrato assinado' : 'Contrato para conferencia';
+  pdf.save(`${fileLabel} - ${safeName(d.nome)}.pdf`);
+  $('status').textContent = d.isSigned ? 'PDF assinado gerado.' : 'PDF para conferência gerado. Este documento ainda não está assinado.';
 }
 
-
-
-
 function setStatus(msg){ const el=document.getElementById('status'); if(el) el.textContent=msg; }
-window.addEventListener('error', (e)=>{ setStatus('Erro: ' + (e.message || 'falha desconhecida')); });
+window.addEventListener('error', (e)=>{
+  const msg=e.message||'falha desconhecida';
+  if(msg==='Script error.' && /^https?:\/\//.test(e.filename||''))return;
+  setStatus('Erro: ' + msg);
+});
 window.addEventListener('unhandledrejection', (e)=>{ setStatus('Erro: ' + (e.reason && e.reason.message ? e.reason.message : e.reason)); });
 async function gerarPDFSeguro(){
   try {
@@ -497,10 +519,33 @@ window.createRemoteSignatureRequest=async function(){
 window.copyCurrentSignatureLink=async function(){if(!window.currentSignatureLink)return;try{await navigator.clipboard.writeText(window.currentSignatureLink);alert('Link copiado.')}catch(e){prompt('Copie o link:',window.currentSignatureLink)}};
 window.openCurrentSignatureWhatsApp=async function(){if(!window.currentSignatureLink)return;try{if(window.currentSignatureRequestId)await contractSb.from('contract_signature_requests').update({status:'sent'}).eq('id',window.currentSignatureRequestId)}catch(e){}let d=val('telefone').replace(/\D/g,'');if(d&&!d.startsWith('55')&&(d.length===10||d.length===11))d='55'+d;const msg=`Olá, ${val('nome')}! 😊 Seu contrato está pronto para conferência e assinatura eletrônica. Abra o link abaixo, leia o documento e assine pelo próprio celular:\n\n${window.currentSignatureLink}`;window.open(d?`https://wa.me/${d}?text=${encodeURIComponent(msg)}`:`https://wa.me/?text=${encodeURIComponent(msg)}`,'_blank')};
 async function loadSignedRequestFromQuery(){
- const id=new URLSearchParams(location.search).get('request');if(!id||!contractSb)return;
- const{data,error}=await contractSb.from('contract_signature_requests').select('*').eq('id',id).maybeSingle();if(error||!data)return;
- const p=data.payload||{},put=(id,v)=>{const e=document.getElementById(id);if(e&&v!=null)e.value=String(v)};put('nome',p.nome);put('nacionalidade',p.nacionalidade);put('estadoCivil',p.estadoCivil);put('cpf',p.cpf);put('nascimento',p.nascimento);put('telefone',p.telefone);put('email',p.email);put('endereco',p.endereco);put('cep',p.cep);put('valor',p.valor);put('pagamento',p.pagamento);window.contractTours=Array.isArray(p.tours)?p.tours:[];window.contractSaleId=p.saleId||data.sale_id||'';renderContractServices();
- if(data.status==='signed'){window.remoteSignatureData=data.signature_data||null;window.remoteAcceptedAt=data.signed_at?new Date(data.signed_at).toLocaleString('pt-BR'):'';window.remoteSignatureProtocol=data.id;window.remotePayloadHash=data.payload_hash||'';setRemoteState('Contrato assinado eletronicamente. Gere o PDF final para arquivar/enviar.',true);document.getElementById('createSignatureLink').style.display='none'}
+  const id=new URLSearchParams(location.search).get('request');if(!id||!contractSb)return;
+  const pdfButton=document.getElementById('gerar');
+  if(pdfButton){pdfButton.textContent='Validando assinatura...';pdfButton.disabled=true}
+  const{data,error}=await contractSb.from('contract_signature_requests').select('*').eq('id',id).maybeSingle();
+  if(error||!data){
+    setRemoteState('Não foi possível validar esta solicitação de assinatura.');
+    if(pdfButton)pdfButton.textContent='PDF assinado indisponível';
+    return;
+  }
+  const p=data.payload||{},put=(id,v)=>{const e=document.getElementById(id);if(e&&v!=null)e.value=String(v)};put('nome',p.nome);put('nacionalidade',p.nacionalidade);put('estadoCivil',p.estadoCivil);put('cpf',p.cpf);put('nascimento',p.nascimento);put('telefone',p.telefone);put('email',p.email);put('endereco',p.endereco);put('cep',p.cep);put('valor',p.valor);put('pagamento',p.pagamento);window.contractTours=Array.isArray(p.tours)?p.tours:[];window.contractSaleId=p.saleId||data.sale_id||'';renderContractServices();
+  if(data.status==='signed'){
+    window.remoteSignatureData=data.signature_data||null;
+    window.remoteAcceptedAt=data.signed_at?new Date(data.signed_at).toLocaleString('pt-BR'):'';
+    window.remoteSignatureProtocol=data.id||'';
+    window.remotePayloadHash=data.payload_hash||'';
+    document.getElementById('createSignatureLink').style.display='none';
+    if(hasVerifiedRemoteSignature()){
+      setRemoteState('Contrato assinado eletronicamente. Gere o PDF final para arquivar/enviar.',true);
+      if(pdfButton){pdfButton.textContent='Gerar PDF assinado';pdfButton.disabled=false}
+    }else{
+      setRemoteState('Assinatura recebida, mas as evidências estão incompletas. O PDF final permanece bloqueado.');
+      if(pdfButton)pdfButton.textContent='PDF assinado indisponível';
+    }
+  }else{
+    setRemoteState('Assinatura ainda não concluída. O PDF final será liberado após o aceite.');
+    if(pdfButton)pdfButton.textContent='PDF assinado indisponível';
+  }
 }
 window.addEventListener('DOMContentLoaded',()=>{renderContractServices();document.getElementById('createSignatureLink')?.addEventListener('click',createRemoteSignatureRequest);document.getElementById('copySignatureLink')?.addEventListener('click',copyCurrentSignatureLink);document.getElementById('whatsappSignatureLink')?.addEventListener('click',openCurrentSignatureWhatsApp);loadSignedRequestFromQuery()});
 </script>
@@ -537,6 +582,6 @@ window.addEventListener('DOMContentLoaded',()=>{
 });
 </script>
 
-<script src="contrato-flow-v1103.js?v=1103"></script>
+<script src="contrato-flow-v1110.js?v=1110"></script>
 </body>
 </html>

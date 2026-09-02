@@ -1,14 +1,14 @@
 {
   "product": "ISA by Korluz",
-  "version": "11.0.9",
-  "release": "Experiência, impacto e desenvolvimento do vendedor",
-  "basedOn": "11.0.8",
+  "version": "11.0.10",
+  "release": "PDF para conferência e PDF final assinado",
+  "basedOn": "11.0.9",
   "databaseMigrationRequired": false,
   "features": [
-    "Carrossel inicial passa de 3 para 10 imagens, incluindo Atacama, Valparaíso, vinhedos e Andes",
-    "Financeiro ganha painel Seu impacto até aqui com clientes e passageiros atendidos",
-    "Financeiro mostra experiências organizadas e comissão acumulada desde o início",
-    "Novo Insight do dia traz microdicas práticas de vendas, WhatsApp, objeções, NPS e pós-venda",
-    "Insight aparece uma vez por dia por vendedor e permite consultar Outra dica"
+    "Contrato permite gerar PDF para conferência antes de criar ou enviar o link de assinatura",
+    "PDF pré-assinatura recebe marca visível de cópia para conferência não assinada",
+    "PDF final assinado só é liberado após validar assinatura, data do aceite e protocolo",
+    "Arquivos baixados distinguem Contrato para conferencia e Contrato assinado",
+    "Fluxo mantém retorno ao ISA e deixa de mostrar o erro genérico Script error de bibliotecas externas"
   ]
 }
