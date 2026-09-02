@@ -1,41 +1,30 @@
-# ISA by Korluz V10.5 — Painel Administrativo
+# ISA by Korluz
 
-Base: V10.4.
+**Indômito Seller Assistant** — plataforma operacional para vendas de turismo.
 
-## Painel administrativo
-Aparece apenas para usuários com `role = admin`.
+Produção: `https://korluz.github.io/isa/`
 
-Mostra:
-- contas cadastradas;
-- vendedores ativos;
-- vendas registradas;
-- carteira registrada;
-- comissão prevista;
-- passeios de amanhã;
-- contratos pendentes;
-- horários pendentes;
-- última sincronização de cada usuário;
-- vendas, passeios, valores, saldos e comissões de cada vendedor, em modo somente leitura.
+## Fonte de verdade do projeto
 
-O administrador também pode:
-- bloquear/desbloquear outra conta;
-- promover vendedor para administrador;
-- rebaixar outro administrador para vendedor.
+Antes de desenvolver, corrigir ou publicar qualquer mudança, consulte:
 
-Por segurança, o próprio administrador logado não pode bloquear ou rebaixar a própria conta.
+1. [`GUIA_MESTRE_ISA.md`](./GUIA_MESTRE_ISA.md) — arquitetura, fluxos aprovados, regras de negócio, segurança, deploy, checklist e roadmap.
+2. [`VERSION.json`](./VERSION.json) — versão atualmente publicada e notas da release mais recente.
 
-## Conta da sua esposa
-Como já existe uma conta `admin`, o gatilho instalado no Supabase cria novas contas como `seller`.
-Depois do primeiro login/sincronização dela, a conta aparece em `👑 Administração`.
+O sistema está em uso real. Mudanças devem ser incrementais, compatíveis e validadas antes do deploy.
 
-## Supabase
-Nenhum SQL novo é necessário se o setup V10 já foi executado.
-As políticas existentes de `profiles` e `app_state` já permitem leitura administrativa.
+## Estado na atualização deste README
 
-## GitHub
-Se subir um por um:
-1. contrato.html
-2. README.md
-3. VERSION.json
-4. ATACAMA_PRECOS_APLICADOS.json
-5. index.html por último
+- Produção: **V11.0.8**
+- GitHub Pages + Supabase
+- Importação de vouchers antigos e novos
+- Operação de passeios e transfers
+- Central de horários e Validador
+- Contratos com assinatura eletrônica remota
+- Portal do cliente **Indômito • Minha Viagem**
+- Financeiro e Auditoria de comissões
+- PDF e Excel formatados
+- Atualizações automáticas + painel **O que mudou**
+- Administração de contas
+
+Para detalhes e próximos passos, use o **Guia Mestre**.
