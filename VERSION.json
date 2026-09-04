@@ -1,14 +1,15 @@
 {
   "product": "ISA by Korluz",
-  "version": "11.0.10",
-  "release": "PDF para conferência e PDF final assinado",
-  "basedOn": "11.0.9",
+  "version": "11.0.11",
+  "release": "Conferência automática de tickets no Validador",
+  "basedOn": "11.0.10",
   "databaseMigrationRequired": false,
   "features": [
-    "Contrato permite gerar PDF para conferência antes de criar ou enviar o link de assinatura",
-    "PDF pré-assinatura recebe marca visível de cópia para conferência não assinada",
-    "PDF final assinado só é liberado após validar assinatura, data do aceite e protocolo",
-    "Arquivos baixados distinguem Contrato para conferencia e Contrato assinado",
-    "Fluxo mantém retorno ao ISA e deixa de mostrar o erro genérico Script error de bibliotecas externas"
+    "O Validador passa a conferir automaticamente o ticket obrigatório anexado junto com a mensagem da logística",
+    "Data de uso do ticket é comparada com a data do passeio e divergências exibem NÃO ENVIAR",
+    "Horário impresso no ticket, quando identificado, é comparado com o horário da mensagem",
+    "Leitura aceita PDF com texto e usa OCR local como apoio para imagens ou PDFs digitalizados",
+    "Tickets continuam privados no Supabase Storage e são lidos somente pela sessão autenticada",
+    "A mudança não exige migração de banco e preserva o comportamento dos passeios sem ticket"
   ]
 }

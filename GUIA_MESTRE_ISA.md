@@ -2,7 +2,7 @@
 
 > **Documento de continuidade e fonte de verdade do projeto**  
 > Atualizado em **02/09/2026**  
-> Versão em produção no momento desta edição: **ISA V11.0.10**
+> Versão em produção no momento desta edição: **ISA V11.0.11**
 
 ---
 
@@ -309,6 +309,18 @@ Deve validar, quando disponível:
 - passageiros;
 - hotel/coleta;
 - demais dados essenciais.
+
+Para passeios com **ticket obrigatório**, a V11.0.11 acrescenta a conferência do arquivo anexado:
+
+- lê PDFs com camada de texto;
+- usa OCR no navegador como apoio para imagens ou PDFs digitalizados;
+- compara a data de uso do ticket com a data do passeio;
+- compara o horário do ticket com o horário da mensagem quando houver horário identificável;
+- diferencia data de uso de datas administrativas, como emissão ou compra;
+- mostra **NÃO ENVIAR** quando houver divergência ou quando o ticket obrigatório não puder ser conferido;
+- mantém os arquivos no bucket privado, acessíveis pela sessão autenticada já existente.
+
+Passeios sem ticket mantêm o fluxo anterior. A atualização não cria uma segunda fonte de horário nem exige migração de banco.
 
 Regras importantes já corrigidas:
 
@@ -649,6 +661,7 @@ Exemplo da sequência recente:
 - 11.0.8 — comissão de 5% nos transfers
 - 11.0.9 — experiência visual, impacto e Insight do dia
 - 11.0.10 — PDF para conferência e PDF final assinado
+- 11.0.11 — conferência automática de data e horário dos tickets no Validador
 
 ---
 
@@ -735,7 +748,7 @@ Após mudança relevante, testar pelo menos:
 
 ## 22. Próximo marco estratégico
 
-Com a **V11.0.10 publicada**, o próximo marco é consolidar a transição do ISA para o **Business Assistant**, preservando a operação de vendas já validada.
+Com a **V11.0.11 publicada**, o próximo marco é consolidar a transição do ISA para o **Business Assistant**, preservando a operação de vendas já validada.
 
 Prioridades iniciais:
 
@@ -775,7 +788,10 @@ Depois disso, a conversa pode seguir diretamente para a próxima demanda.
 
 ## 25. Estado final desta edição
 
-**Produção confirmada:** V11.0.10  
-**Última melhoria publicada:** PDF para conferência antes da assinatura e PDF final liberado após validação das evidências da assinatura eletrônica.  
-**Próximo marco:** handoff do ISA para o Business Assistant e definição do primeiro recorte do BA Logistics.  
+**Produção confirmada:** V11.0.11
+
+**Última melhoria publicada:** conferência automática da data e do horário de tickets obrigatórios junto com a mensagem da logística.
+
+**Próximo marco:** handoff do ISA para o Business Assistant e definição do primeiro recorte do BA Logistics.
+
 **Estratégia:** evolução incremental, validação antes de deploy e manutenção orientada por uso real.

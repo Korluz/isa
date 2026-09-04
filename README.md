@@ -15,11 +15,12 @@ O sistema está em uso real. Mudanças devem ser incrementais, compatíveis e va
 
 ## Estado na atualização deste README
 
-- Produção: **V11.0.10**
+- Produção: **V11.0.11**
 - GitHub Pages + Supabase
 - Importação de vouchers antigos e novos
 - Operação de passeios e transfers
 - Central de horários e Validador
+- Conferência de data e horário dos tickets obrigatórios no Validador
 - Contratos com PDF para conferência e PDF final com assinatura eletrônica remota
 - Portal do cliente **Indômito • Minha Viagem**
 - Financeiro e Auditoria de comissões
