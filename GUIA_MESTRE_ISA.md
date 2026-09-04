@@ -1,8 +1,8 @@
 # Guia Mestre do ISA
 
 > **Documento de continuidade e fonte de verdade do projeto**  
-> Atualizado em **02/09/2026**  
-> Versão em produção no momento desta edição: **ISA V11.0.11**
+> Atualizado em **04/09/2026**
+> Versão em produção no momento desta edição: **ISA V11.0.12**
 
 ---
 
@@ -93,6 +93,7 @@ O painel de Administração permite:
 - bloquear/desbloquear conta;
 - promover vendedor a administrador;
 - rebaixar outro administrador para vendedor;
+- definir uma nova senha para outro usuário;
 - resetar uma conta operacionalmente;
 - excluir uma conta completamente.
 
@@ -100,8 +101,19 @@ Proteções:
 
 - administrador não deve conseguir bloquear a própria conta;
 - administrador não deve conseguir se rebaixar acidentalmente;
+- administrador nunca visualiza a senha atual de qualquer usuário;
+- troca administrativa de senha deve ocorrer somente no servidor, sem chave administrativa no frontend;
 - administrador não deve conseguir resetar/excluir a própria conta pelos botões comuns;
 - exclusão exige confirmação forte.
+
+### Comportamento de autenticação — V11.0.12
+
+- login e cadastro bloqueiam novos cliques enquanto a requisição está em andamento;
+- erros conhecidos do Supabase são traduzidos para orientações claras em português;
+- ao atingir o limite de e-mails do provedor, o cadastro entra em espera local por uma hora para evitar novas tentativas inúteis;
+- campos de senha permitem mostrar ou ocultar o conteúdo digitado;
+- a troca administrativa define somente uma senha nova e não confirma automaticamente um e-mail ainda pendente;
+- um vendedor não pode alterar os próprios campos de papel ou acesso para se promover, desbloquear ou mudar de status.
 
 ### Resetar x excluir
 
@@ -662,6 +674,7 @@ Exemplo da sequência recente:
 - 11.0.9 — experiência visual, impacto e Insight do dia
 - 11.0.10 — PDF para conferência e PDF final assinado
 - 11.0.11 — conferência automática de data e horário dos tickets no Validador
+- 11.0.12 — autenticação protegida e nova senha definida com segurança pelo administrador
 
 ---
 
@@ -688,6 +701,10 @@ Após mudança relevante, testar pelo menos:
 - entrar;
 - sessão persistir;
 - bloqueio funcionar;
+- cliques repetidos não criarem requisições duplicadas;
+- erros de credencial e confirmação aparecerem em português;
+- administrador conseguir definir uma nova senha para outra conta de teste;
+- vendedor não conseguir alterar o próprio papel ou status;
 - seller não ver Administração.
 
 ### Voucher
@@ -748,7 +765,7 @@ Após mudança relevante, testar pelo menos:
 
 ## 22. Próximo marco estratégico
 
-Com a **V11.0.11 publicada**, o próximo marco é consolidar a transição do ISA para o **Business Assistant**, preservando a operação de vendas já validada.
+Com a **V11.0.12 publicada**, o próximo marco é consolidar a transição do ISA para o **Business Assistant**, preservando a operação de vendas já validada.
 
 Prioridades iniciais:
 
@@ -788,9 +805,9 @@ Depois disso, a conversa pode seguir diretamente para a próxima demanda.
 
 ## 25. Estado final desta edição
 
-**Produção confirmada:** V11.0.11
+**Produção confirmada:** V11.0.12
 
-**Última melhoria publicada:** conferência automática da data e do horário de tickets obrigatórios junto com a mensagem da logística.
+**Última melhoria publicada:** proteção do fluxo de autenticação e definição segura de nova senha pelo administrador.
 
 **Próximo marco:** handoff do ISA para o Business Assistant e definição do primeiro recorte do BA Logistics.
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>ISA by Korluz — Cloud V11.0.11</title>
+<title>ISA by Korluz — Cloud V11.0.12</title>
 <style>
 :root{
  --navy:#0b2136;--navy2:#153752;--gold:#dfa82f;--bg:#f4f7fb;--card:#fff;
@@ -410,8 +410,8 @@ body{font-family:Arial;padding:28px;color:#172033}h1{margin-bottom:3px}p{color:#
 <link rel="stylesheet" href="mobile-v1070.css?v=1070">
 </head>
 <body>
-<div id="appVersionBadge" style="position:fixed;bottom:4px;right:6px;z-index:9999;font-size:10px;color:#999;background:rgba(255,255,255,.85);padding:2px 6px;border-radius:6px;pointer-events:none;font-family:monospace">v11.0.11</div>
-<script>window.addEventListener('error',function(e){const b=document.getElementById('appVersionBadge');if(b)b.textContent='v11.0.11 ⚠ erro: '+(e.message||'').slice(0,60);b&&(b.style.color='red')})</script>
+<div id="appVersionBadge" style="position:fixed;bottom:4px;right:6px;z-index:9999;font-size:10px;color:#999;background:rgba(255,255,255,.85);padding:2px 6px;border-radius:6px;pointer-events:none;font-family:monospace">v11.0.12</div>
+<script>window.addEventListener('error',function(e){const b=document.getElementById('appVersionBadge');if(b)b.textContent='v11.0.12 ⚠ erro: '+(e.message||'').slice(0,60);b&&(b.style.color='red')})</script>
 <!-- ISA V10.2.1 Recovery: base estável V10.1.1 -->
 
 <div id="cloudConfig" class="cloud-config">
@@ -652,7 +652,7 @@ body{font-family:Arial;padding:28px;color:#172033}h1{margin-bottom:3px}p{color:#
  </div>
  <div class="card" style="margin-top:16px">
   <div class="cardhead"><div><h2>Como funciona a administração</h2><div class="meta">Separação de dados preservada.</div></div></div>
-  <div class="admin-note">O administrador consulta os estados individuais no Supabase sem trocar de login e sem substituir o próprio banco local. Pode visualizar a operação, promover/rebaixar outras contas entre Vendedor e Administrador e bloquear/desbloquear acesso. Esta versão não exclui contas de autenticação nem edita diretamente vendas de outra pessoa.</div>
+  <div class="admin-note">O administrador consulta os estados individuais no Supabase sem trocar de login e sem substituir o próprio banco local. Pode visualizar a operação, promover/rebaixar outras contas, bloquear/desbloquear, resetar ou excluir contas e definir uma nova senha para outro usuário. A senha atual nunca é exibida, e as vendas de outra pessoa permanecem somente para leitura.</div>
  </div>
 </section>
 
@@ -2564,5 +2564,6 @@ renderAll();
 <script src="impact-v1109.js?v=1109"></script>
 <script src="insights-v1109.js?v=1109"></script>
 <script src="ticket-validator-v11011.js?v=11011"></script>
+<script src="auth-admin-hotfix-v11012.js?v=11012"></script>
 </body>
 </html>

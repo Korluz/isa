@@ -1,15 +1,15 @@
 {
   "product": "ISA by Korluz",
-  "version": "11.0.11",
-  "release": "Conferência automática de tickets no Validador",
-  "basedOn": "11.0.10",
-  "databaseMigrationRequired": false,
+  "version": "11.0.12",
+  "release": "Autenticação protegida e senha gerenciada pelo administrador",
+  "basedOn": "11.0.11",
+  "databaseMigrationRequired": true,
   "features": [
-    "O Validador passa a conferir automaticamente o ticket obrigatório anexado junto com a mensagem da logística",
-    "Data de uso do ticket é comparada com a data do passeio e divergências exibem NÃO ENVIAR",
-    "Horário impresso no ticket, quando identificado, é comparado com o horário da mensagem",
-    "Leitura aceita PDF com texto e usa OCR local como apoio para imagens ou PDFs digitalizados",
-    "Tickets continuam privados no Supabase Storage e são lidos somente pela sessão autenticada",
-    "A mudança não exige migração de banco e preserva o comportamento dos passeios sem ticket"
+    "Cadastro e login bloqueiam cliques repetidos enquanto a solicitação está em andamento",
+    "Erros de autenticação passam a ser explicados em português com orientação objetiva",
+    "Campos de senha recebem controle para mostrar ou ocultar o conteúdo digitado",
+    "Um administrador ativo pode definir uma nova senha para outro usuário sem visualizar a senha atual",
+    "A troca de senha ocorre em função segura no Supabase, sem chave administrativa no navegador",
+    "Perfis ficam protegidos contra autopromoção, autobloqueio ou autorrebaixamento indevido"
   ]
 }
