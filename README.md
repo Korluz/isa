@@ -15,7 +15,7 @@ O sistema está em uso real. Mudanças devem ser incrementais, compatíveis e va
 
 ## Estado na atualização deste README
 
-- Produção: **V11.0.12**
+- Produção: **V11.0.13**
 - GitHub Pages + Supabase
 - Importação de vouchers antigos e novos
 - Operação de passeios e transfers
@@ -27,6 +27,6 @@ O sistema está em uso real. Mudanças devem ser incrementais, compatíveis e va
 - PDF e Excel formatados
 - Atualizações automáticas + painel **O que mudou**
 - Administração de contas, incluindo definição segura de nova senha para usuários
-- Autenticação protegida contra cliques duplicados, com mensagens de erro claras
+- Autenticação e recuperação de senha protegidas contra cliques duplicados, com mensagens de erro claras
 
 Para detalhes e próximos passos, use o **Guia Mestre**.

@@ -1,15 +1,15 @@
 {
   "product": "ISA by Korluz",
-  "version": "11.0.12",
-  "release": "Autenticação protegida e senha gerenciada pelo administrador",
-  "basedOn": "11.0.11",
-  "databaseMigrationRequired": true,
+  "version": "11.0.13",
+  "release": "Recuperação de senha protegida contra reenvios",
+  "basedOn": "11.0.12",
+  "databaseMigrationRequired": false,
   "features": [
-    "Cadastro e login bloqueiam cliques repetidos enquanto a solicitação está em andamento",
-    "Erros de autenticação passam a ser explicados em português com orientação objetiva",
-    "Campos de senha recebem controle para mostrar ou ocultar o conteúdo digitado",
-    "Um administrador ativo pode definir uma nova senha para outro usuário sem visualizar a senha atual",
-    "A troca de senha ocorre em função segura no Supabase, sem chave administrativa no navegador",
-    "Perfis ficam protegidos contra autopromoção, autobloqueio ou autorrebaixamento indevido"
+    "O botão Esqueci minha senha envia somente uma solicitação mesmo quando recebe vários cliques",
+    "O botão fica bloqueado imediatamente durante o envio e confirma quando o link foi solicitado",
+    "Após um envio bem-sucedido, o mesmo navegador aguarda uma hora antes de permitir outro link",
+    "Mesmo quando a tentativa falha, novas requisições respeitam um intervalo mínimo de segurança",
+    "Erros de limite, e-mail inválido e configuração de redirecionamento recebem mensagens claras em português",
+    "A atualização não exige mudança no banco e preserva os fluxos de login, cadastro e administração da V11.0.12"
   ]
 }

@@ -2,7 +2,7 @@
 
 > **Documento de continuidade e fonte de verdade do projeto**  
 > Atualizado em **04/09/2026**
-> Versão em produção no momento desta edição: **ISA V11.0.12**
+> Versão em produção no momento desta edição: **ISA V11.0.13**
 
 ---
 
@@ -106,11 +106,12 @@ Proteções:
 - administrador não deve conseguir resetar/excluir a própria conta pelos botões comuns;
 - exclusão exige confirmação forte.
 
-### Comportamento de autenticação — V11.0.12
+### Comportamento de autenticação — V11.0.12–V11.0.13
 
 - login e cadastro bloqueiam novos cliques enquanto a requisição está em andamento;
 - erros conhecidos do Supabase são traduzidos para orientações claras em português;
 - ao atingir o limite de e-mails do provedor, o cadastro entra em espera local por uma hora para evitar novas tentativas inúteis;
+- “Esqueci minha senha” aceita somente uma requisição por vez, impõe intervalo mínimo após falhas e, após o envio, mantém espera local de uma hora mesmo se a página for recarregada;
 - campos de senha permitem mostrar ou ocultar o conteúdo digitado;
 - a troca administrativa define somente uma senha nova e não confirma automaticamente um e-mail ainda pendente;
 - um vendedor não pode alterar os próprios campos de papel ou acesso para se promover, desbloquear ou mudar de status.
@@ -675,6 +676,7 @@ Exemplo da sequência recente:
 - 11.0.10 — PDF para conferência e PDF final assinado
 - 11.0.11 — conferência automática de data e horário dos tickets no Validador
 - 11.0.12 — autenticação protegida e nova senha definida com segurança pelo administrador
+- 11.0.13 — recuperação de senha protegida contra cliques repetidos e reenvios
 
 ---
 
@@ -702,6 +704,7 @@ Após mudança relevante, testar pelo menos:
 - sessão persistir;
 - bloqueio funcionar;
 - cliques repetidos não criarem requisições duplicadas;
+- cliques repetidos em “Esqueci minha senha” gerarem somente um pedido de recuperação;
 - erros de credencial e confirmação aparecerem em português;
 - administrador conseguir definir uma nova senha para outra conta de teste;
 - vendedor não conseguir alterar o próprio papel ou status;
@@ -765,7 +768,7 @@ Após mudança relevante, testar pelo menos:
 
 ## 22. Próximo marco estratégico
 
-Com a **V11.0.12 publicada**, o próximo marco é consolidar a transição do ISA para o **Business Assistant**, preservando a operação de vendas já validada.
+Com a **V11.0.13 publicada**, o próximo marco é consolidar a transição do ISA para o **Business Assistant**, preservando a operação de vendas já validada.
 
 Prioridades iniciais:
 
@@ -805,9 +808,9 @@ Depois disso, a conversa pode seguir diretamente para a próxima demanda.
 
 ## 25. Estado final desta edição
 
-**Produção confirmada:** V11.0.12
+**Produção confirmada:** V11.0.13
 
-**Última melhoria publicada:** proteção do fluxo de autenticação e definição segura de nova senha pelo administrador.
+**Última melhoria publicada:** proteção da recuperação de senha contra cliques repetidos e reenvios que consumam a cota de e-mails.
 
 **Próximo marco:** handoff do ISA para o Business Assistant e definição do primeiro recorte do BA Logistics.
 
