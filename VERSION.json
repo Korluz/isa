@@ -1,15 +1,15 @@
 {
   "product": "ISA by Korluz",
-  "version": "11.0.15",
-  "release": "Troca administrativa de senha corrigida",
-  "basedOn": "11.0.14",
+  "version": "11.1.0",
+  "release": "Central de Inteligência e Relatórios Gerenciais",
+  "basedOn": "11.0.15",
   "databaseMigrationRequired": false,
   "features": [
-    "A Edge Function valida administrador e conta de destino usando a sessão autenticada e as políticas RLS",
-    "A chave de serviço fica restrita à alteração de senha no Supabase Auth",
-    "A correção elimina o erro 403 que impedia a função antes de chegar à troca de senha",
-    "O administrador continua sem acesso à senha atual do usuário",
-    "A operação continua sem confirmar automaticamente o e-mail da conta",
-    "A atualização não exige mudança no banco de dados"
+    "Administradores entram diretamente em uma visão gerencial sem alterar a experiência dos vendedores",
+    "KPIs de faturamento, recebimentos, saldo, passeios, cancelamentos, ticket médio e comissão por período",
+    "Rankings de passeios por faturamento, volume e taxa de cancelamento, além do desempenho da equipe",
+    "Relatórios gerenciais filtráveis com exportação em PDF e Excel",
+    "Novos cancelamentos passam a registrar um motivo estruturado para análise",
+    "A leitura usa os estados já autorizados pelo Supabase e não exige migração de banco"
   ]
 }

@@ -15,7 +15,7 @@ O sistema está em uso real. Mudanças devem ser incrementais, compatíveis e va
 
 ## Estado na atualização deste README
 
-- Produção: **V11.0.15**
+- Produção: **V11.1.0**
 - GitHub Pages + Supabase
 - Importação de vouchers antigos e novos
 - Operação de passeios e transfers
@@ -29,5 +29,8 @@ O sistema está em uso real. Mudanças devem ser incrementais, compatíveis e va
 - Administração de contas, incluindo definição segura e funcional de nova senha para usuários
 - Autenticação e recuperação de senha protegidas contra cliques duplicados, com mensagens de erro claras
 - Menu lateral sem sobreposição em notebooks e desktops com pouca altura
+- Central de Inteligência administrativa com KPIs, rankings, filtros e comparação entre períodos
+- Relatórios gerenciais em PDF e Excel, incluindo desempenho de passeios, cancelamentos, vendas e vendedores
+- Motivos de cancelamento estruturados para alimentar as análises futuras
 
 Para detalhes e próximos passos, use o **Guia Mestre**.

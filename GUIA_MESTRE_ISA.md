@@ -2,7 +2,7 @@
 
 > **Documento de continuidade e fonte de verdade do projeto**  
 > Atualizado em **05/09/2026**
-> Versão em produção no momento desta edição: **ISA V11.0.15**
+> Versão em produção no momento desta edição: **ISA V11.1.0**
 
 ---
 
@@ -88,6 +88,12 @@ Papéis existentes:
 
 O painel de Administração permite:
 
+- abrir diretamente uma visão gerencial no acesso do administrador;
+- filtrar indicadores por período, vendedor, passeio e situação;
+- acompanhar faturamento, recebimentos, saldo, volume, cancelamentos, ticket médio e comissão;
+- comparar automaticamente o período selecionado com o período anterior equivalente;
+- consultar rankings de passeios e desempenho da equipe;
+- gerar relatórios gerenciais em PDF e Excel;
 - visualizar contas e atividade operacional;
 - selecionar vendedor e consultar seu estado de forma administrativa;
 - bloquear/desbloquear conta;
@@ -260,6 +266,19 @@ Na Auditoria, como a regra não é por passageiro, as colunas de comissão ADT/C
 ## 8. Cancelamento e reativação
 
 Um passeio pode ser marcado como cancelado nos alertas/ficha.
+
+Desde a V11.1.0, todo **novo cancelamento** deve registrar um motivo estruturado. As opções iniciais são:
+
+- desistência do cliente;
+- falta de pagamento;
+- condições climáticas;
+- cancelado pelo operador;
+- erro de cadastro;
+- mudança de data;
+- duplicidade;
+- outro, com descrição obrigatória.
+
+Cancelamentos históricos sem motivo continuam preservados e aparecem nos relatórios como **“Não informado (registro anterior)”**. A atualização não deve inventar motivos retroativamente.
 
 Se marcado por engano, pode ser reativado na ficha da venda alterando a situação para **Ativo** e salvando.
 
@@ -509,6 +528,48 @@ Deve conter:
 - total correto;
 - identificação de cancelados.
 
+### Central de Inteligência e Relatórios Gerenciais — V11.1.0
+
+A área Administração possui uma camada gerencial somente de leitura sobre os estados já autorizados pelo Supabase. Ela não altera a separação dos dados por vendedor e não usa chave administrativa no frontend.
+
+Filtros disponíveis:
+
+- data inicial e final;
+- vendedor;
+- passeio;
+- situação ativa/cancelada.
+
+KPIs iniciais:
+
+- faturamento efetivo;
+- valor recebido;
+- saldo a receber;
+- vendas;
+- passeios ocorridos, definidos como serviços cuja data já chegou e que não estão cancelados;
+- passeios futuros;
+- cancelamentos e taxa de cancelamento;
+- faturamento perdido em cancelamentos;
+- ticket médio por venda ativa;
+- comissão prevista.
+
+Regras de leitura:
+
+- o período considera a data de cada passeio;
+- o faturamento por produto usa o preço individual do serviço, evitando duplicar o total de pacotes com vários passeios;
+- passeios cancelados ficam fora do faturamento efetivo e permanecem no histórico como faturamento perdido;
+- “mais cancelado” deve sempre mostrar quantidade e taxa proporcional;
+- “menor faturamento” deve ser lido junto com o volume vendido;
+- quando uma venda possui vários passeios, o valor recebido é distribuído proporcionalmente ao preço de cada serviço para fins gerenciais.
+
+Relatórios iniciais:
+
+- desempenho dos passeios;
+- cancelamentos e motivos;
+- vendas e recebimentos;
+- desempenho dos vendedores.
+
+Todos respeitam os filtros da Central de Inteligência e podem ser gerados em PDF ou Excel real `.xlsx`.
+
 ---
 
 ## 15. Atualizações automáticas e “O que mudou”
@@ -680,6 +741,7 @@ Exemplo da sequência recente:
 - 11.0.13 — recuperação de senha protegida contra cliques repetidos e reenvios
 - 11.0.14 — correção da sobreposição no menu lateral de desktops com pouca altura
 - 11.0.15 — correção da autorização interna na troca administrativa de senha
+- 11.1.0 — Central de Inteligência, KPIs, rankings, relatórios gerenciais e motivos de cancelamento
 
 ---
 
@@ -726,6 +788,7 @@ Após mudança relevante, testar pelo menos:
 - abrir ficha;
 - editar;
 - cancelar;
+- exigir motivo estruturado em todo novo cancelamento;
 - reativar;
 - salvar/sincronizar.
 
@@ -745,6 +808,11 @@ Após mudança relevante, testar pelo menos:
 - Auditoria na tela;
 - PDF com linhas;
 - Excel `.xlsx` formatado.
+- Central de Inteligência restrita ao administrador;
+- filtros por período, vendedor, passeio e situação;
+- cancelados fora do faturamento efetivo e dentro do histórico;
+- quantidade e taxa proporcional nos rankings de cancelamento;
+- relatórios de passeios, cancelamentos, vendas e vendedores em PDF e Excel.
 
 ### Contrato
 - abrir preenchido;
@@ -771,17 +839,17 @@ Após mudança relevante, testar pelo menos:
 
 ## 22. Próximo marco estratégico
 
-Com a **V11.0.15 publicada**, o próximo marco é consolidar a transição do ISA para o **Business Assistant**, preservando a operação de vendas já validada.
+Com a **V11.1.0 publicada**, o próximo marco do ISA é validar a Central de Inteligência com o uso real e consolidar a qualidade dos dados que alimentarão decisões gerenciais.
 
 Prioridades iniciais:
 
-1. mapear as capacidades do ISA que serão mantidas como domínio de vendas;
-2. definir a arquitetura modular do Business Assistant;
-3. iniciar o módulo **BA Logistics**, sem duplicar cadastros nem criar fontes de verdade concorrentes;
-4. manter compatibilidade com os fluxos em produção enquanto a nova camada evolui;
-5. registrar cada decisão relevante no Guia Mestre e no `VERSION.json`.
+1. conferir, com dados reais, se os conceitos de faturamento, passeio ocorrido e taxa de cancelamento correspondem à leitura da gestão;
+2. começar a registrar motivos de cancelamento de forma consistente;
+3. avaliar metas, margem/custo e comparações adicionais somente depois da validação dos indicadores iniciais;
+4. planejar a migração gradual dos relatórios para tabelas normalizadas quando volume e histórico justificarem;
+5. manter compatibilidade com os fluxos atuais e registrar cada decisão relevante neste guia e no `VERSION.json`.
 
-O ISA continua sendo a implementação operacional de vendas; o Business Assistant é a plataforma-mãe em evolução.
+O ISA continua sendo a implementação operacional de vendas em produção. A evolução da plataforma-mãe Fariom permanece tratada separadamente, sem misturar mudanças estruturais neste fluxo de manutenção online.
 
 ---
 
@@ -811,10 +879,10 @@ Depois disso, a conversa pode seguir diretamente para a próxima demanda.
 
 ## 25. Estado final desta edição
 
-**Produção confirmada:** V11.0.15
+**Produção confirmada:** V11.1.0
 
-**Última melhoria publicada:** troca administrativa de senha corrigida com validação de perfis pela sessão do administrador e chave de serviço restrita ao Supabase Auth.
+**Última melhoria publicada:** Central de Inteligência administrativa com KPIs, rankings, comparação de períodos, relatórios em PDF/Excel e coleta estruturada dos motivos de cancelamento.
 
-**Próximo marco:** handoff do ISA para o Business Assistant e definição do primeiro recorte do BA Logistics.
+**Próximo marco:** validar os indicadores com dados reais e evoluir a qualidade analítica sem interromper a operação atual.
 
 **Estratégia:** evolução incremental, validação antes de deploy e manutenção orientada por uso real.
