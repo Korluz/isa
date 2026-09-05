@@ -2,7 +2,7 @@
 
 > **Documento de continuidade e fonte de verdade do projeto**  
 > Atualizado em **05/09/2026**
-> Versão em produção no momento desta edição: **ISA V11.0.14**
+> Versão em produção no momento desta edição: **ISA V11.0.15**
 
 ---
 
@@ -106,7 +106,7 @@ Proteções:
 - administrador não deve conseguir resetar/excluir a própria conta pelos botões comuns;
 - exclusão exige confirmação forte.
 
-### Comportamento de autenticação — V11.0.12–V11.0.13
+### Comportamento de autenticação — V11.0.12–V11.0.15
 
 - login e cadastro bloqueiam novos cliques enquanto a requisição está em andamento;
 - erros conhecidos do Supabase são traduzidos para orientações claras em português;
@@ -114,6 +114,7 @@ Proteções:
 - “Esqueci minha senha” aceita somente uma requisição por vez, impõe intervalo mínimo após falhas e, após o envio, mantém espera local de uma hora mesmo se a página for recarregada;
 - campos de senha permitem mostrar ou ocultar o conteúdo digitado;
 - a troca administrativa define somente uma senha nova e não confirma automaticamente um e-mail ainda pendente;
+- a Edge Function consulta os perfis no contexto do administrador autenticado e reserva a chave de serviço somente para a atualização no Auth;
 - um vendedor não pode alterar os próprios campos de papel ou acesso para se promover, desbloquear ou mudar de status.
 
 ### Resetar x excluir
@@ -678,6 +679,7 @@ Exemplo da sequência recente:
 - 11.0.12 — autenticação protegida e nova senha definida com segurança pelo administrador
 - 11.0.13 — recuperação de senha protegida contra cliques repetidos e reenvios
 - 11.0.14 — correção da sobreposição no menu lateral de desktops com pouca altura
+- 11.0.15 — correção da autorização interna na troca administrativa de senha
 
 ---
 
@@ -769,7 +771,7 @@ Após mudança relevante, testar pelo menos:
 
 ## 22. Próximo marco estratégico
 
-Com a **V11.0.14 publicada**, o próximo marco é consolidar a transição do ISA para o **Business Assistant**, preservando a operação de vendas já validada.
+Com a **V11.0.15 publicada**, o próximo marco é consolidar a transição do ISA para o **Business Assistant**, preservando a operação de vendas já validada.
 
 Prioridades iniciais:
 
@@ -809,9 +811,9 @@ Depois disso, a conversa pode seguir diretamente para a próxima demanda.
 
 ## 25. Estado final desta edição
 
-**Produção confirmada:** V11.0.14
+**Produção confirmada:** V11.0.15
 
-**Última melhoria publicada:** barra lateral desktop adaptada para notebooks com pouca altura, sem sobreposição entre menu e dados do usuário.
+**Última melhoria publicada:** troca administrativa de senha corrigida com validação de perfis pela sessão do administrador e chave de serviço restrita ao Supabase Auth.
 
 **Próximo marco:** handoff do ISA para o Business Assistant e definição do primeiro recorte do BA Logistics.
 

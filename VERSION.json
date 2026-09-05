@@ -1,15 +1,15 @@
 {
   "product": "ISA by Korluz",
-  "version": "11.0.14",
-  "release": "Menu lateral responsivo em desktops baixos",
-  "basedOn": "11.0.13",
+  "version": "11.0.15",
+  "release": "Troca administrativa de senha corrigida",
+  "basedOn": "11.0.14",
   "databaseMigrationRequired": false,
   "features": [
-    "O menu e o rodapé da barra lateral deixam de ocupar a mesma região em telas desktop com pouca altura",
-    "Quando necessário, somente a lista de opções do menu recebe rolagem",
-    "Os atalhos ficam mais compactos em notebooks com altura de até 820 pixels",
-    "Dados do usuário, sincronização e botão de saída permanecem legíveis no rodapé",
-    "O comportamento mobile permanece inalterado",
-    "A atualização é apenas visual e não exige mudança no banco"
+    "A Edge Function valida administrador e conta de destino usando a sessão autenticada e as políticas RLS",
+    "A chave de serviço fica restrita à alteração de senha no Supabase Auth",
+    "A correção elimina o erro 403 que impedia a função antes de chegar à troca de senha",
+    "O administrador continua sem acesso à senha atual do usuário",
+    "A operação continua sem confirmar automaticamente o e-mail da conta",
+    "A atualização não exige mudança no banco de dados"
   ]
 }

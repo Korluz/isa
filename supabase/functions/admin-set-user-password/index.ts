@@ -44,18 +44,22 @@ Deno.serve(async (request) => {
       global: { headers: { Authorization: authorization } },
       auth: { persistSession: false, autoRefreshToken: false }
     });
-    const adminClient = createClient(supabaseUrl, serviceRoleKey, {
+    const authAdminClient = createClient(supabaseUrl, serviceRoleKey, {
       auth: { persistSession: false, autoRefreshToken: false }
     });
 
     const result = await processPasswordChange({ authorization, body }, {
       async getCaller() {
-        const { data, error } = await callerClient.auth.getUser();
+        const token = authorization.replace(/^Bearer\s+/i, '');
+        const { data, error } = await callerClient.auth.getUser(token);
         if (error) return null;
         return data.user;
       },
       async getProfile(userId) {
-        const { data, error } = await adminClient
+        // Perfis são validados no contexto do administrador autenticado.
+        // Assim, a RLS continua sendo a barreira de autorização e a chave de
+        // serviço fica restrita à única operação que realmente a exige: Auth.
+        const { data, error } = await callerClient
           .from('profiles')
           .select('id,full_name,role,active,status')
           .eq('id', userId)
@@ -64,7 +68,7 @@ Deno.serve(async (request) => {
         return data;
       },
       async updatePassword(userId, password) {
-        const { data, error } = await adminClient.auth.admin.updateUserById(userId, { password });
+        const { data, error } = await authAdminClient.auth.admin.updateUserById(userId, { password });
         if (error) throw error;
         return data.user;
       },

@@ -15,7 +15,7 @@ O sistema está em uso real. Mudanças devem ser incrementais, compatíveis e va
 
 ## Estado na atualização deste README
 
-- Produção: **V11.0.14**
+- Produção: **V11.0.15**
 - GitHub Pages + Supabase
 - Importação de vouchers antigos e novos
 - Operação de passeios e transfers
@@ -26,7 +26,7 @@ O sistema está em uso real. Mudanças devem ser incrementais, compatíveis e va
 - Financeiro e Auditoria de comissões
 - PDF e Excel formatados
 - Atualizações automáticas + painel **O que mudou**
-- Administração de contas, incluindo definição segura de nova senha para usuários
+- Administração de contas, incluindo definição segura e funcional de nova senha para usuários
 - Autenticação e recuperação de senha protegidas contra cliques duplicados, com mensagens de erro claras
 - Menu lateral sem sobreposição em notebooks e desktops com pouca altura
 
