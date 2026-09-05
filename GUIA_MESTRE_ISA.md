@@ -2,7 +2,7 @@
 
 > **Documento de continuidade e fonte de verdade do projeto**  
 > Atualizado em **05/09/2026**
-> Versão em produção no momento desta edição: **ISA V11.1.1**
+> Versão em produção no momento desta edição: **ISA V11.1.2**
 
 ---
 
@@ -750,6 +750,7 @@ Exemplo da sequência recente:
 - 11.0.15 — correção da autorização interna na troca administrativa de senha
 - 11.1.0 — Central de Inteligência, KPIs, rankings, relatórios gerenciais e motivos de cancelamento
 - 11.1.1 — múltiplos administradores com proteção integral da conta do administrador proprietário
+- 11.1.2 — correção semântica do indicador de comissão prevista: `R$` no cartão e `%` apenas na comparação entre períodos
 
 ---
 
@@ -847,7 +848,7 @@ Após mudança relevante, testar pelo menos:
 
 ## 22. Próximo marco estratégico
 
-Com a **V11.1.1 publicada**, o próximo marco do ISA é validar a Central de Inteligência com o uso real e consolidar a qualidade dos dados que alimentarão decisões gerenciais.
+Com a **V11.1.2 publicada**, o próximo marco do ISA é validar a Central de Inteligência com o uso real e consolidar a qualidade dos dados que alimentarão decisões gerenciais.
 
 Prioridades iniciais:
 
@@ -887,9 +888,9 @@ Depois disso, a conversa pode seguir diretamente para a próxima demanda.
 
 ## 25. Estado final desta edição
 
-**Produção confirmada:** V11.1.1
+**Produção confirmada:** V11.1.2
 
-**Última melhoria publicada:** múltiplos administradores com Lucas identificado como administrador proprietário e protegido no banco e na interface.
+**Última melhoria publicada:** o indicador de comissão prevista passou a exibir `R$`, mantendo `%` somente na comparação com o período anterior.
 
 **Próximo marco:** validar os indicadores com dados reais e evoluir a qualidade analítica sem interromper a operação atual.
 

@@ -1,16 +1,14 @@
 {
   "product": "ISA by Korluz",
-  "version": "11.1.1",
-  "release": "Administrador proprietário protegido",
-  "basedOn": "11.1.0",
-  "databaseMigrationRequired": true,
-  "databaseMigration": "isa_v11_0_16_owner_admin_protection",
+  "version": "11.1.2",
+  "release": "Indicador monetário da comissão prevista",
+  "basedOn": "11.1.1",
+  "databaseMigrationRequired": false,
   "features": [
-    "O ISA continua permitindo vários administradores simultâneos",
-    "Lucas passa a ser identificado como administrador proprietário",
-    "Outros administradores não podem rebaixar, bloquear, resetar ou excluir a conta proprietária",
-    "A senha do proprietário não pode ser redefinida por outro administrador",
-    "A proteção é aplicada no banco e reforçada visualmente no painel Administração",
-    "A Central de Inteligência e os relatórios gerenciais da V11.1.0 foram integralmente preservados"
+    "O cartão Comissão prevista passa a usar R$ como indicador de natureza monetária",
+    "O percentual permanece somente na comparação com o período anterior",
+    "Cálculos, filtros, rankings e relatórios permanecem inalterados",
+    "A proteção do administrador proprietário da V11.1.1 foi integralmente preservada",
+    "A atualização é apenas visual e não exige mudança no banco de dados"
   ]
 }

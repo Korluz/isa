@@ -5,7 +5,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const api=require('../admin-intelligence-v1110.js');
 
-assert.equal(api.VERSION,'11.1.0');
+assert.equal(api.VERSION,'11.1.2');
 
 const members=[
   {
@@ -75,15 +75,15 @@ assert.equal(api.validateCancellationReason('Falta de pagamento'), '');
 const root=path.resolve(__dirname,'..');
 const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
 const css=fs.readFileSync(path.join(root,'admin-intelligence-v1110.css'),'utf8');
+const intelligenceSource=fs.readFileSync(path.join(root,'admin-intelligence-v1110.js'),'utf8');
 const version=JSON.parse(fs.readFileSync(path.join(root,'VERSION.json'),'utf8'));
 assert.match(html,/admin-intelligence-v1110\.css\?v=1110/);
-assert.match(html,/admin-intelligence-v1110\.js\?v=1110/);
+assert.match(html,/admin-intelligence-v1110\.js\?v=1112/);
 assert.match(html,/window\.ISA_ADMIN_CACHE=adminCache/);
+assert.match(intelligenceSource,/\['Comissão prevista',[\s\S]*?'purple','R\$'/);
+assert.doesNotMatch(intelligenceSource,/\['Comissão prevista',[\s\S]*?'purple','%'/);
 assert.match(css,/\.ai-kpi-grid/);
 assert.match(css,/@media\(max-width:520px\)/,'o painel precisa manter adaptação mobile');
-assert.ok(
-  version.version==='11.1.0'||version.basedOn==='11.1.0',
-  'a versão atual deve preservar a Central de Inteligência da V11.1.0'
-);
+assert.match(version.version,/^11\.1\./,'a versão atual deve preservar a Central de Inteligência da V11.1.0');
 
 console.log('admin-intelligence-v1110: métricas, filtros, relatórios e integração verificados');

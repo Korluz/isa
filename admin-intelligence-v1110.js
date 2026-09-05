@@ -10,7 +10,7 @@
 })(function(){
   'use strict';
 
-  const VERSION='11.1.0';
+  const VERSION='11.1.2';
   const CANCELLATION_REASONS=[
     'Desistência do cliente',
     'Falta de pagamento',
@@ -317,7 +317,7 @@
       ['Cancelados',m.cancelled.toLocaleString('pt-BR'),`${pct(m.cancellationRate)} do total`,'red','×',deltaLabel(m.cancelled,p.cancelled,true)],
       ['Faturamento perdido',moneyBRL(m.lostRevenue),'Valor dos serviços cancelados','red','!',deltaLabel(m.lostRevenue,p.lostRevenue,true)],
       ['Ticket médio',moneyBRL(m.averageTicket),'Média por venda ativa','gold','◉',deltaLabel(m.averageTicket,p.averageTicket)],
-      ['Comissão prevista',moneyBRL(m.commission),'Cancelados não entram no total','purple','%',deltaLabel(m.commission,p.commission)]
+      ['Comissão prevista',moneyBRL(m.commission),'Cancelados não entram no total','purple','R$',deltaLabel(m.commission,p.commission)]
     ];
     box.innerHTML=items.map(x=>`<article class="ai-kpi ${x[3]}"><div class="ai-kpi-label"><span>${esc(x[0])}</span><span>${esc(x[4])}</span></div><div class="ai-kpi-value">${esc(x[1])}</div><div class="ai-kpi-sub">${esc(x[2])}</div>${x[5]}</article>`).join('');
   }
