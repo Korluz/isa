@@ -1,15 +1,15 @@
 {
   "product": "ISA by Korluz",
-  "version": "11.0.13",
-  "release": "Recuperação de senha protegida contra reenvios",
-  "basedOn": "11.0.12",
+  "version": "11.0.14",
+  "release": "Menu lateral responsivo em desktops baixos",
+  "basedOn": "11.0.13",
   "databaseMigrationRequired": false,
   "features": [
-    "O botão Esqueci minha senha envia somente uma solicitação mesmo quando recebe vários cliques",
-    "O botão fica bloqueado imediatamente durante o envio e confirma quando o link foi solicitado",
-    "Após um envio bem-sucedido, o mesmo navegador aguarda uma hora antes de permitir outro link",
-    "Mesmo quando a tentativa falha, novas requisições respeitam um intervalo mínimo de segurança",
-    "Erros de limite, e-mail inválido e configuração de redirecionamento recebem mensagens claras em português",
-    "A atualização não exige mudança no banco e preserva os fluxos de login, cadastro e administração da V11.0.12"
+    "O menu e o rodapé da barra lateral deixam de ocupar a mesma região em telas desktop com pouca altura",
+    "Quando necessário, somente a lista de opções do menu recebe rolagem",
+    "Os atalhos ficam mais compactos em notebooks com altura de até 820 pixels",
+    "Dados do usuário, sincronização e botão de saída permanecem legíveis no rodapé",
+    "O comportamento mobile permanece inalterado",
+    "A atualização é apenas visual e não exige mudança no banco"
   ]
 }

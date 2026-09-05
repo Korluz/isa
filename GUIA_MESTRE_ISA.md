@@ -1,8 +1,8 @@
 # Guia Mestre do ISA
 
 > **Documento de continuidade e fonte de verdade do projeto**  
-> Atualizado em **04/09/2026**
-> Versão em produção no momento desta edição: **ISA V11.0.13**
+> Atualizado em **05/09/2026**
+> Versão em produção no momento desta edição: **ISA V11.0.14**
 
 ---
 
@@ -677,6 +677,7 @@ Exemplo da sequência recente:
 - 11.0.11 — conferência automática de data e horário dos tickets no Validador
 - 11.0.12 — autenticação protegida e nova senha definida com segurança pelo administrador
 - 11.0.13 — recuperação de senha protegida contra cliques repetidos e reenvios
+- 11.0.14 — correção da sobreposição no menu lateral de desktops com pouca altura
 
 ---
 
@@ -768,7 +769,7 @@ Após mudança relevante, testar pelo menos:
 
 ## 22. Próximo marco estratégico
 
-Com a **V11.0.13 publicada**, o próximo marco é consolidar a transição do ISA para o **Business Assistant**, preservando a operação de vendas já validada.
+Com a **V11.0.14 publicada**, o próximo marco é consolidar a transição do ISA para o **Business Assistant**, preservando a operação de vendas já validada.
 
 Prioridades iniciais:
 
@@ -808,9 +809,9 @@ Depois disso, a conversa pode seguir diretamente para a próxima demanda.
 
 ## 25. Estado final desta edição
 
-**Produção confirmada:** V11.0.13
+**Produção confirmada:** V11.0.14
 
-**Última melhoria publicada:** proteção da recuperação de senha contra cliques repetidos e reenvios que consumam a cota de e-mails.
+**Última melhoria publicada:** barra lateral desktop adaptada para notebooks com pouca altura, sem sobreposição entre menu e dados do usuário.
 
 **Próximo marco:** handoff do ISA para o Business Assistant e definição do primeiro recorte do BA Logistics.
 

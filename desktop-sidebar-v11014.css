@@ -1,0 +1,79 @@
+/* ISA V11.0.14 — evita sobreposição entre menu e rodapé em desktops baixos. */
+@media (min-width: 761px) {
+  .side {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .side .brand {
+    flex: 0 0 auto;
+  }
+
+  .side .menu {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding-right: 4px;
+    scrollbar-color: rgba(255, 255, 255, .28) transparent;
+    scrollbar-width: thin;
+  }
+
+  .side .menu::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  .side .menu::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, .28);
+    border-radius: 999px;
+  }
+
+  .sidefoot {
+    position: static;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    flex: 0 0 auto;
+    margin: 12px 3px 0;
+    padding: 12px 5px 0;
+    border-top: 1px solid rgba(255, 255, 255, .12);
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (min-width: 761px) and (max-height: 820px) {
+  .side {
+    padding-top: 14px;
+    padding-bottom: 14px;
+  }
+
+  .side .brand {
+    padding-top: 1px;
+    padding-bottom: 14px;
+  }
+
+  .side .menu {
+    gap: 3px;
+  }
+
+  .side .menu button {
+    padding-top: 8px;
+    padding-bottom: 8px;
+    line-height: 1.25;
+  }
+
+  .sidefoot {
+    margin-top: 8px;
+    padding-top: 8px;
+    font-size: 11px;
+  }
+
+  .sidefoot .logout-btn {
+    margin: 5px 0;
+    padding: 4px 8px;
+  }
+}
