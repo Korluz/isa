@@ -4,7 +4,7 @@ import { processPasswordChange, validatePassword } from '../supabase/functions/a
 const ADMIN_ID='11111111-1111-4111-8111-111111111111';
 const SELLER_ID='22222222-2222-4222-8222-222222222222';
 
-function dependencies({callerId=ADMIN_ID,callerRole='admin',callerActive=true,callerStatus='active',targetExists=true}={}){
+function dependencies({callerId=ADMIN_ID,callerRole='admin',callerActive=true,callerStatus='active',targetExists=true,targetIsOwner=false}={}){
   const calls=[];
   return{
     calls,
@@ -12,7 +12,7 @@ function dependencies({callerId=ADMIN_ID,callerRole='admin',callerActive=true,ca
       getCaller:async()=>callerId?{id:callerId}:null,
       getProfile:async id=>{
         if(id===callerId)return{id,role:callerRole,active:callerActive,status:callerStatus,full_name:'Administrador'};
-        return targetExists?{id,role:'seller',active:true,status:'active',full_name:'Vendedora'}:null;
+        return targetExists?{id,role:'seller',active:true,status:'active',is_owner:targetIsOwner,full_name:'Vendedora'}:null;
       },
       updatePassword:async(id,password)=>{calls.push({id,password});return{email_confirmed_at:'2026-09-04T00:00:00Z'}},
       audit:async event=>calls.push({audit:event})
@@ -63,6 +63,14 @@ assert.equal(validatePassword('Senha123'),'');
   const deps=dependencies({targetExists:false});
   const result=await processPasswordChange({authorization:'Bearer token',body:{target_user_id:SELLER_ID,password:'Senha123'}},deps.api);
   assert.equal(result.status,404);
+}
+
+{
+  const deps=dependencies({targetIsOwner:true});
+  const result=await processPasswordChange({authorization:'Bearer token',body:{target_user_id:SELLER_ID,password:'Senha123'}},deps.api);
+  assert.equal(result.status,403);
+  assert.match(result.body.error,/administrador proprietário/);
+  assert.equal(deps.calls.length,0);
 }
 
 {

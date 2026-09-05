@@ -2,7 +2,7 @@
 
 > **Documento de continuidade e fonte de verdade do projeto**  
 > Atualizado em **05/09/2026**
-> Versão em produção no momento desta edição: **ISA V11.1.0**
+> Versão em produção no momento desta edição: **ISA V11.1.1**
 
 ---
 
@@ -84,6 +84,10 @@ Papéis existentes:
 - **seller** — vendedor.
 - **admin** — administrador.
 
+Identificação especial:
+
+- **is_owner** — marca exclusiva do administrador proprietário. Não substitui o papel `admin`; acrescenta proteção à conta principal e permite manter vários administradores simultâneos.
+
 ### Administração
 
 O painel de Administração permite:
@@ -110,9 +114,12 @@ Proteções:
 - administrador nunca visualiza a senha atual de qualquer usuário;
 - troca administrativa de senha deve ocorrer somente no servidor, sem chave administrativa no frontend;
 - administrador não deve conseguir resetar/excluir a própria conta pelos botões comuns;
+- somente uma conta pode possuir `is_owner = true`;
+- outros administradores não podem rebaixar, bloquear, resetar, excluir nem redefinir a senha do administrador proprietário;
+- a propriedade não pode ser atribuída, removida ou transferida pelo frontend;
 - exclusão exige confirmação forte.
 
-### Comportamento de autenticação — V11.0.12–V11.0.15
+### Comportamento de autenticação — V11.0.12–V11.1.1
 
 - login e cadastro bloqueiam novos cliques enquanto a requisição está em andamento;
 - erros conhecidos do Supabase são traduzidos para orientações claras em português;
@@ -742,6 +749,7 @@ Exemplo da sequência recente:
 - 11.0.14 — correção da sobreposição no menu lateral de desktops com pouca altura
 - 11.0.15 — correção da autorização interna na troca administrativa de senha
 - 11.1.0 — Central de Inteligência, KPIs, rankings, relatórios gerenciais e motivos de cancelamento
+- 11.1.1 — múltiplos administradores com proteção integral da conta do administrador proprietário
 
 ---
 
@@ -839,7 +847,7 @@ Após mudança relevante, testar pelo menos:
 
 ## 22. Próximo marco estratégico
 
-Com a **V11.1.0 publicada**, o próximo marco do ISA é validar a Central de Inteligência com o uso real e consolidar a qualidade dos dados que alimentarão decisões gerenciais.
+Com a **V11.1.1 publicada**, o próximo marco do ISA é validar a Central de Inteligência com o uso real e consolidar a qualidade dos dados que alimentarão decisões gerenciais.
 
 Prioridades iniciais:
 
@@ -879,9 +887,9 @@ Depois disso, a conversa pode seguir diretamente para a próxima demanda.
 
 ## 25. Estado final desta edição
 
-**Produção confirmada:** V11.1.0
+**Produção confirmada:** V11.1.1
 
-**Última melhoria publicada:** Central de Inteligência administrativa com KPIs, rankings, comparação de períodos, relatórios em PDF/Excel e coleta estruturada dos motivos de cancelamento.
+**Última melhoria publicada:** múltiplos administradores com Lucas identificado como administrador proprietário e protegido no banco e na interface.
 
 **Próximo marco:** validar os indicadores com dados reais e evoluir a qualidade analítica sem interromper a operação atual.
 

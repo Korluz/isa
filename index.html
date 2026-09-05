@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>ISA by Korluz — Cloud V11.1.0</title>
+<title>ISA by Korluz — Cloud V11.1.1</title>
 <style>
 :root{
  --navy:#0b2136;--navy2:#153752;--gold:#dfa82f;--bg:#f4f7fb;--card:#fff;
@@ -412,8 +412,8 @@ body{font-family:Arial;padding:28px;color:#172033}h1{margin-bottom:3px}p{color:#
 <link rel="stylesheet" href="admin-intelligence-v1110.css?v=1110">
 </head>
 <body>
-<div id="appVersionBadge" style="position:fixed;bottom:4px;right:6px;z-index:9999;font-size:10px;color:#999;background:rgba(255,255,255,.85);padding:2px 6px;border-radius:6px;pointer-events:none;font-family:monospace">v11.1.0</div>
-<script>window.addEventListener('error',function(e){const b=document.getElementById('appVersionBadge');if(b)b.textContent='v11.1.0 ⚠ erro: '+(e.message||'').slice(0,60);b&&(b.style.color='red')})</script>
+<div id="appVersionBadge" style="position:fixed;bottom:4px;right:6px;z-index:9999;font-size:10px;color:#999;background:rgba(255,255,255,.85);padding:2px 6px;border-radius:6px;pointer-events:none;font-family:monospace">v11.1.1</div>
+<script>window.addEventListener('error',function(e){const b=document.getElementById('appVersionBadge');if(b)b.textContent='v11.1.1 ⚠ erro: '+(e.message||'').slice(0,60);b&&(b.style.color='red')})</script>
 <!-- ISA V10.2.1 Recovery: base estável V10.1.1 -->
 
 <div id="cloudConfig" class="cloud-config">
@@ -2281,7 +2281,7 @@ window.loadAdminPanel=async function(force=false){
  const section=E('admin');if(section)section.classList.add('admin-refreshing');
  try{
   const[pr,st]=await Promise.all([
-   sb.from('profiles').select('id,email,full_name,phone_original,team,role,status,active,created_at,updated_at').order('created_at',{ascending:true}),
+   sb.from('profiles').select('id,email,full_name,phone_original,team,role,status,active,is_owner,created_at,updated_at').order('created_at',{ascending:true}),
    sb.from('app_state').select('user_id,state,updated_at').order('updated_at',{ascending:false})
   ]);
   if(pr.error)throw pr.error;if(st.error)throw st.error;
@@ -2309,7 +2309,7 @@ window.renderAdminUsers=function(){
  const q=(E('adminUserSearch')?.value||'').trim().toLowerCase(),filter=E('adminUserFilter')?.value||'';
  const rows=(adminCache.members||[]).filter(m=>{const hay=((m.full_name||'')+' '+(m.email||'')+' '+(m.team||'')).toLowerCase();if(q&&!hay.includes(q))return false;if(filter==='seller'&&m.role!=='seller')return false;if(filter==='admin'&&m.role!=='admin')return false;if(filter==='blocked'&&m.active!==false&&m.status!=='blocked')return false;return true});
  if(!rows.length){box.innerHTML='<div class="admin-empty">Nenhuma conta encontrada.</div>';return}
- box.innerHTML=rows.map(m=>{const selected=String(m.id)===String(adminCache.selectedId),blocked=m.active===false||m.status==='blocked';return `<div class="admin-user ${selected?'selected':''}"><div class="admin-user-head"><div><div class="admin-user-name">${admEsc(m.full_name||m.state?.seller||'Sem nome')}</div><div class="admin-user-email">${admEsc(m.email||'')}</div>${m.team?`<div class="admin-user-email">Equipe: ${admEsc(m.team)}</div>`:''}</div><div class="admin-badges"><span class="admin-role ${m.role==='seller'?'seller':''}">${m.role==='admin'?'👑 Administrador':'● Vendedor'}</span><span class="admin-status ${blocked?'blocked':'active'}">${blocked?'Bloqueado':'Ativo'}</span></div></div><div class="admin-user-metrics"><div class="admin-mini"><small>Vendas</small><strong>${m.summary.sales}</strong></div><div class="admin-mini"><small>Carteira</small><strong>${admMoney(m.summary.sold)}</strong></div><div class="admin-mini"><small>Comissão</small><strong>${admMoney(m.summary.commission)}</strong></div></div><div class="admin-user-email" style="margin-top:8px">Última sincronização: ${admEsc(admDateTime(m.stateUpdatedAt))}</div><div class="admin-actions"><button class="btn light sm" type="button" onclick="selectAdminUser('${admEsc(m.id)}')">Ver operação</button></div></div>`}).join('');
+ box.innerHTML=rows.map(m=>{const selected=String(m.id)===String(adminCache.selectedId),blocked=m.active===false||m.status==='blocked',roleLabel=m.is_owner?'⭐ Administrador proprietário':m.role==='admin'?'👑 Administrador':'● Vendedor';return `<div class="admin-user ${selected?'selected':''}"><div class="admin-user-head"><div><div class="admin-user-name">${admEsc(m.full_name||m.state?.seller||'Sem nome')}</div><div class="admin-user-email">${admEsc(m.email||'')}</div>${m.team?`<div class="admin-user-email">Equipe: ${admEsc(m.team)}</div>`:''}</div><div class="admin-badges"><span class="admin-role ${m.role==='seller'?'seller':''}">${roleLabel}</span><span class="admin-status ${blocked?'blocked':'active'}">${blocked?'Bloqueado':'Ativo'}</span></div></div><div class="admin-user-metrics"><div class="admin-mini"><small>Vendas</small><strong>${m.summary.sales}</strong></div><div class="admin-mini"><small>Carteira</small><strong>${admMoney(m.summary.sold)}</strong></div><div class="admin-mini"><small>Comissão</small><strong>${admMoney(m.summary.commission)}</strong></div></div><div class="admin-user-email" style="margin-top:8px">Última sincronização: ${admEsc(admDateTime(m.stateUpdatedAt))}</div><div class="admin-actions"><button class="btn light sm" type="button" onclick="selectAdminUser('${admEsc(m.id)}')">Ver operação</button></div></div>`}).join('');
 };
 
 window.selectAdminUser=function(id){adminCache.selectedId=id;renderAdminUsers();renderAdminSellerDetail()};
@@ -2317,24 +2317,24 @@ window.selectAdminUser=function(id){adminCache.selectedId=id;renderAdminUsers();
 window.renderAdminSellerDetail=function(){
  const box=E('adminSellerDetail');if(!box)return;
  const m=(adminCache.members||[]).find(x=>String(x.id)===String(adminCache.selectedId));if(!m){box.innerHTML='<div class="admin-empty">Selecione uma conta.</div>';return}
- const blocked=m.active===false||m.status==='blocked',isSelf=user&&String(m.id)===String(user.id);
+ const blocked=m.active===false||m.status==='blocked',isSelf=user&&String(m.id)===String(user.id),isOwner=m.is_owner===true,roleLabel=isOwner?'Administrador proprietário':m.role==='admin'?'Administrador':'Vendedor';
  const sales=(Array.isArray(m.state?.sales)?m.state.sales:[]).filter(admActiveSale).slice().reverse();
- box.innerHTML=`<div class="admin-detail-head"><div><h2 style="margin:0">${admEsc(m.full_name||m.state?.seller||'Conta')}</h2><div class="meta">${admEsc(m.email||'')} • ${m.role==='admin'?'Administrador':'Vendedor'} • ${blocked?'Bloqueado':'Ativo'}</div></div><div class="admin-badges"><span class="admin-status ${blocked?'blocked':'active'}">${blocked?'Acesso bloqueado':'Acesso liberado'}</span></div></div>
+ box.innerHTML=`<div class="admin-detail-head"><div><h2 style="margin:0">${admEsc(m.full_name||m.state?.seller||'Conta')}</h2><div class="meta">${admEsc(m.email||'')} • ${roleLabel} • ${blocked?'Bloqueado':'Ativo'}</div></div><div class="admin-badges">${isOwner?'<span class="admin-role">⭐ Proprietário</span>':''}<span class="admin-status ${blocked?'blocked':'active'}">${blocked?'Acesso bloqueado':'Acesso liberado'}</span></div></div>
  <div class="financegrid"><div class="moneycard"><small>Carteira registrada</small><strong>${admMoney(m.summary.sold)}</strong></div><div class="moneycard"><small>Recebido</small><strong>${admMoney(m.summary.received)}</strong></div><div class="moneycard"><small>Comissão prevista</small><strong>${admMoney(m.summary.commission)}</strong></div><div class="moneycard"><small>Passeios amanhã</small><strong>${m.summary.tomorrow}</strong></div></div>
- <div class="admin-actions" style="margin:13px 0">${isSelf?'<span class="admin-note">Sua própria conta administrativa não pode ser bloqueada ou rebaixada por esta tela.</span>':`<button class="btn ${blocked?'gold':'red'} sm" type="button" onclick="adminSetUserStatus('${admEsc(m.id)}',${blocked?'true':'false'})">${blocked?'Desbloquear conta':'Bloquear conta'}</button><button class="btn light sm" type="button" onclick="adminSetUserRole('${admEsc(m.id)}','${m.role==='admin'?'seller':'admin'}')">${m.role==='admin'?'Tornar vendedor':'Tornar administrador'}</button>`}</div>
+ <div class="admin-actions" style="margin:13px 0">${isOwner?'<span class="admin-note">Conta do administrador proprietário: não pode ser rebaixada, bloqueada, resetada, excluída nem ter a senha redefinida por outro administrador.</span>':isSelf?'<span class="admin-note">Sua própria conta administrativa não pode ser bloqueada ou rebaixada por esta tela.</span>':`<button class="btn ${blocked?'gold':'red'} sm" type="button" onclick="adminSetUserStatus('${admEsc(m.id)}',${blocked?'true':'false'})">${blocked?'Desbloquear conta':'Bloquear conta'}</button><button class="btn light sm" type="button" onclick="adminSetUserRole('${admEsc(m.id)}','${m.role==='admin'?'seller':'admin'}')">${m.role==='admin'?'Tornar vendedor':'Tornar administrador'}</button>`}</div>
  <div class="cardhead" style="margin-top:10px"><div><h2>Vendas registradas</h2><div class="meta">${sales.length} venda(s) ativa(s) • somente leitura</div></div></div>
  <div class="admin-sales">${sales.length?sales.map(s=>{const tours=(s.tours||[]).filter(admActiveTour),balance=Math.max(0,Number(s.valueCents||0)-Number(s.paidCents||0));return `<div class="admin-sale"><div class="admin-sale-top"><div><div class="admin-sale-title">${admEsc(s.name||'Cliente')}</div><div class="meta">${admEsc(s.phone||'Sem telefone')} • ${admEsc(s.status||'')}</div></div><div style="text-align:right"><strong>${admMoney(s.valueCents)}</strong><div class="meta">Comissão ${admMoney(s.commissionCents)}</div></div></div><div class="admin-sale-tours">${tours.map(t=>`${admEsc(t.name||'Passeio')} • ${admEsc(t.date||'sem data')} • ${admMoney(t.priceCents||0)} • comissão ${admMoney(t.commissionCents||0)}`).join('<br>')||'Sem passeios ativos.'}</div>${balance>0?`<div class="quick-warning" style="margin-top:8px">Saldo do cliente: ${admMoney(balance)}</div>`:''}</div>`}).join(''):'<div class="admin-empty">Esta conta ainda não possui vendas registradas.</div>'}</div>`;
 };
 
 window.adminSetUserStatus=async function(id,enable){
- if(window.ISA_ROLE!=='admin'||!user)return;if(String(id)===String(user.id))return alert('Por segurança, sua própria conta administrativa não pode ser bloqueada aqui.');
- const member=adminCache.members.find(m=>String(m.id)===String(id));if(!member)return;const action=enable?'desbloquear':'bloquear';if(!confirm(`Deseja ${action} a conta de ${member.full_name||member.email}?`))return;
+ if(window.ISA_ROLE!=='admin'||!user)return;const member=adminCache.members.find(m=>String(m.id)===String(id));if(!member)return;if(member.is_owner)return alert('A conta do administrador proprietário não pode ser bloqueada.');if(String(id)===String(user.id))return alert('Por segurança, sua própria conta administrativa não pode ser bloqueada aqui.');
+ const action=enable?'desbloquear':'bloquear';if(!confirm(`Deseja ${action} a conta de ${member.full_name||member.email}?`))return;
  const{error}=await sb.from('profiles').update({active:!!enable,status:enable?'active':'blocked'}).eq('id',id);if(error)return alert('Não foi possível alterar o acesso: '+error.message);await loadAdminPanel(true);
 };
 
 window.adminSetUserRole=async function(id,newRole){
- if(window.ISA_ROLE!=='admin'||!user)return;if(String(id)===String(user.id))return alert('Por segurança, sua própria conta administrativa não pode ser rebaixada aqui.');if(!['seller','admin'].includes(newRole))return;
- const member=adminCache.members.find(m=>String(m.id)===String(id));if(!member)return;const label=newRole==='admin'?'Administrador':'Vendedor';if(!confirm(`Alterar ${member.full_name||member.email} para ${label}?`))return;
+ if(window.ISA_ROLE!=='admin'||!user)return;const member=adminCache.members.find(m=>String(m.id)===String(id));if(!member)return;if(member.is_owner)return alert('A conta do administrador proprietário não pode ser rebaixada.');if(String(id)===String(user.id))return alert('Por segurança, sua própria conta administrativa não pode ser rebaixada aqui.');if(!['seller','admin'].includes(newRole))return;
+ const label=newRole==='admin'?'Administrador':'Vendedor';if(!confirm(`Alterar ${member.full_name||member.email} para ${label}?`))return;
  const{error}=await sb.from('profiles').update({role:newRole}).eq('id',id);if(error)return alert('Não foi possível alterar o papel: '+error.message);await loadAdminPanel(true);
 };
 

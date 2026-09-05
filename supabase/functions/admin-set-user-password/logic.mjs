@@ -56,6 +56,12 @@ export async function processPasswordChange({ authorization, body }, dependencie
   if (!targetProfile?.id) {
     return { status: 404, body: { ok: false, error: 'Conta de destino não encontrada.' } };
   }
+  if (targetProfile.is_owner === true) {
+    return {
+      status: 403,
+      body: { ok: false, error: 'A senha do administrador proprietário não pode ser alterada por outro administrador.' }
+    };
+  }
 
   const updatedUser = await dependencies.updatePassword(validated.targetUserId, validated.password);
   await dependencies.audit?.({ actorUserId: caller.id, targetUserId: validated.targetUserId });

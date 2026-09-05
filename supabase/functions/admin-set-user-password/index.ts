@@ -61,7 +61,7 @@ Deno.serve(async (request) => {
         // serviço fica restrita à única operação que realmente a exige: Auth.
         const { data, error } = await callerClient
           .from('profiles')
-          .select('id,full_name,role,active,status')
+          .select('id,full_name,role,active,status,is_owner')
           .eq('id', userId)
           .maybeSingle();
         if (error) throw error;

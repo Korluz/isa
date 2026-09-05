@@ -10,6 +10,7 @@ const getProfile=source.match(/async getProfile\(userId\)\s*\{([\s\S]*?)\n\s*\},
 assert.ok(getProfile,'a Edge Function precisa declarar getProfile');
 assert.match(getProfile[1],/callerClient\s*\n?\s*\.from\('profiles'\)/,'perfis devem respeitar a sessão do administrador e a RLS');
 assert.doesNotMatch(getProfile[1],/authAdminClient/,'a chave de serviço não deve consultar profiles');
+assert.match(getProfile[1],/is_owner/,'a Edge Function precisa identificar a conta proprietária');
 assert.match(source,/authAdminClient\.auth\.admin\.updateUserById\(userId, \{ password \}\)/,'a chave de serviço deve ficar restrita à operação administrativa do Auth');
 assert.match(source,/callerClient\.auth\.getUser\(token\)/,'o usuário chamador deve ser validado pelo JWT recebido');
 

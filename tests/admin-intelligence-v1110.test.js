@@ -81,7 +81,9 @@ assert.match(html,/admin-intelligence-v1110\.js\?v=1110/);
 assert.match(html,/window\.ISA_ADMIN_CACHE=adminCache/);
 assert.match(css,/\.ai-kpi-grid/);
 assert.match(css,/@media\(max-width:520px\)/,'o painel precisa manter adaptação mobile');
-assert.equal(version.version,'11.1.0');
-assert.equal(version.databaseMigrationRequired,false);
+assert.ok(
+  version.version==='11.1.0'||version.basedOn==='11.1.0',
+  'a versão atual deve preservar a Central de Inteligência da V11.1.0'
+);
 
 console.log('admin-intelligence-v1110: métricas, filtros, relatórios e integração verificados');

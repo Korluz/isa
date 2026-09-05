@@ -1,15 +1,16 @@
 {
   "product": "ISA by Korluz",
-  "version": "11.1.0",
-  "release": "Central de Inteligência e Relatórios Gerenciais",
-  "basedOn": "11.0.15",
-  "databaseMigrationRequired": false,
+  "version": "11.1.1",
+  "release": "Administrador proprietário protegido",
+  "basedOn": "11.1.0",
+  "databaseMigrationRequired": true,
+  "databaseMigration": "isa_v11_0_16_owner_admin_protection",
   "features": [
-    "Administradores entram diretamente em uma visão gerencial sem alterar a experiência dos vendedores",
-    "KPIs de faturamento, recebimentos, saldo, passeios, cancelamentos, ticket médio e comissão por período",
-    "Rankings de passeios por faturamento, volume e taxa de cancelamento, além do desempenho da equipe",
-    "Relatórios gerenciais filtráveis com exportação em PDF e Excel",
-    "Novos cancelamentos passam a registrar um motivo estruturado para análise",
-    "A leitura usa os estados já autorizados pelo Supabase e não exige migração de banco"
+    "O ISA continua permitindo vários administradores simultâneos",
+    "Lucas passa a ser identificado como administrador proprietário",
+    "Outros administradores não podem rebaixar, bloquear, resetar ou excluir a conta proprietária",
+    "A senha do proprietário não pode ser redefinida por outro administrador",
+    "A proteção é aplicada no banco e reforçada visualmente no painel Administração",
+    "A Central de Inteligência e os relatórios gerenciais da V11.1.0 foram integralmente preservados"
   ]
 }
