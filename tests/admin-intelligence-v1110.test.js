@@ -5,7 +5,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const api=require('../admin-intelligence-v1110.js');
 
-assert.equal(api.VERSION,'11.1.2');
+assert.equal(api.VERSION,'11.2.0');
 
 const members=[
   {
@@ -37,8 +37,8 @@ assert.equal(dataset.metrics.activeTours,2);
 assert.equal(dataset.metrics.cancelled,2);
 assert.equal(dataset.metrics.cancellationRate,50);
 assert.equal(dataset.metrics.revenue,40000);
-assert.ok(Math.abs(dataset.metrics.received-36666.666666666664)<0.01,'recebimento da venda com pacote deve ser rateado entre os passeios');
-assert.ok(Math.abs(dataset.metrics.balance-3333.333333333334)<0.01);
+assert.equal(dataset.metrics.received,40000,'recebimento deve ser limitado ao valor líquido dos passeios ativos');
+assert.equal(dataset.metrics.balance,0);
 assert.equal(dataset.metrics.lostRevenue,30000);
 assert.equal(dataset.metrics.commission,4000,'comissões canceladas não entram no total');
 assert.equal(dataset.metrics.occurred,2);
@@ -84,6 +84,6 @@ assert.match(intelligenceSource,/\['Comissão prevista',[\s\S]*?'purple','R\$'/)
 assert.doesNotMatch(intelligenceSource,/\['Comissão prevista',[\s\S]*?'purple','%'/);
 assert.match(css,/\.ai-kpi-grid/);
 assert.match(css,/@media\(max-width:520px\)/,'o painel precisa manter adaptação mobile');
-assert.match(version.version,/^11\.1\./,'a versão atual deve preservar a Central de Inteligência da V11.1.0');
+assert.match(version.version,/^11\.2\./,'a versão atual deve preservar a Central de Inteligência e adicionar conciliação financeira');
 
 console.log('admin-intelligence-v1110: métricas, filtros, relatórios e integração verificados');

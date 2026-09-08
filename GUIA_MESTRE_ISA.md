@@ -1,8 +1,8 @@
 # Guia Mestre do ISA
 
 > **Documento de continuidade e fonte de verdade do projeto**  
-> Atualizado em **05/09/2026**
-> Versão em produção no momento desta edição: **ISA V11.1.2**
+> Atualizado em **08/09/2026**
+> Versão em produção no momento desta edição: **ISA V11.2.0**
 
 ---
 
@@ -461,6 +461,24 @@ O mesmo link deve refletir novos horários salvos na Central de Horários. Não 
 
 O Financeiro consolida valores e comissões do vendedor.
 
+### Descontos e conciliação — V11.2.0
+
+O modelo financeiro separa, por passeio:
+
+- `standardPriceCents` — valor padrão antes de desconto;
+- `discountCents` — desconto comercial concedido;
+- `priceCents` — valor final líquido do serviço;
+- `discountReason` — motivo obrigatório do desconto;
+- `discountAuthorizedBy` — responsável que autorizou.
+
+Regra comercial vinculante: **desconto não reduz a comissão do vendedor**. A comissão continua sendo calculada pela tabela do passeio e pela quantidade de passageiros. No caso de transfers, os 5% usam o valor padrão do serviço, não o valor após desconto.
+
+Ao editar uma venda, a soma dos valores finais dos passeios deve coincidir com o valor final da venda. Quando o total informado for menor que a soma padrão, o ISA permite distribuir a diferença proporcionalmente como desconto e exige motivo e responsável. Se o total for maior que os serviços lançados, a venda não pode ser salva até que o serviço ou valor ausente seja corrigido.
+
+Vendas antigas não são reescritas silenciosamente. Diferenças existentes ficam sinalizadas como conciliação pendente para classificação e correção assistida.
+
+Em vendas já conciliadas, cancelar ou reativar um serviço recalcula o valor ativo da venda. Valores já recebidos nunca são apagados; eventual recebimento acima do novo valor permanece apontado para decisão de reembolso, crédito ou retenção.
+
 Deve permanecer separado da Auditoria quando os objetivos forem diferentes:
 
 - **Financeiro:** visão gerencial do vendedor.
@@ -567,6 +585,10 @@ Regras de leitura:
 - “mais cancelado” deve sempre mostrar quantidade e taxa proporcional;
 - “menor faturamento” deve ser lido junto com o volume vendido;
 - quando uma venda possui vários passeios, o valor recebido é distribuído proporcionalmente ao preço de cada serviço para fins gerenciais.
+- o total final registrado na venda é a fonte financeira e é distribuído proporcionalmente entre os serviços ativos para impedir divergência entre Administração e Central de Inteligência;
+- valor padrão, descontos e faturamento líquido são exibidos separadamente;
+- diferenças históricas ainda não classificadas aparecem como conciliação pendente;
+- descontos não alteram as comissões; cancelamentos continuam fora da comissão efetiva e dentro do histórico.
 
 Relatórios iniciais:
 
@@ -751,6 +773,7 @@ Exemplo da sequência recente:
 - 11.1.0 — Central de Inteligência, KPIs, rankings, relatórios gerenciais e motivos de cancelamento
 - 11.1.1 — múltiplos administradores com proteção integral da conta do administrador proprietário
 - 11.1.2 — correção semântica do indicador de comissão prevista: `R$` no cartão e `%` apenas na comparação entre períodos
+- 11.2.0 — descontos separados do valor padrão, comissão protegida, conciliação financeira e auditoria de diferenças históricas
 
 ---
 
@@ -848,7 +871,7 @@ Após mudança relevante, testar pelo menos:
 
 ## 22. Próximo marco estratégico
 
-Com a **V11.1.2 publicada**, o próximo marco do ISA é validar a Central de Inteligência com o uso real e consolidar a qualidade dos dados que alimentarão decisões gerenciais.
+Com a **V11.2.0 publicada**, o próximo marco do ISA é concluir a classificação das diferenças históricas e validar a conciliação com o uso real.
 
 Prioridades iniciais:
 
@@ -888,9 +911,9 @@ Depois disso, a conversa pode seguir diretamente para a próxima demanda.
 
 ## 25. Estado final desta edição
 
-**Produção confirmada:** V11.1.2
+**Produção confirmada:** V11.2.0
 
-**Última melhoria publicada:** o indicador de comissão prevista passou a exibir `R$`, mantendo `%` somente na comparação com o período anterior.
+**Última melhoria publicada:** descontos e valores padrão passaram a ser separados, com comissão preservada e conciliação entre venda e passeios.
 
 **Próximo marco:** validar os indicadores com dados reais e evoluir a qualidade analítica sem interromper a operação atual.
 

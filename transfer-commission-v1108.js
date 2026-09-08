@@ -4,7 +4,8 @@
   const norm=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim();
   const isTransfer=name=>typeof window.ISA_isTransfer==='function'?window.ISA_isTransfer(name):/(^| )transfer (in|out)($| )/.test(' '+norm(name)+' ');
   const isCancelled=t=>!!(t?.cancelled||t?.cancelChecked===true);
-  const serviceValue=t=>Math.max(0,Number(t?.priceCents||0)/100);
+  // Descontos comerciais não reduzem comissão: transfers usam o valor padrão.
+  const serviceValue=t=>Math.max(0,Number(t?.standardPriceCents??(Number(t?.priceCents||0)+Number(t?.discountCents||0)))/100);
 
   function installCommission(){
     const previous=window.calcSaleCommission;

@@ -10,7 +10,7 @@
 })(function(){
   'use strict';
 
-  const VERSION='11.1.2';
+  const VERSION='11.2.0';
   const CANCELLATION_REASONS=[
     'Desistência do cliente',
     'Falta de pagamento',
@@ -45,6 +45,17 @@
   const isTourCancelled=(t,s)=>isSaleCancelled(s)||t?.cancelled===true||t?.cancelChecked===true||/cancel/.test(norm(t?.status));
   const tourKey=v=>norm(v)||'passeio sem nome';
   const hasOwn=(obj,key)=>Object.prototype.hasOwnProperty.call(obj||{},key);
+  const cents=v=>Math.max(0,Math.round(number(v)));
+  const standardPrice=t=>hasOwn(t,'standardPriceCents')?cents(t.standardPriceCents):cents(t?.priceCents)+cents(t?.discountCents);
+  const explicitDiscount=t=>Math.min(standardPrice(t),cents(t?.discountCents));
+  const finalPrice=t=>hasOwn(t,'standardPriceCents')?Math.max(0,standardPrice(t)-explicitDiscount(t)):cents(t?.priceCents);
+
+  function allocateCents(total,weights){
+    const target=cents(total),list=(Array.isArray(weights)?weights:[]).map(cents);if(!list.length)return[];
+    const sum=list.reduce((a,v)=>a+v,0);if(!sum){const base=Math.floor(target/list.length),rest=target-(base*list.length);return list.map((_,i)=>base+(i<rest?1:0))}
+    const raw=list.map((weight,index)=>({index,value:target*weight/sum})),result=raw.map(x=>Math.floor(x.value));let rest=target-result.reduce((a,v)=>a+v,0);
+    raw.sort((a,b)=>(b.value-Math.floor(b.value))-(a.value-Math.floor(a.value))||a.index-b.index);for(let i=0;i<rest;i++)result[raw[i%raw.length].index]++;return result;
+  }
 
   function previousRange(start,end){
     const length=daysBetween(start,end)+1;
@@ -75,19 +86,22 @@
       sales.forEach((sale,saleIndex)=>{
         const tours=Array.isArray(sale?.tours)?sale.tours:[];
         if(!tours.length)return;
-        const knownRevenue=tours.reduce((sum,t)=>sum+Math.max(0,number(t?.priceCents)),0);
-        const missing=tours.filter(t=>number(t?.priceCents)<=0).length;
-        const saleValue=Math.max(0,number(sale?.valueCents));
-        const remaining=Math.max(0,saleValue-knownRevenue);
-        const missingShare=missing?(remaining||(!knownRevenue?saleValue:0))/missing:0;
-        const allocated=tours.map(t=>Math.max(0,number(t?.priceCents))||missingShare);
-        const allocatedTotal=allocated.reduce((a,v)=>a+v,0)||saleValue||tours.length;
-        const paid=Math.max(0,number(sale?.paidCents));
+        const entries=tours.map((tour,index)=>({tour,index,cancelled:isTourCancelled(tour,sale),gross:standardPrice(tour),baseNet:finalPrice(tour),explicitDiscount:explicitDiscount(tour)}));
+        const activeEntries=entries.filter(entry=>!entry.cancelled),baseActiveNet=activeEntries.reduce((sum,entry)=>sum+entry.baseNet,0);
+        const explicitModel=sale?.financialModelVersion==='1.0'||activeEntries.some(entry=>hasOwn(entry.tour,'standardPriceCents')||entry.explicitDiscount>0);
+        const declared=cents(sale?.valueCents),hasCancelled=entries.some(entry=>entry.cancelled);
+        const saleValue=explicitModel?declared:hasCancelled?Math.min(declared||baseActiveNet,baseActiveNet):(declared>0||!baseActiveNet?declared:baseActiveNet);
+        const allocatedActive=allocateCents(saleValue,activeEntries.map(entry=>entry.baseNet||entry.gross));
+        const allocatedByIndex=new Map(activeEntries.map((entry,index)=>[entry.index,allocatedActive[index]]));
+        const paid=Math.min(cents(sale?.paidCents),saleValue),receivedActive=allocateCents(paid,allocatedActive),receivedByIndex=new Map(activeEntries.map((entry,index)=>[entry.index,receivedActive[index]]));
+        const reconciliationDelta=saleValue-baseActiveNet;
+        const reconciliationStatus=Math.abs(reconciliationDelta)<=1?'ok':reconciliationDelta<0?'unclassified_discount':'missing_value';
         tours.forEach((tour,tourIndex)=>{
-          const revenue=allocated[tourIndex]||0;
-          const share=allocatedTotal?revenue/allocatedTotal:1/tours.length;
-          const received=Math.min(revenue,paid*share);
-          const cancelled=isTourCancelled(tour,sale);
+          const entry=entries[tourIndex],cancelled=entry.cancelled;
+          const revenue=cancelled?entry.baseNet:(allocatedByIndex.get(tourIndex)||0);
+          const received=cancelled?0:(receivedByIndex.get(tourIndex)||0);
+          const gross=cancelled?entry.gross:Math.max(entry.gross,revenue);
+          const discount=Math.max(0,gross-revenue);
           const reason=cancellationLabel(tour)||cancellationLabel(sale);
           const name=clean(tour?.name||tour?.tour_name_snapshot||'Passeio sem nome');
           const date=parseIso(tour?.date||tour?.tour_date);
@@ -100,11 +114,13 @@
             voucher:clean(sale?.voucherFile||sale?.voucherNumber||sale?.external_reference),
             saleStatus:clean(sale?.status),
             tourIndex,name,tourKey:tourKey(name),date,cancelled,reason,
-            revenue,received,balance:Math.max(0,revenue-received),
+            gross,discount,revenue,received,balance:Math.max(0,revenue-received),
             commission:cancelled?0:Math.max(0,number(tour?.commissionCents)),
             passengers:counts,
             hasExplicitPrice:number(tour?.priceCents)>0,
             hasDate:!!date,
+            reconciliationStatus,reconciliationDelta,
+            discountReason:clean(tour?.discountReason),discountAuthorizedBy:clean(tour?.discountAuthorizedBy),
             cancelledAt:clean(tour?.cancelledAt||tour?.cancelled_at||sale?.cancelledAt||sale?.cancelled_at)
           });
         });
@@ -130,6 +146,7 @@
     const list=Array.isArray(rows)?rows:[];
     const active=list.filter(r=>!r.cancelled),cancelled=list.filter(r=>r.cancelled);
     const saleKeys=new Set(active.map(r=>r.saleKey));
+    const reconciliations=new Map();active.forEach(row=>{if(!reconciliations.has(row.saleKey))reconciliations.set(row.saleKey,{status:row.reconciliationStatus,delta:row.reconciliationDelta})});
     const revenue=active.reduce((a,r)=>a+r.revenue,0);
     const received=active.reduce((a,r)=>a+r.received,0);
     return{
@@ -141,6 +158,8 @@
       future:active.filter(r=>r.date&&r.date>today).length,
       cancelled:cancelled.length,
       cancellationRate:list.length?cancelled.length/list.length*100:0,
+      grossRevenue:active.reduce((a,r)=>a+r.gross,0),
+      discounts:active.reduce((a,r)=>a+r.discount,0),
       revenue,received,balance:Math.max(0,revenue-received),
       commission:active.reduce((a,r)=>a+r.commission,0),
       lostRevenue:cancelled.reduce((a,r)=>a+r.revenue,0),
@@ -148,7 +167,9 @@
       passengers:active.reduce((a,r)=>a+r.passengers,0),
       missingPrice:list.filter(r=>!r.hasExplicitPrice).length,
       missingDate:list.filter(r=>!r.hasDate).length,
-      cancellationsWithoutReason:cancelled.filter(r=>!r.reason).length
+      cancellationsWithoutReason:cancelled.filter(r=>!r.reason).length,
+      reconciliationIssues:[...reconciliations.values()].filter(item=>item.status!=='ok').length,
+      reconciliationDelta:[...reconciliations.values()].reduce((sum,item)=>sum+number(item.delta),0)
     };
   }
 
@@ -156,9 +177,9 @@
     const map=new Map();
     (Array.isArray(rows)?rows:[]).forEach(row=>{
       let item=map.get(row.tourKey);
-      if(!item){item={key:row.tourKey,name:row.name,occurrences:0,active:0,cancelled:0,revenue:0,received:0,balance:0,commission:0,lostRevenue:0};map.set(row.tourKey,item)}
+      if(!item){item={key:row.tourKey,name:row.name,occurrences:0,active:0,cancelled:0,gross:0,discount:0,revenue:0,received:0,balance:0,commission:0,lostRevenue:0};map.set(row.tourKey,item)}
       item.occurrences++;
-      if(row.cancelled){item.cancelled++;item.lostRevenue+=row.revenue}else{item.active++;item.revenue+=row.revenue;item.received+=row.received;item.balance+=row.balance;item.commission+=row.commission}
+      if(row.cancelled){item.cancelled++;item.lostRevenue+=row.revenue}else{item.active++;item.gross+=row.gross;item.discount+=row.discount;item.revenue+=row.revenue;item.received+=row.received;item.balance+=row.balance;item.commission+=row.commission}
     });
     return[...map.values()].map(x=>({...x,cancellationRate:x.occurrences?x.cancelled/x.occurrences*100:0}));
   }
@@ -167,11 +188,11 @@
     const map=new Map();
     (Array.isArray(rows)?rows:[]).forEach(row=>{
       let item=map.get(row.sellerId);
-      if(!item){item={id:row.sellerId,name:row.seller,saleKeys:new Set(),occurrences:0,active:0,cancelled:0,revenue:0,received:0,balance:0,commission:0,lostRevenue:0};map.set(row.sellerId,item)}
+      if(!item){item={id:row.sellerId,name:row.seller,saleKeys:new Set(),occurrences:0,active:0,cancelled:0,gross:0,discount:0,revenue:0,received:0,balance:0,commission:0,lostRevenue:0};map.set(row.sellerId,item)}
       item.occurrences++;
-      if(row.cancelled){item.cancelled++;item.lostRevenue+=row.revenue}else{item.active++;item.saleKeys.add(row.saleKey);item.revenue+=row.revenue;item.received+=row.received;item.balance+=row.balance;item.commission+=row.commission}
+      if(row.cancelled){item.cancelled++;item.lostRevenue+=row.revenue}else{item.active++;item.saleKeys.add(row.saleKey);item.gross+=row.gross;item.discount+=row.discount;item.revenue+=row.revenue;item.received+=row.received;item.balance+=row.balance;item.commission+=row.commission}
     });
-    return[...map.values()].map(x=>({id:x.id,name:x.name,sales:x.saleKeys.size,occurrences:x.occurrences,active:x.active,cancelled:x.cancelled,revenue:x.revenue,received:x.received,balance:x.balance,commission:x.commission,lostRevenue:x.lostRevenue,cancellationRate:x.occurrences?x.cancelled/x.occurrences*100:0}));
+    return[...map.values()].map(x=>({id:x.id,name:x.name,sales:x.saleKeys.size,occurrences:x.occurrences,active:x.active,cancelled:x.cancelled,gross:x.gross,discount:x.discount,revenue:x.revenue,received:x.received,balance:x.balance,commission:x.commission,lostRevenue:x.lostRevenue,cancellationRate:x.occurrences?x.cancelled/x.occurrences*100:0}));
   }
 
   function buildDataset(members,filters={},today=iso(new Date())){
@@ -190,9 +211,9 @@
     const map=new Map();
     rows.forEach(row=>{
       let item=map.get(row.saleKey);
-      if(!item){item={saleKey:row.saleKey,seller:row.seller,client:row.client,voucher:row.voucher,dates:[],tours:[],active:0,cancelled:0,revenue:0,received:0,balance:0,commission:0,lostRevenue:0};map.set(row.saleKey,item)}
+      if(!item){item={saleKey:row.saleKey,seller:row.seller,client:row.client,voucher:row.voucher,dates:[],tours:[],active:0,cancelled:0,gross:0,discount:0,revenue:0,received:0,balance:0,commission:0,lostRevenue:0,reconciliationStatus:row.reconciliationStatus};map.set(row.saleKey,item)}
       if(row.date)item.dates.push(row.date);item.tours.push(row.name);
-      if(row.cancelled){item.cancelled++;item.lostRevenue+=row.revenue}else{item.active++;item.revenue+=row.revenue;item.received+=row.received;item.balance+=row.balance;item.commission+=row.commission}
+      if(row.cancelled){item.cancelled++;item.lostRevenue+=row.revenue}else{item.active++;item.gross+=row.gross;item.discount+=row.discount;item.revenue+=row.revenue;item.received+=row.received;item.balance+=row.balance;item.commission+=row.commission}
     });
     return[...map.values()].map(x=>({...x,date:x.dates.sort()[0]||'',status:x.active?'Ativa':'Cancelada',tourNames:[...new Set(x.tours)].join(', ')}));
   }
@@ -204,15 +225,15 @@
       return{type,title:'Relatório de cancelamentos',columns:[['Data','date'],['Vendedor','text'],['Cliente','text'],['Voucher','text'],['Passeio','text'],['Faturamento perdido','money'],['Motivo','text']],rows};
     }
     if(type==='sales'){
-      const rows=groupSales(data.rows||[]).sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(x=>[x.date,x.seller,x.client,x.voucher,x.tourNames,x.status,x.revenue,x.received,x.balance,x.commission,x.lostRevenue]);
-      return{type,title:'Relatório de vendas e recebimentos',columns:[['Data','date'],['Vendedor','text'],['Cliente','text'],['Voucher','text'],['Passeios','text'],['Status','text'],['Faturamento','money'],['Recebido','money'],['Saldo','money'],['Comissão','money'],['Cancelado','money']],rows};
+      const rows=groupSales(data.rows||[]).sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(x=>[x.date,x.seller,x.client,x.voucher,x.tourNames,x.status,x.gross,x.discount,x.revenue,x.received,x.balance,x.commission,x.lostRevenue,x.reconciliationStatus==='ok'?'Conferido':'Revisar']);
+      return{type,title:'Relatório de vendas e recebimentos',columns:[['Data','date'],['Vendedor','text'],['Cliente','text'],['Voucher','text'],['Passeios','text'],['Status','text'],['Valor padrão','money'],['Descontos','money'],['Faturamento líquido','money'],['Recebido','money'],['Saldo','money'],['Comissão','money'],['Cancelado','money'],['Conciliação','text']],rows};
     }
     if(type==='sellers'){
-      const rows=(data.sellers||[]).slice().sort((a,b)=>b.revenue-a.revenue).map(x=>[x.name,x.sales,x.occurrences,x.cancelled,x.cancellationRate,x.revenue,x.received,x.balance,x.commission]);
-      return{type,title:'Relatório de desempenho por vendedor',columns:[['Vendedor','text'],['Vendas','integer'],['Passeios','integer'],['Cancelados','integer'],['Taxa de cancelamento','percent'],['Faturamento','money'],['Recebido','money'],['Saldo','money'],['Comissão','money']],rows};
+      const rows=(data.sellers||[]).slice().sort((a,b)=>b.revenue-a.revenue).map(x=>[x.name,x.sales,x.occurrences,x.cancelled,x.cancellationRate,x.gross,x.discount,x.revenue,x.received,x.balance,x.commission]);
+      return{type,title:'Relatório de desempenho por vendedor',columns:[['Vendedor','text'],['Vendas','integer'],['Passeios','integer'],['Cancelados','integer'],['Taxa de cancelamento','percent'],['Valor padrão','money'],['Descontos','money'],['Faturamento líquido','money'],['Recebido','money'],['Saldo','money'],['Comissão','money']],rows};
     }
-    const rows=(data.tours||[]).slice().sort((a,b)=>b.revenue-a.revenue||b.occurrences-a.occurrences).map(x=>[x.name,x.occurrences,x.active,x.cancelled,x.cancellationRate,x.revenue,x.received,x.balance,x.commission,x.lostRevenue]);
-    return{type:'tours',title:'Relatório de desempenho dos passeios',columns:[['Passeio','text'],['Total','integer'],['Ativos','integer'],['Cancelados','integer'],['Taxa de cancelamento','percent'],['Faturamento','money'],['Recebido','money'],['Saldo','money'],['Comissão','money'],['Faturamento perdido','money']],rows};
+    const rows=(data.tours||[]).slice().sort((a,b)=>b.revenue-a.revenue||b.occurrences-a.occurrences).map(x=>[x.name,x.occurrences,x.active,x.cancelled,x.cancellationRate,x.gross,x.discount,x.revenue,x.received,x.balance,x.commission,x.lostRevenue]);
+    return{type:'tours',title:'Relatório de desempenho dos passeios',columns:[['Passeio','text'],['Total','integer'],['Ativos','integer'],['Cancelados','integer'],['Taxa de cancelamento','percent'],['Valor padrão','money'],['Descontos','money'],['Faturamento líquido','money'],['Recebido','money'],['Saldo','money'],['Comissão','money'],['Faturamento perdido','money']],rows};
   }
 
   function trend(rows,start,end){
@@ -308,7 +329,9 @@
     const box=browser.win.document.getElementById('aiKpis');if(!box)return;
     const m=dataset.metrics,p=dataset.previous;
     const items=[
-      ['Faturamento efetivo',moneyBRL(m.revenue),'Passeios ativos no período','green','R$',deltaLabel(m.revenue,p.revenue)],
+      ['Valor padrão',moneyBRL(m.grossRevenue),'Antes dos descontos','green','R$',deltaLabel(m.grossRevenue,p.grossRevenue)],
+      ['Descontos',moneyBRL(m.discounts),'Comissão não é reduzida','gold','−',deltaLabel(m.discounts,p.discounts,true)],
+      ['Faturamento líquido',moneyBRL(m.revenue),'Após descontos; cancelados ficam fora','green','R$',deltaLabel(m.revenue,p.revenue)],
       ['Valor recebido',moneyBRL(m.received),m.revenue?`${pct(m.received/m.revenue*100)} do faturamento`:'Sem faturamento','green','✓',deltaLabel(m.received,p.received)],
       ['Saldo a receber',moneyBRL(m.balance),'Valor ainda pendente','gold','⌛',deltaLabel(m.balance,p.balance,true)],
       ['Vendas',m.sales.toLocaleString('pt-BR'),`${m.activeTours} passeio(s) ativo(s)`,'','▣',deltaLabel(m.sales,p.sales)],
@@ -330,7 +353,8 @@
     if(!m.cancelled)items.push({tone:'ok',icon:'✓',title:'Nenhum cancelamento',text:'Não há passeio cancelado dentro dos filtros selecionados.'});
     else if(m.cancellationRate>=15)items.push({tone:'danger',icon:'!',title:'Cancelamentos pedem atenção',text:`A taxa chegou a ${pct(m.cancellationRate)}; abra o relatório para identificar os motivos.`});
     else items.push({tone:'warn',icon:'×',title:'Cancelamentos monitorados',text:`${m.cancelled} cancelamento(s), equivalentes a ${moneyBRL(m.lostRevenue)} em faturamento perdido.`});
-    if(m.cancellationsWithoutReason)items.push({tone:'warn',icon:'?',title:'Histórico sem motivo',text:`${m.cancellationsWithoutReason} cancelamento(s) antigo(s) ainda não possui(em) motivo estruturado.`});
+    if(m.reconciliationIssues)items.push({tone:'warn',icon:'≠',title:'Conciliação pendente',text:`${m.reconciliationIssues} venda(s) antiga(s) possui(em) diferença ainda não classificada entre o total e os passeios.`});
+    else if(m.cancellationsWithoutReason)items.push({tone:'warn',icon:'?',title:'Histórico sem motivo',text:`${m.cancellationsWithoutReason} cancelamento(s) antigo(s) ainda não possui(em) motivo estruturado.`});
     else if(m.balance>0)items.push({tone:'warn',icon:'⌛',title:'Recebimentos pendentes',text:`Há ${moneyBRL(m.balance)} a receber no período selecionado.`});
     else items.push({tone:'ok',icon:'●',title:'Dados prontos para análise',text:'Datas, valores e cancelamentos do período estão consistentes para esta leitura.'});
     box.innerHTML=items.slice(0,3).map(x=>`<article class="ai-insight ${x.tone}"><div class="ai-insight-icon">${esc(x.icon)}</div><div><strong>${esc(x.title)}</strong><span>${esc(x.text)}</span></div></article>`).join('');
@@ -384,7 +408,7 @@
     doc.getElementById('aiStatus').value=current.status;
     browser.filters=readFilters();browser.dataset=buildDataset(members,browser.filters,iso(new Date()));
     const range=browser.dataset.previousRange,m=browser.dataset.metrics;
-    doc.getElementById('aiDataNote').innerHTML=`<span>ⓘ</span><span><strong>${m.tours} passeio(s)</strong> analisado(s). Comparação automática com ${esc(dateBR(range.start))} a ${esc(dateBR(range.end))}. Faturamento usa o preço individual do passeio; cancelados permanecem no histórico, mas ficam fora da receita efetiva.</span>`;
+    doc.getElementById('aiDataNote').innerHTML=`<span>ⓘ</span><span><strong>${m.tours} passeio(s)</strong> analisado(s). Comparação automática com ${esc(dateBR(range.start))} a ${esc(dateBR(range.end))}. O total final da venda é distribuído entre os passeios; descontos ficam separados e não reduzem a comissão. Cancelados permanecem no histórico, fora da receita líquida.</span>`;
     renderKpis(browser.dataset);renderInsights(browser.dataset);renderTrend(browser.dataset,browser.filters);renderRankings(browser.dataset);renderReport();
   }
 

@@ -18,7 +18,8 @@ assert.match(sql,/before update of role, active, status, is_owner/);
 assert.match(sql,/before delete on public\.profiles/);
 assert.match(sql,/A conta do administrador proprietário não pode ser resetada/);
 assert.match(sql,/A conta do administrador proprietário não pode ser excluída/);
-assert.match(version.version,/^11\.1\./);
-assert.ok(version.version==='11.1.1'||version.basedOn==='11.1.1','versões posteriores devem preservar a proteção proprietária da V11.1.1');
+assert.match(version.version,/^11\.(1|2)\./);
+const [major,minor,patch]=version.version.split('.').map(Number);
+assert.ok(major>11||(major===11&&(minor>1||(minor===1&&patch>=1))),'versões posteriores devem preservar a proteção proprietária da V11.1.1');
 
 console.log('owner-admin-v11016: banco, painel e versão protegidos');

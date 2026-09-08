@@ -1,0 +1,21 @@
+.fr-tourrow{position:relative}
+.fr-tour-adjustment{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;padding:12px;border:1px solid #dbe4ec;border-radius:12px;background:#fff}
+.fr-tour-adjustment output{display:flex;align-items:center;min-height:42px;padding:10px 12px;border:1px solid #c9d5df;border-radius:10px;background:#f4f7fa;color:#0b2136;font-weight:900}
+.fr-cancelled-row .fr-tour-adjustment{opacity:.62;background:#fff5f5}
+.fr-sale-summary{padding:16px 21px;border-top:1px solid #dbe4ec;background:#f8fafc}
+.fr-summary-grid,.fr-detail-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.fr-summary-grid>div,.fr-detail-grid>div{display:flex;flex-direction:column;gap:4px;padding:11px;border:1px solid #dbe4ec;border-radius:11px;background:#fff}
+.fr-summary-grid small,.fr-detail-grid small{font-size:11px;color:#647181;font-weight:800}
+.fr-summary-grid strong,.fr-detail-grid strong{font-size:15px;color:#0b2136}
+.fr-reconciliation-message{margin-top:10px;padding:10px 12px;border-radius:10px;background:#ecfdf3;color:#166534;font-size:12px;font-weight:800}
+.fr-sale-summary.has-error .fr-reconciliation-message{background:#fff7e6;color:#8a5700}
+.fr-sale-summary.has-error [data-fr-delta]{color:#b54708}
+.fr-summary-actions{display:flex;justify-content:flex-end;margin-top:10px}
+.fr-detail-summary{margin-top:12px}
+.fr-detail-grid{grid-template-columns:repeat(3,minmax(0,1fr));margin-top:10px}
+.fr-pending{margin-top:10px;padding:10px 12px;border:1px solid #f4c96b;border-radius:10px;background:#fff8e8;color:#7a4b00;font-size:12px;font-weight:800}
+.financegrid .fr-finance-extra strong{font-size:20px}
+@media(max-width:760px){
+ .fr-tour-adjustment,.fr-summary-grid,.fr-detail-grid{grid-template-columns:1fr}
+ .fr-sale-summary{padding:14px}
+}

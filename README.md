@@ -15,7 +15,7 @@ O sistema está em uso real. Mudanças devem ser incrementais, compatíveis e va
 
 ## Estado na atualização deste README
 
-- Produção: **V11.1.2**
+- Produção: **V11.2.0**
 - GitHub Pages + Supabase
 - Importação de vouchers antigos e novos
 - Operação de passeios e transfers
@@ -32,5 +32,7 @@ O sistema está em uso real. Mudanças devem ser incrementais, compatíveis e va
 - Central de Inteligência administrativa com KPIs, rankings, filtros e comparação entre períodos
 - Relatórios gerenciais em PDF e Excel, incluindo desempenho de passeios, cancelamentos, vendas e vendedores
 - Motivos de cancelamento estruturados para alimentar as análises futuras
+- Descontos registrados separadamente do valor padrão, sem reduzir a comissão
+- Conciliação entre total da venda e valores dos passeios, com auditoria de registros antigos
 
 Para detalhes e próximos passos, use o **Guia Mestre**.
