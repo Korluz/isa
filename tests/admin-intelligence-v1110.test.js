@@ -72,6 +72,19 @@ assert.match(api.validateCancellationReason('Outro','x'),/3 caracteres/);
 assert.equal(api.validateCancellationReason('Outro','Mudança solicitada pela família'), '');
 assert.equal(api.validateCancellationReason('Falta de pagamento'), '');
 
+const discountedDataset=api.buildDataset([{id:'seller-discount',full_name:'Dani',state:{sales:[{
+  id:'sale-discount',name:'Cliente com desconto',status:'Reserva feita',financialModelVersion:'1.0',valueCents:27000,paidCents:17000,tours:[
+    {name:'Passeio A',date:'2026-09-02',standardPriceCents:10000,discountCents:1000,priceCents:9000,commissionCents:1500},
+    {name:'Passeio B',date:'2026-09-03',standardPriceCents:20000,discountCents:2000,priceCents:18000,commissionCents:2500}
+  ]
+}]}}],filters,'2026-09-05');
+assert.equal(discountedDataset.metrics.grossRevenue,30000);
+assert.equal(discountedDataset.metrics.discounts,3000);
+assert.equal(discountedDataset.metrics.revenue,27000);
+assert.equal(discountedDataset.metrics.balance,10000);
+assert.equal(discountedDataset.metrics.commission,4000,'desconto não pode reduzir comissão na Central de Inteligência');
+assert.equal(discountedDataset.metrics.reconciliationIssues,0);
+
 const root=path.resolve(__dirname,'..');
 const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
 const css=fs.readFileSync(path.join(root,'admin-intelligence-v1110.css'),'utf8');

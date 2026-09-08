@@ -130,6 +130,7 @@
     if(!row||row.dataset.frEnhanced)return;
     row.dataset.frEnhanced='1';row.classList.add('fr-tourrow');row.__isaOriginalTour=data&&typeof data==='object'?data:null;
     const price=row.querySelector('.tr-price'),label=price?.closest('.field')?.querySelector('label');
+    const cancelInput=row.querySelector('.tr-cancel');if(cancelInput&&isCancelled(data))cancelInput.value='yes';
     if(label)label.textContent='Valor padrão';
     const standard=standardPriceCents(data||{priceCents:cents(price?.dataset.cents)});
     if(price){price.dataset.cents=String(standard);price.value=standard?money(standard):''}
