@@ -91,7 +91,7 @@ const css=fs.readFileSync(path.join(root,'admin-intelligence-v1110.css'),'utf8')
 const intelligenceSource=fs.readFileSync(path.join(root,'admin-intelligence-v1110.js'),'utf8');
 const version=JSON.parse(fs.readFileSync(path.join(root,'VERSION.json'),'utf8'));
 assert.match(html,/admin-intelligence-v1110\.css\?v=1110/);
-assert.match(html,/admin-intelligence-v1110\.js\?v=1112/);
+assert.match(html,/admin-intelligence-v1110\.js\?v=1120/);
 assert.match(html,/window\.ISA_ADMIN_CACHE=adminCache/);
 assert.match(intelligenceSource,/\['Comissão prevista',[\s\S]*?'purple','R\$'/);
 assert.doesNotMatch(intelligenceSource,/\['Comissão prevista',[\s\S]*?'purple','%'/);
