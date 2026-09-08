@@ -5,7 +5,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const api=require('../admin-intelligence-v1110.js');
 
-assert.equal(api.VERSION,'11.1.2');
+assert.equal(api.VERSION,'11.2.0');
 
 const members=[
   {
@@ -37,8 +37,8 @@ assert.equal(dataset.metrics.activeTours,2);
 assert.equal(dataset.metrics.cancelled,2);
 assert.equal(dataset.metrics.cancellationRate,50);
 assert.equal(dataset.metrics.revenue,40000);
-assert.ok(Math.abs(dataset.metrics.received-36666.666666666664)<0.01,'recebimento da venda com pacote deve ser rateado entre os passeios');
-assert.ok(Math.abs(dataset.metrics.balance-3333.333333333334)<0.01);
+assert.equal(dataset.metrics.received,40000,'recebimento deve ser limitado ao valor líquido dos passeios ativos');
+assert.equal(dataset.metrics.balance,0);
 assert.equal(dataset.metrics.lostRevenue,30000);
 assert.equal(dataset.metrics.commission,4000,'comissões canceladas não entram no total');
 assert.equal(dataset.metrics.occurred,2);
@@ -72,18 +72,31 @@ assert.match(api.validateCancellationReason('Outro','x'),/3 caracteres/);
 assert.equal(api.validateCancellationReason('Outro','Mudança solicitada pela família'), '');
 assert.equal(api.validateCancellationReason('Falta de pagamento'), '');
 
+const discountedDataset=api.buildDataset([{id:'seller-discount',full_name:'Dani',state:{sales:[{
+  id:'sale-discount',name:'Cliente com desconto',status:'Reserva feita',financialModelVersion:'1.0',valueCents:27000,paidCents:17000,tours:[
+    {name:'Passeio A',date:'2026-09-02',standardPriceCents:10000,discountCents:1000,priceCents:9000,commissionCents:1500},
+    {name:'Passeio B',date:'2026-09-03',standardPriceCents:20000,discountCents:2000,priceCents:18000,commissionCents:2500}
+  ]
+}]}}],filters,'2026-09-05');
+assert.equal(discountedDataset.metrics.grossRevenue,30000);
+assert.equal(discountedDataset.metrics.discounts,3000);
+assert.equal(discountedDataset.metrics.revenue,27000);
+assert.equal(discountedDataset.metrics.balance,10000);
+assert.equal(discountedDataset.metrics.commission,4000,'desconto não pode reduzir comissão na Central de Inteligência');
+assert.equal(discountedDataset.metrics.reconciliationIssues,0);
+
 const root=path.resolve(__dirname,'..');
 const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
 const css=fs.readFileSync(path.join(root,'admin-intelligence-v1110.css'),'utf8');
 const intelligenceSource=fs.readFileSync(path.join(root,'admin-intelligence-v1110.js'),'utf8');
 const version=JSON.parse(fs.readFileSync(path.join(root,'VERSION.json'),'utf8'));
 assert.match(html,/admin-intelligence-v1110\.css\?v=1110/);
-assert.match(html,/admin-intelligence-v1110\.js\?v=1112/);
+assert.match(html,/admin-intelligence-v1110\.js\?v=1120/);
 assert.match(html,/window\.ISA_ADMIN_CACHE=adminCache/);
 assert.match(intelligenceSource,/\['Comissão prevista',[\s\S]*?'purple','R\$'/);
 assert.doesNotMatch(intelligenceSource,/\['Comissão prevista',[\s\S]*?'purple','%'/);
 assert.match(css,/\.ai-kpi-grid/);
 assert.match(css,/@media\(max-width:520px\)/,'o painel precisa manter adaptação mobile');
-assert.match(version.version,/^11\.1\./,'a versão atual deve preservar a Central de Inteligência da V11.1.0');
+assert.match(version.version,/^11\.2\./,'a versão atual deve preservar a Central de Inteligência e adicionar conciliação financeira');
 
 console.log('admin-intelligence-v1110: métricas, filtros, relatórios e integração verificados');

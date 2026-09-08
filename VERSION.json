@@ -1,14 +1,14 @@
 {
   "product": "ISA by Korluz",
-  "version": "11.1.2",
-  "release": "Indicador monetário da comissão prevista",
-  "basedOn": "11.1.1",
+  "version": "11.2.0",
+  "release": "Descontos e conciliação financeira",
+  "basedOn": "11.1.2",
   "databaseMigrationRequired": false,
   "features": [
-    "O cartão Comissão prevista passa a usar R$ como indicador de natureza monetária",
-    "O percentual permanece somente na comparação com o período anterior",
-    "Cálculos, filtros, rankings e relatórios permanecem inalterados",
-    "A proteção do administrador proprietário da V11.1.1 foi integralmente preservada",
-    "A atualização é apenas visual e não exige mudança no banco de dados"
+    "Valor padrão, desconto e valor final passam a ser registrados separadamente por passeio",
+    "Descontos comerciais reduzem o valor cobrado e o saldo, mas não reduzem a comissão do vendedor",
+    "A diferença do total da venda pode ser distribuída proporcionalmente como desconto, com motivo e responsável",
+    "A Central de Inteligência passa a conciliar o total da venda com os passeios e sinalizar registros antigos pendentes",
+    "Cancelamentos preservam o histórico e, nas vendas conciliadas, ajustam o valor ativo sem apagar o que já foi recebido"
   ]
 }
